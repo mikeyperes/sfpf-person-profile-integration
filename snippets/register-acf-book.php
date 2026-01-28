@@ -5,7 +5,6 @@ namespace sfpf_person_website;
  * Book ACF Fields Registration
  * 
  * Registers Advanced Custom Fields for the Book post type.
- * Includes URL fields, content fields, cover image, and schema fields.
  * 
  * @package sfpf_person_website
  * @since 1.0.0
@@ -14,22 +13,13 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 /**
- * Enable Book ACF fields
- * 
- * Called when the snippet is activated.
+ * Register the Book ACF field group
  */
-function enable_book_acf_fields() {
+function register_book_acf_fields() {
+    
     if (!function_exists('acf_add_local_field_group')) {
         return;
     }
-    
-    register_book_acf_group();
-}
-
-/**
- * Register the Book ACF field group
- */
-function register_book_acf_group() {
     
     acf_add_local_field_group([
         'key' => 'group_sfpf_book',
@@ -292,6 +282,4 @@ function register_book_acf_group() {
         'active' => true,
         'show_in_rest' => 1,
     ]);
-    
-    write_log('Registered Book ACF field group', false, 'ACF Registration');
 }

@@ -5,7 +5,6 @@ namespace sfpf_person_website;
  * Organization ACF Fields Registration
  * 
  * Registers Advanced Custom Fields for the Organization post type.
- * Includes company info, URLs, founding details, and schema fields.
  * 
  * @package sfpf_person_website
  * @since 1.0.0
@@ -14,22 +13,13 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 /**
- * Enable Organization ACF fields
- * 
- * Called when the snippet is activated.
+ * Register the Organization ACF field group
  */
-function enable_organization_acf_fields() {
+function register_organization_acf_fields() {
+    
     if (!function_exists('acf_add_local_field_group')) {
         return;
     }
-    
-    register_organization_acf_group();
-}
-
-/**
- * Register the Organization ACF field group
- */
-function register_organization_acf_group() {
     
     acf_add_local_field_group([
         'key' => 'group_sfpf_organization',
@@ -306,5 +296,5 @@ function register_organization_acf_group() {
         'show_in_rest' => 1,
     ]);
     
-    write_log('Registered Organization ACF field group', false, 'ACF Registration');
+
 }

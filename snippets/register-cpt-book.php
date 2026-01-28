@@ -13,20 +13,9 @@ namespace sfpf_person_website;
 
 defined('ABSPATH') || exit;
 
-// Register immediately since this file is loaded during init
-add_action('init', __NAMESPACE__ . '\\register_book_post_type', 0);
-
-/**
- * Register the Book custom post type
- */
-function register_book_post_type() {
-    
-    // Check if post type already exists
-    if (post_type_exists('book')) {
-        return;
-    }
-    
-    register_post_type('book', [
+// Register immediately since this file is loaded during init priority 0
+if (!\post_type_exists('book')) {
+    \register_post_type('book', [
         'labels' => [
             'name'                  => 'Books',
             'singular_name'         => 'Book',
@@ -58,12 +47,21 @@ function register_book_post_type() {
             'item_link'             => 'Book Link',
             'item_link_description' => 'A link to a book.',
         ],
-        'public'             => true,
-        'show_in_rest'       => true,
-        'menu_icon'          => 'dashicons-book-alt',
-        'supports'           => ['title', 'author', 'editor', 'thumbnail', 'custom-fields'],
-        'has_archive'        => 'books',
-        'rewrite'            => ['slug' => 'book', 'with_front' => false],
-        'delete_with_user'   => false,
+        'public'              => true,
+        'publicly_queryable'  => true,
+        'show_ui'             => true,
+        'show_in_menu'        => true,
+        'show_in_nav_menus'   => true,
+        'show_in_admin_bar'   => true,
+        'show_in_rest'        => true,
+        'menu_position'       => 20,
+        'menu_icon'           => 'dashicons-book-alt',
+        'capability_type'     => 'post',
+        'hierarchical'        => false,
+        'supports'            => ['title', 'author', 'editor', 'thumbnail', 'custom-fields', 'excerpt'],
+        'has_archive'         => 'books',
+        'rewrite'             => ['slug' => 'book', 'with_front' => false],
+        'query_var'           => true,
+        'delete_with_user'    => false,
     ]);
 }

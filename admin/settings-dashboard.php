@@ -48,6 +48,10 @@ function render_dashboard() {
             'label' => 'Templates',
             'icon' => 'dashicons-welcome-write-blog',
         ],
+        'faq' => [
+            'label' => 'FAQ Structures',
+            'icon' => 'dashicons-editor-help',
+        ],
         'snippets' => [
             'label' => 'Snippets',
             'icon' => 'dashicons-admin-plugins',

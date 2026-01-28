@@ -466,6 +466,86 @@ function get_critical_pages_structure() {
 }
 
 /**
+ * Get default page template content
+ * 
+ * @param string $page_key The page key
+ * @return string Default content for the page
+ */
+function get_default_page_template($page_key) {
+    $templates = [
+        'biography' => '<h2>Biography</h2>
+<p>[founder id="biography"]</p>
+
+<h3>Quick Facts</h3>
+<ul>
+<li><strong>Full Name:</strong> [founder id="name"]</li>
+<li><strong>Position:</strong> [founder id="additional_title"]</li>
+<li><strong>Email:</strong> [founder id="email"]</li>
+</ul>',
+
+        'education' => '<h2>Education</h2>
+<p>Educational background and academic achievements of [founder id="name"].</p>',
+
+        'location_born' => '<h2>Birthplace</h2>
+<p>Information about where [founder id="name"] was born and raised.</p>',
+
+        'organizations_founded' => '<h2>Organizations Founded</h2>
+<p>Companies and organizations founded by [founder id="name"].</p>',
+
+        'alternate_names' => '<h2>Also Known As</h2>
+<p>Alternative names and aliases for [founder id="name"].</p>',
+
+        'professions' => '<h2>Professional Background</h2>
+<p>Career and professional roles of [founder id="name"].</p>
+
+<h3>Current Position</h3>
+<p>[founder id="additional_title"]</p>',
+    ];
+    
+    return $templates[$page_key] ?? '';
+}
+
+/**
+ * Render page action buttons
+ * 
+ * @param int $page_id Page ID
+ * @param string $page_key Page key for template
+ * @param bool $is_set Whether page is assigned
+ * @param array $page_data Page data array (title, slug)
+ * @param string $parent_key Parent key if child page
+ * @return string HTML for action buttons
+ */
+function render_page_actions($page_id, $page_key, $is_set, $page_data, $parent_key = '') {
+    $html = '';
+    
+    if ($is_set) {
+        // Edit button - opens in new tab
+        $html .= '<a href="' . esc_url(get_edit_post_link($page_id)) . '" target="_blank" class="button button-small">Edit</a> ';
+        
+        // View button - opens in new tab
+        $html .= '<a href="' . esc_url(get_permalink($page_id)) . '" target="_blank" class="button button-small">View</a> ';
+        
+        // Apply Template button
+        $html .= '<button type="button" class="button button-small sfpf-apply-template" ';
+        $html .= 'data-page-id="' . esc_attr($page_id) . '" ';
+        $html .= 'data-page-key="' . esc_attr($page_key) . '">';
+        $html .= 'Apply Template</button>';
+    } else {
+        // Create button
+        $html .= '<button class="button button-small button-primary sfpf-create-page" ';
+        $html .= 'data-page="' . esc_attr($page_key) . '" ';
+        $html .= 'data-title="' . esc_attr($page_data['title']) . '" ';
+        $html .= 'data-slug="' . esc_attr($page_data['slug']) . '"';
+        if ($parent_key) {
+            $html .= ' data-parent="' . esc_attr($parent_key) . '"';
+        }
+        $html .= '>+ Create</button>';
+    }
+    
+    return $html;
+}
+
+/**
  * Get front page ID
  * 
  * @return int|false Front page ID or false
@@ -475,6 +555,208 @@ function get_front_page_id() {
         return (int) get_option('page_on_front');
     }
     return false;
+}
+
+/**
+ * =============================================================================
+ * ACF STRUCTURE DISPLAY
+ * =============================================================================
+ */
+
+/**
+ * Get ACF field structure from snippet file
+ * 
+ * @param string $snippet_id The snippet ID
+ * @return array Field structure array
+ */
+function get_acf_field_structure($snippet_id) {
+    $structures = [
+        'sfpf_enable_book_acf' => [
+            'group_key' => 'group_sfpf_book',
+            'group_title' => 'Book Details',
+            'location' => 'post_type == book',
+            'tabs' => [
+                'Schema' => [
+                    ['label' => 'Schema Markup', 'name' => 'schema_markup', 'key' => 'field_sfpf_book_schema', 'type' => 'textarea', 'readonly' => true],
+                    ['label' => 'Schema Preview', 'name' => 'schema_preview', 'key' => 'field_sfpf_book_schema_preview', 'type' => 'message'],
+                ],
+                'Basic Info' => [
+                    ['label' => 'Sub-Title', 'name' => 'subtitle', 'key' => 'field_sfpf_book_subtitle', 'type' => 'text'],
+                    ['label' => 'Description', 'name' => 'description', 'key' => 'field_sfpf_book_description', 'type' => 'wysiwyg'],
+                    ['label' => 'Author Bio', 'name' => 'author_bio', 'key' => 'field_sfpf_book_author_bio', 'type' => 'wysiwyg'],
+                    ['label' => 'Featured', 'name' => 'featured', 'key' => 'field_sfpf_book_featured', 'type' => 'true_false'],
+                ],
+                'Media' => [
+                    ['label' => 'Cover Image', 'name' => 'cover', 'key' => 'field_sfpf_book_cover', 'type' => 'image'],
+                    ['label' => 'Featured Content', 'name' => 'featured_content', 'key' => 'field_sfpf_book_featured_content', 'type' => 'wysiwyg'],
+                ],
+                'URLs' => [
+                    ['label' => 'Amazon URL', 'name' => 'amazon_url', 'key' => 'field_sfpf_book_amazon_url', 'type' => 'url'],
+                    ['label' => 'Audible URL', 'name' => 'audible_url', 'key' => 'field_sfpf_book_audible_url', 'type' => 'url'],
+                    ['label' => 'Google Books URL', 'name' => 'google_books_url', 'key' => 'field_sfpf_book_google_books_url', 'type' => 'url'],
+                    ['label' => 'GoodReads URL', 'name' => 'goodreads_url', 'key' => 'field_sfpf_book_goodreads_url', 'type' => 'url'],
+                    ['label' => 'SoundCloud URL', 'name' => 'soundcloud_url', 'key' => 'field_sfpf_book_soundcloud_url', 'type' => 'url'],
+                    ['label' => 'Audio URL', 'name' => 'audio_url', 'key' => 'field_sfpf_book_audio_url', 'type' => 'url'],
+                ],
+                'Social' => [
+                    ['label' => 'Instagram URL', 'name' => 'instagram_url', 'key' => 'field_sfpf_book_instagram_url', 'type' => 'url'],
+                    ['label' => 'YouTube URL', 'name' => 'youtube_url', 'key' => 'field_sfpf_book_youtube_url', 'type' => 'url'],
+                ],
+                'Publishing' => [
+                    ['label' => 'Publishing Company', 'name' => 'publishing_company', 'key' => 'field_sfpf_book_publishing_company', 'type' => 'wysiwyg'],
+                    ['label' => 'Press', 'name' => 'press', 'key' => 'field_sfpf_book_press', 'type' => 'wysiwyg'],
+                    ['label' => 'Additional Resources', 'name' => 'additional_resources', 'key' => 'field_sfpf_book_additional_resources', 'type' => 'wysiwyg'],
+                ],
+            ],
+        ],
+        
+        'sfpf_enable_organization_acf' => [
+            'group_key' => 'group_sfpf_organization',
+            'group_title' => 'Organization Details',
+            'location' => 'post_type == organization',
+            'tabs' => [
+                'Schema' => [
+                    ['label' => 'Schema Markup', 'name' => 'schema_markup', 'key' => 'field_sfpf_org_schema', 'type' => 'textarea', 'readonly' => true],
+                ],
+                'Basic Info' => [
+                    ['label' => 'Logo', 'name' => 'logo', 'key' => 'field_sfpf_org_logo', 'type' => 'image'],
+                    ['label' => 'Description', 'name' => 'description', 'key' => 'field_sfpf_org_description', 'type' => 'wysiwyg'],
+                    ['label' => 'Website', 'name' => 'website', 'key' => 'field_sfpf_org_website', 'type' => 'url'],
+                    ['label' => 'Founding Date', 'name' => 'founding_date', 'key' => 'field_sfpf_org_founding_date', 'type' => 'date_picker'],
+                    ['label' => 'Founder', 'name' => 'founder', 'key' => 'field_sfpf_org_founder', 'type' => 'user'],
+                    ['label' => 'Number of Employees', 'name' => 'employees', 'key' => 'field_sfpf_org_employees', 'type' => 'number'],
+                    ['label' => 'NAICS Code', 'name' => 'naics', 'key' => 'field_sfpf_org_naics', 'type' => 'text'],
+                ],
+                'Social URLs' => [
+                    ['label' => 'Facebook URL', 'name' => 'facebook_url', 'key' => 'field_sfpf_org_facebook', 'type' => 'url'],
+                    ['label' => 'Twitter URL', 'name' => 'twitter_url', 'key' => 'field_sfpf_org_twitter', 'type' => 'url'],
+                    ['label' => 'LinkedIn URL', 'name' => 'linkedin_url', 'key' => 'field_sfpf_org_linkedin', 'type' => 'url'],
+                    ['label' => 'Instagram URL', 'name' => 'instagram_url', 'key' => 'field_sfpf_org_instagram', 'type' => 'url'],
+                    ['label' => 'YouTube URL', 'name' => 'youtube_url', 'key' => 'field_sfpf_org_youtube', 'type' => 'url'],
+                ],
+            ],
+        ],
+        
+        'sfpf_enable_homepage_acf' => [
+            'group_key' => 'group_sfpf_homepage',
+            'group_title' => 'Homepage Schema',
+            'location' => 'page_type == front_page',
+            'tabs' => [
+                'Schema Settings' => [
+                    ['label' => 'Schema Type', 'name' => 'schema_type', 'key' => 'field_sfpf_hp_schema_type', 'type' => 'select', 'choices' => ['profile_page' => 'ProfilePage', 'about_page' => 'AboutPage', 'web_page' => 'WebPage']],
+                    ['label' => 'Schema Markup', 'name' => 'schema', 'key' => 'field_sfpf_hp_schema', 'type' => 'textarea', 'readonly' => true],
+                ],
+            ],
+        ],
+        
+        'sfpf_enable_user_schema_acf' => [
+            'group_key' => 'group_sfpf_user_schema_structures',
+            'group_title' => 'Schema.org Structured Data',
+            'location' => 'user_form == all',
+            'tabs' => [
+                'Entity & Education' => [
+                    ['label' => 'Entity Type', 'name' => 'entity_type', 'key' => 'field_sfpf_entity_type', 'type' => 'button_group'],
+                    ['label' => 'Education History', 'name' => 'education', 'key' => 'field_sfpf_education_repeater', 'type' => 'repeater'],
+                ],
+                'Organization Fields' => [
+                    ['label' => 'Inception Date', 'name' => 'inception_date', 'key' => 'field_sfpf_inception_date', 'type' => 'text'],
+                    ['label' => 'Headquarters', 'name' => 'headquarters', 'key' => 'field_sfpf_headquarters_group', 'type' => 'group'],
+                ],
+                'Shared' => [
+                    ['label' => 'SameAs URLs', 'name' => 'sameas', 'key' => 'field_sfpf_sameas', 'type' => 'textarea'],
+                ],
+            ],
+        ],
+    ];
+    
+    return $structures[$snippet_id] ?? [];
+}
+
+/**
+ * Render ACF field structure as HTML
+ * 
+ * @param string $snippet_id The snippet ID
+ * @return string HTML output
+ */
+function render_acf_structure_html($snippet_id) {
+    $structure = get_acf_field_structure($snippet_id);
+    
+    if (empty($structure)) {
+        return '<p style="color:#666;">No structure available.</p>';
+    }
+    
+    $html = '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:15px;font-size:12px;">';
+    $html .= '<div style="margin-bottom:10px;"><strong>Group Key:</strong> <code>' . esc_html($structure['group_key']) . '</code></div>';
+    $html .= '<div style="margin-bottom:10px;"><strong>Location:</strong> <code>' . esc_html($structure['location']) . '</code></div>';
+    $html .= '<div style="margin-bottom:15px;"><strong>Title:</strong> ' . esc_html($structure['group_title']) . '</div>';
+    
+    foreach ($structure['tabs'] as $tab_name => $fields) {
+        $html .= '<div style="margin-bottom:10px;">';
+        $html .= '<div style="background:#e5e7eb;padding:5px 10px;border-radius:4px;font-weight:600;margin-bottom:8px;">📁 ' . esc_html($tab_name) . '</div>';
+        $html .= '<table style="width:100%;border-collapse:collapse;margin-left:15px;">';
+        
+        foreach ($fields as $field) {
+            $html .= '<tr style="border-bottom:1px solid #e5e7eb;">';
+            $html .= '<td style="padding:4px 8px;width:25%;"><strong>' . esc_html($field['label']) . '</strong></td>';
+            $html .= '<td style="padding:4px 8px;width:25%;"><code style="background:#dbeafe;padding:2px 5px;border-radius:3px;">' . esc_html($field['name']) . '</code></td>';
+            $html .= '<td style="padding:4px 8px;width:25%;color:#666;">' . esc_html($field['type']) . '</td>';
+            $html .= '<td style="padding:4px 8px;width:25%;"><code style="font-size:10px;color:#9ca3af;">' . esc_html($field['key']) . '</code></td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '</table>';
+        $html .= '</div>';
+    }
+    
+    $html .= '</div>';
+    
+    return $html;
+}
+
+/**
+ * Get CPT registration PHP code
+ * 
+ * @param string $snippet_id The snippet ID
+ * @return string PHP code
+ */
+function get_cpt_php_code($snippet_id) {
+    $codes = [
+        'sfpf_enable_book_cpt' => "register_post_type('book', [
+    'labels' => [
+        'name'          => 'Books',
+        'singular_name' => 'Book',
+        'menu_name'     => 'Books',
+        'add_new_item'  => 'Add New Book',
+        'edit_item'     => 'Edit Book',
+        'view_item'     => 'View Book',
+    ],
+    'public'        => true,
+    'show_in_rest'  => true,
+    'menu_icon'     => 'dashicons-book-alt',
+    'supports'      => ['title', 'author', 'editor', 'thumbnail', 'custom-fields'],
+    'has_archive'   => 'books',
+    'rewrite'       => ['slug' => 'book', 'with_front' => false],
+]);",
+
+        'sfpf_enable_organization_cpt' => "register_post_type('organization', [
+    'labels' => [
+        'name'          => 'Organizations',
+        'singular_name' => 'Organization',
+        'menu_name'     => 'Organizations',
+        'add_new_item'  => 'Add New Organization',
+        'edit_item'     => 'Edit Organization',
+        'view_item'     => 'View Organization',
+    ],
+    'public'        => true,
+    'show_in_rest'  => true,
+    'menu_icon'     => 'dashicons-building',
+    'supports'      => ['title', 'author', 'editor', 'thumbnail', 'custom-fields'],
+    'has_archive'   => 'organizations',
+    'rewrite'       => ['slug' => 'organization', 'with_front' => false],
+]);",
+    ];
+    
+    return $codes[$snippet_id] ?? '';
 }
 
 /**
@@ -492,21 +774,24 @@ function get_front_page_id() {
  */
 function render_status_badge($status, $text = '') {
     if ($status) {
+        $class = 'sfpf-badge sfpf-badge-success';
         $bg = '#dcfce7';
         $color = '#166534';
-        $icon = '✓';
+        $icon = '<span class="dashicons dashicons-yes-alt" style="font-size:14px;vertical-align:middle;margin-right:3px;"></span>';
         $default_text = 'Enabled';
     } else {
+        $class = 'sfpf-badge sfpf-badge-error';
         $bg = '#fee2e2';
         $color = '#991b1b';
-        $icon = '✗';
+        $icon = '<span class="dashicons dashicons-no-alt" style="font-size:14px;vertical-align:middle;margin-right:3px;"></span>';
         $default_text = 'Disabled';
     }
     
     $display_text = $text ?: $default_text;
     
     return sprintf(
-        '<span style="display:inline-block;background:%s;color:%s;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:500;">%s %s</span>',
+        '<span class="%s" style="display:inline-block;background:%s;color:%s;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:500;">%s%s</span>',
+        $class,
         $bg,
         $color,
         $icon,

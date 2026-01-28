@@ -13,20 +13,9 @@ namespace sfpf_person_website;
 
 defined('ABSPATH') || exit;
 
-// Register immediately since this file is loaded during init
-add_action('init', __NAMESPACE__ . '\\register_organization_post_type', 0);
-
-/**
- * Register the Organization custom post type
- */
-function register_organization_post_type() {
-    
-    // Check if post type already exists
-    if (post_type_exists('organization')) {
-        return;
-    }
-    
-    register_post_type('organization', [
+// Register immediately since this file is loaded during init priority 0
+if (!\post_type_exists('organization')) {
+    \register_post_type('organization', [
         'labels' => [
             'name'                  => 'Organizations',
             'singular_name'         => 'Organization',
@@ -57,12 +46,21 @@ function register_organization_post_type() {
             'item_link'             => 'Organization Link',
             'item_link_description' => 'A link to an organization.',
         ],
-        'public'             => true,
-        'show_in_rest'       => true,
-        'menu_icon'          => 'dashicons-building',
-        'supports'           => ['title', 'author', 'editor', 'thumbnail', 'custom-fields'],
-        'has_archive'        => 'organizations',
-        'rewrite'            => ['slug' => 'organization', 'with_front' => false],
-        'delete_with_user'   => false,
+        'public'              => true,
+        'publicly_queryable'  => true,
+        'show_ui'             => true,
+        'show_in_menu'        => true,
+        'show_in_nav_menus'   => true,
+        'show_in_admin_bar'   => true,
+        'show_in_rest'        => true,
+        'menu_position'       => 21,
+        'menu_icon'           => 'dashicons-building',
+        'capability_type'     => 'post',
+        'hierarchical'        => false,
+        'supports'            => ['title', 'author', 'editor', 'thumbnail', 'custom-fields', 'excerpt'],
+        'has_archive'         => 'organizations',
+        'rewrite'             => ['slug' => 'organization', 'with_front' => false],
+        'query_var'           => true,
+        'delete_with_user'    => false,
     ]);
 }

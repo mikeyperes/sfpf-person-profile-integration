@@ -37,6 +37,14 @@ function get_snippets($type = 'all') {
             'type' => 'cpt',
             'info' => 'Post type: organization | Archive: /organizations/',
         ],
+        [
+            'id' => 'sfpf_enable_testimonial_cpt',
+            'name' => 'Testimonial Custom Post Type',
+            'description' => 'Registers the "testimonial" custom post type for managing testimonials.',
+            'file' => 'register-cpt-testimonial.php',
+            'type' => 'cpt',
+            'info' => 'Post type: testimonial | Archive: /testimonials/',
+        ],
         
         // ACF Snippets
         [
@@ -54,6 +62,14 @@ function get_snippets($type = 'all') {
             'file' => 'register-acf-organization.php',
             'type' => 'acf',
             'info' => 'Fields: logo, description, website, social URLs, founding_date, founder, naics, employees',
+        ],
+        [
+            'id' => 'sfpf_enable_user_schema_acf',
+            'name' => 'User Schema.org ACF Fields',
+            'description' => 'Adds Schema.org structured data fields to user profiles: entity type, education, sameas, headquarters.',
+            'file' => 'register-acf-user-schema.php',
+            'type' => 'acf',
+            'info' => 'Fields: entity_type (Person/Organization), education (repeater), inception_date, headquarters, sameas',
         ],
         [
             'id' => 'sfpf_enable_homepage_acf',

@@ -5,7 +5,6 @@ namespace sfpf_person_website;
  * Homepage ACF Fields Registration
  * 
  * Registers Advanced Custom Fields for the front page/homepage.
- * Adds schema markup field for Person/ProfilePage schema.
  * 
  * @package sfpf_person_website
  * @since 1.0.0
@@ -14,25 +13,16 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 /**
- * Enable Homepage ACF fields
- * 
- * Called when the snippet is activated.
+ * Register the Homepage ACF field group
  */
-function enable_homepage_acf_fields() {
+function register_homepage_acf_fields() {
+    
     if (!function_exists('acf_add_local_field_group')) {
         return;
     }
     
-    register_homepage_acf_group();
-    
     // Add admin footer scripts for the homepage editor
     add_action('admin_footer', __NAMESPACE__ . '\\homepage_schema_admin_scripts');
-}
-
-/**
- * Register the Homepage ACF field group
- */
-function register_homepage_acf_group() {
     
     // Use page_type location rule for front page
     $location = [

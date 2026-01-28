@@ -318,5 +318,266 @@ jQuery(document).ready(function($) {
             alert(response.success ? 'Template applied to page!' : 'Error: ' + response.data);
         });
     });
+    
+    // Save Elementor loop assignments
+    $('#sfpf-save-elementor-loops').on('click', function() {
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Saving...');
+        
+        var assignments = {};
+        $('.sfpf-loop-select').each(function() {
+            var cpt = $(this).data('cpt');
+            var val = $(this).val();
+            assignments[cpt] = val;
+        });
+        
+        $.post(ajaxurl, {
+            action: 'sfpf_save_elementor_loops',
+            assignments: JSON.stringify(assignments),
+            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
+        }, function(response) {
+            $btn.prop('disabled', false).html('💾 Save Loop Assignments');
+            if (response.success) {
+                var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#dcfce7;border:1px solid #16a34a;border-radius:6px;"><p style="margin:0;">✅ Loop assignments saved!</p></div>');
+                $('body').append($notice);
+                setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 3000);
+            }
+        });
+    });
 });
 </script>
+
+<!-- Elementor Loop Items Section -->
+<?php
+// Check if Elementor is active
+$elementor_active = defined('ELEMENTOR_VERSION');
+
+// Get Elementor loop templates
+$loop_items = [];
+if ($elementor_active) {
+    $loop_items = get_posts([
+        'post_type' => 'elementor_library',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            [
+                'key' => '_elementor_template_type',
+                'value' => 'loop-item',
+                'compare' => '='
+            ]
+        ]
+    ]);
+}
+
+// Get saved assignments
+$loop_assignments = get_option('sfpf_elementor_loop_assignments', []);
+
+// CPT definitions for loops
+$loop_cpts = [];
+if (is_snippet_enabled('sfpf_enable_book_cpt')) {
+    $loop_cpts['book'] = ['name' => 'Books', 'icon' => 'dashicons-book'];
+}
+if (is_snippet_enabled('sfpf_enable_organization_cpt')) {
+    $loop_cpts['organization'] = ['name' => 'Organizations', 'icon' => 'dashicons-building'];
+}
+if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
+    $loop_cpts['testimonial'] = ['name' => 'Testimonials', 'icon' => 'dashicons-format-quote'];
+}
+?>
+
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-admin-customizer" style="color:#ec4899;"></span>
+        <h3>Elementor Loop Templates</h3>
+    </div>
+    
+    <?php if (!$elementor_active): ?>
+        <div style="background:#fef3c7;padding:15px;border-radius:6px;color:#92400e;">
+            <span class="dashicons dashicons-warning" style="vertical-align:middle;"></span>
+            Elementor is not active. Install and activate Elementor to use loop templates.
+        </div>
+    <?php elseif (empty($loop_cpts)): ?>
+        <div style="background:#f3f4f6;padding:15px;border-radius:6px;color:#666;">
+            No custom post types are enabled. Enable Books, Organizations, or Testimonials in the Snippets tab first.
+        </div>
+    <?php else: ?>
+        <p style="color:#666;margin-bottom:20px;">Assign Elementor Loop Item templates to display your custom post types. Create Loop Items in Elementor → Templates → Loop Items.</p>
+        
+        <?php if (empty($loop_items)): ?>
+            <div style="background:#fef3c7;padding:15px;border-radius:6px;margin-bottom:20px;">
+                <span class="dashicons dashicons-info" style="color:#f59e0b;vertical-align:middle;"></span>
+                No Loop Item templates found. Create one in <strong>Elementor → Templates → Loop Items</strong>.
+            </div>
+        <?php endif; ?>
+        
+        <div style="display:flex;flex-direction:column;gap:15px;">
+            <?php foreach ($loop_cpts as $cpt => $info): 
+                $selected = $loop_assignments[$cpt] ?? '';
+            ?>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:15px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="dashicons <?php echo esc_attr($info['icon']); ?>" style="font-size:20px;color:#6366f1;"></span>
+                    <strong><?php echo esc_html($info['name']); ?></strong>
+                </div>
+                <div style="display:flex;align-items:center;gap:15px;">
+                    <select class="sfpf-loop-select" data-cpt="<?php echo esc_attr($cpt); ?>" style="min-width:280px;">
+                        <option value="">-- Select Loop Template --</option>
+                        <?php foreach ($loop_items as $item): ?>
+                            <option value="<?php echo esc_attr($item->ID); ?>" <?php selected($selected, $item->ID); ?>>
+                                <?php echo esc_html($item->post_title); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    
+                    <?php if ($selected): ?>
+                        <code style="background:#e8f4fc;padding:4px 10px;border-radius:4px;font-size:11px;">
+                            [sfpf_loop cpt="<?php echo esc_attr($cpt); ?>"]
+                        </code>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <button type="button" class="button button-primary" id="sfpf-save-elementor-loops">💾 Save Loop Assignments</button>
+        </div>
+        
+        <!-- Loop Shortcode Reference -->
+        <div style="margin-top:25px;padding:15px;background:#f0f6fc;border-radius:6px;">
+            <h4 style="margin:0 0 10px;font-size:13px;">Loop Shortcode Parameters</h4>
+            <table class="sfpf-table" style="margin:0;">
+                <tr>
+                    <td><code>[sfpf_loop cpt="book"]</code></td>
+                    <td>Display books loop</td>
+                </tr>
+                <tr>
+                    <td><code>[sfpf_loop cpt="organization"]</code></td>
+                    <td>Display organizations loop</td>
+                </tr>
+                <tr>
+                    <td><code>[sfpf_loop cpt="testimonial"]</code></td>
+                    <td>Display testimonials loop</td>
+                </tr>
+                <tr>
+                    <td><code>[sfpf_loop cpt="book" columns="3"]</code></td>
+                    <td>3 columns grid</td>
+                </tr>
+                <tr>
+                    <td><code>[sfpf_loop cpt="book" columns="3" rows="2"]</code></td>
+                    <td>3 columns, max 2 rows (6 items)</td>
+                </tr>
+                <tr>
+                    <td><code>[sfpf_loop cpt="book" columns="3" responsive="true"]</code></td>
+                    <td>Responsive grid (stacks on mobile)</td>
+                </tr>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Default Elementor Loop Import -->
+<?php if ($elementor_active): 
+    // Define available default templates
+    $default_templates = [
+        'hexa-book' => [
+            'name' => 'Hexa - Book - Default Loop Item #1',
+            'file' => 'hexa-book-default-loop.json',
+            'cpt' => 'book',
+            'description' => 'Card layout with featured image, title, excerpt, and author info',
+        ],
+        'hexa-organization' => [
+            'name' => 'Hexa - Organization - Default Loop Item #1',
+            'file' => 'hexa-organization-default-loop.json',
+            'cpt' => 'organization',
+            'description' => 'Minimalist layout with logo, title, and short summary',
+        ],
+        'hexa-testimonial' => [
+            'name' => 'Hexa - Testimonial - Default Loop Item #1',
+            'file' => 'hexa-testimonial-default-loop.json',
+            'cpt' => 'testimonial',
+            'description' => 'Quote card with testimonial text and attribution',
+        ],
+    ];
+?>
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-download" style="color:#059669;"></span>
+        <h3>Default Elementor Loop Import</h3>
+    </div>
+    
+    <p style="color:#666;margin-bottom:20px;">Import pre-built Elementor Loop Item templates. Select templates and click Import to add them to your Elementor library.</p>
+    
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <?php foreach ($default_templates as $template_key => $template): 
+            $file_path = SFPF_PLUGIN_DIR . 'assets/elementor-templates/' . $template['file'];
+            $file_exists = file_exists($file_path);
+        ?>
+        <label style="display:flex;align-items:flex-start;gap:12px;padding:15px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;cursor:<?php echo $file_exists ? 'pointer' : 'not-allowed'; ?>;<?php echo !$file_exists ? 'opacity:0.5;' : ''; ?>">
+            <input type="checkbox" class="sfpf-import-template" value="<?php echo esc_attr($template_key); ?>" <?php echo !$file_exists ? 'disabled' : ''; ?> style="margin-top:3px;">
+            <div style="flex:1;">
+                <strong style="display:block;margin-bottom:4px;"><?php echo esc_html($template['name']); ?></strong>
+                <span style="color:#666;font-size:12px;"><?php echo esc_html($template['description']); ?></span>
+                <?php if (!$file_exists): ?>
+                    <span style="display:block;color:#dc2626;font-size:11px;margin-top:4px;">Template file not found</span>
+                <?php endif; ?>
+            </div>
+            <span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:4px;font-size:11px;"><?php echo esc_html($template['cpt']); ?></span>
+        </label>
+        <?php endforeach; ?>
+    </div>
+    
+    <div style="display:flex;align-items:center;gap:15px;">
+        <button type="button" class="button button-primary" id="sfpf-import-elementor-templates">
+            <span class="dashicons dashicons-download" style="vertical-align:middle;margin-right:5px;"></span>
+            Import Selected Templates
+        </button>
+        <span id="sfpf-import-status" style="color:#666;font-size:13px;"></span>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Import Elementor templates
+    $('#sfpf-import-elementor-templates').on('click', function() {
+        var $btn = $(this);
+        var $status = $('#sfpf-import-status');
+        var templates = [];
+        
+        $('.sfpf-import-template:checked').each(function() {
+            templates.push($(this).val());
+        });
+        
+        if (templates.length === 0) {
+            $status.text('Please select at least one template to import.').css('color', '#dc2626');
+            return;
+        }
+        
+        $btn.prop('disabled', true);
+        $status.text('Importing templates...').css('color', '#666');
+        
+        $.post(ajaxurl, {
+            action: 'sfpf_import_elementor_templates',
+            templates: templates,
+            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
+        }, function(response) {
+            $btn.prop('disabled', false);
+            
+            if (response.success) {
+                $status.text(response.data.message).css('color', '#059669');
+                // Uncheck imported templates
+                $('.sfpf-import-template:checked').prop('checked', false);
+                // Reload page after 2 seconds to refresh loop items dropdown
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            } else {
+                $status.text('Error: ' + (response.data || 'Import failed')).css('color', '#dc2626');
+            }
+        }).fail(function() {
+            $btn.prop('disabled', false);
+            $status.text('Error: Request failed').css('color', '#dc2626');
+        });
+    });
+});
+</script>
+<?php endif; ?>

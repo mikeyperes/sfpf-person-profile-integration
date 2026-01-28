@@ -25,27 +25,38 @@ $site_url = get_site_url_clean();
         <h3>Plugin Dependencies</h3>
     </div>
     
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:15px;">
-        <div>
-            <strong style="font-size:15px;">HWS Base Tools</strong>
-            <span style="color:#666;margin-left:10px;">Required for website settings</span>
-            <?php if ($hws_info['active']): ?>
-                <div style="margin-top:8px;display:flex;gap:20px;font-size:13px;color:#666;">
-                    <span><strong>Version:</strong> <?php echo esc_html($hws_info['version']); ?></span>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:15px;background:#f9fafb;border-radius:6px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span class="dashicons dashicons-admin-tools" style="font-size:24px;color:#6366f1;"></span>
+            <div>
+                <strong style="font-size:15px;">HWS Base Tools</strong>
+                <span style="color:#666;font-size:12px;margin-left:8px;">Required for website settings</span>
+                <?php if ($hws_info['active']): ?>
+                    <div style="margin-top:5px;font-size:13px;color:#666;">
+                        Version: <?php echo esc_html($hws_info['version']); ?>
+                    </div>
                     <?php if ($hws_info['author']): ?>
-                        <span><strong>Author:</strong> <?php echo esc_html(strip_tags($hws_info['author'])); ?></span>
+                    <div style="font-size:13px;color:#666;">
+                        Author: <?php echo esc_html(strip_tags($hws_info['author'])); ?>
+                    </div>
                     <?php endif; ?>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
-        <div style="display:flex;gap:10px;">
-            <a href="<?php echo esc_url(get_hws_base_tools_url()); ?>" target="_blank" class="sfpf-btn sfpf-btn-secondary">
-                Open HWS Base Tools →
-            </a>
-            <a href="<?php echo esc_url(get_website_settings_url()); ?>" target="_blank" class="sfpf-btn sfpf-btn-secondary">
-                Website Settings →
-            </a>
-        </div>
+        <?php if ($hws_info['active']): ?>
+            <span style="background:#dcfce7;color:#166534;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;">Active</span>
+        <?php else: ?>
+            <span style="background:#fef2f2;color:#dc2626;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;">Not Active</span>
+        <?php endif; ?>
+    </div>
+    
+    <div style="margin-top:15px;display:flex;gap:10px;">
+        <a href="<?php echo esc_url(get_hws_base_tools_url()); ?>" target="_blank" class="button button-secondary">
+            Open HWS Base Tools →
+        </a>
+        <a href="<?php echo esc_url(get_website_settings_url()); ?>" target="_blank" class="button button-secondary">
+            Website Settings →
+        </a>
     </div>
 </div>
 
@@ -76,15 +87,18 @@ $site_url = get_site_url_clean();
                     </div>
                     
                     <?php if (!empty($founder['urls'])): ?>
-                        <div class="sfpf-url-chips">
+                        <div class="sfpf-url-list" style="margin-top:12px;font-size:13px;">
                             <?php foreach ($founder['urls'] as $platform => $url): if ($url): ?>
-                                <a href="<?php echo esc_url($url); ?>" target="_blank" class="sfpf-url-chip"><?php echo esc_html(ucfirst($platform)); ?></a>
+                                <div style="margin-bottom:6px;">
+                                    <strong style="display:inline-block;width:100px;color:#4b5563;"><?php echo esc_html(ucfirst(str_replace('_', ' ', $platform))); ?>:</strong>
+                                    <a href="<?php echo esc_url($url); ?>" target="_blank" style="color:#2563eb;word-break:break-all;"><?php echo esc_html($url); ?></a>
+                                </div>
                             <?php endif; endforeach; ?>
                         </div>
                     <?php endif; ?>
                     
                     <div style="margin-top:15px;display:flex;gap:10px;">
-                        <a href="<?php echo esc_url($founder['edit_url']); ?>" class="button button-secondary">Edit Profile</a>
+                        <a href="<?php echo esc_url($founder['edit_url']); ?>" target="_blank" class="button button-secondary">Edit Profile</a>
                         <a href="<?php echo esc_url($founder['view_url']); ?>" target="_blank" class="button button-secondary">View Profile</a>
                     </div>
                 </div>
@@ -118,7 +132,7 @@ $site_url = get_site_url_clean();
                     </div>
                     
                     <div style="margin-top:15px;display:flex;gap:10px;">
-                        <a href="<?php echo esc_url($company['edit_url']); ?>" class="button button-secondary">Edit Profile</a>
+                        <a href="<?php echo esc_url($company['edit_url']); ?>" target="_blank" class="button button-secondary">Edit Profile</a>
                         <a href="<?php echo esc_url($company['view_url']); ?>" target="_blank" class="button button-secondary">View Profile</a>
                     </div>
                 </div>
@@ -176,6 +190,8 @@ $site_url = get_site_url_clean();
             <tr><td>Book ACF Fields</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_book_acf')); ?></td><td>Internal</td></tr>
             <tr><td>Organization CPT</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_organization_cpt')); ?></td><td>Internal</td></tr>
             <tr><td>Organization ACF Fields</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_organization_acf')); ?></td><td>Internal</td></tr>
+            <tr><td>User Schema ACF Fields</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_user_schema_acf')); ?></td><td>Internal</td></tr>
+            <tr><td>Testimonial CPT (Internal)</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_testimonial_cpt')); ?></td><td>Internal</td></tr>
             <tr><td>Homepage ACF Fields</td><td><?php echo render_status_badge(is_snippet_enabled('sfpf_enable_homepage_acf')); ?></td><td>Internal</td></tr>
             <tr><td>Founder User Configured</td><td><?php echo render_status_badge($founder !== null); ?></td><td>Internal</td></tr>
             <tr><td>Company User Configured</td><td><?php echo render_status_badge($company !== null); ?></td><td>Internal</td></tr>
@@ -205,7 +221,7 @@ $site_url = get_site_url_clean();
                     <td><strong><?php echo esc_html($page['title']); ?></strong></td>
                     <td><?php echo render_status_badge($is_set, $is_set ? 'Set' : 'Not Set'); ?></td>
                     <td><code>/<?php echo $is_set ? esc_html($page_obj->post_name) : esc_html($page['slug']); ?>/</code><?php if (!$is_set): ?><span style="color:#999;font-size:11px;margin-left:5px;">(expected)</span><?php endif; ?></td>
-                    <td><?php if ($is_set): ?><a href="<?php echo get_edit_post_link($page_id); ?>" class="button button-small">Edit</a><?php else: ?><button class="button button-small button-primary sfpf-create-page" data-page="<?php echo esc_attr($page_key); ?>" data-title="<?php echo esc_attr($page['title']); ?>" data-slug="<?php echo esc_attr($page['slug']); ?>">+ Create</button><?php endif; ?></td>
+                    <td><?php echo render_page_actions($page_id, $page_key, $is_set, $page, ''); ?></td>
                 </tr>
                 <?php if (!empty($page['children'])): foreach ($page['children'] as $child_key => $child):
                     $child_id = get_option('sfpf_page_' . $child_key, 0);
@@ -216,7 +232,7 @@ $site_url = get_site_url_clean();
                     <td style="padding-left:35px;">— <?php echo esc_html($child['title']); ?></td>
                     <td><?php echo render_status_badge($child_is_set, $child_is_set ? 'Set' : 'Not Set'); ?></td>
                     <td><code>/<?php echo $child_is_set ? esc_html($child_obj->post_name) : esc_html($child['slug']); ?>/</code><?php if (!$child_is_set): ?><span style="color:#999;font-size:11px;margin-left:5px;">(expected)</span><?php endif; ?></td>
-                    <td><?php if ($child_is_set): ?><a href="<?php echo get_edit_post_link($child_id); ?>" class="button button-small">Edit</a><?php else: ?><button class="button button-small button-primary sfpf-create-page" data-page="<?php echo esc_attr($child_key); ?>" data-title="<?php echo esc_attr($child['title']); ?>" data-slug="<?php echo esc_attr($child['slug']); ?>" data-parent="<?php echo esc_attr($page_key); ?>">+ Create</button><?php endif; ?></td>
+                    <td><?php echo render_page_actions($child_id, $child_key, $child_is_set, $child, $page_key); ?></td>
                 </tr>
                 <?php endforeach; endif; ?>
             <?php endforeach; ?>
@@ -247,10 +263,51 @@ $site_url = get_site_url_clean();
     </table>
 </div>
 
+<!-- FAQs Overview -->
+<?php
+$faq_sets = get_option('sfpf_faq_sets', []);
+if (!empty($faq_sets)):
+?>
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-editor-help" style="color:#8b5cf6;"></span>
+        <h3>FAQ Sets</h3>
+        <span style="margin-left:auto;font-size:12px;"><a href="#faq" class="sfpf-tab-link" data-tab="faq">Manage FAQs →</a></span>
+    </div>
+    
+    <div style="display:flex;flex-direction:column;gap:15px;">
+        <?php foreach ($faq_sets as $set): if (!empty($set['name'])): ?>
+            <div style="background:#f9fafb;border-radius:6px;padding:15px;border:1px solid #e5e7eb;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <strong style="font-size:14px;"><?php echo esc_html($set['name']); ?></strong>
+                    <span style="background:#dbeafe;color:#1d4ed8;padding:3px 8px;border-radius:4px;font-size:11px;">
+                        <?php echo count($set['items'] ?? []); ?> items
+                    </span>
+                </div>
+                <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">
+                    <?php 
+                    $items = $set['items'] ?? [];
+                    foreach (array_slice($items, 0, 3) as $item) {
+                        if (!empty($item['question'])) {
+                            echo '• ' . esc_html(substr($item['question'], 0, 60)) . (strlen($item['question']) > 60 ? '...' : '') . '<br>';
+                        }
+                    }
+                    if (count($items) > 3) {
+                        echo '<em>+ ' . (count($items) - 3) . ' more...</em>';
+                    }
+                    ?>
+                </div>
+                <code style="background:#e8f4fc;padding:3px 8px;border-radius:3px;font-size:11px;">[sfpf_faq set="<?php echo esc_attr($set['slug']); ?>"]</code>
+            </div>
+        <?php endif; endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- SFPF Plugin Info Section -->
 <?php sfpf_display_plugin_info(); ?>
 
-<!-- Create Page AJAX Script -->
+<!-- Page Actions AJAX Script -->
 <script>
 jQuery(document).ready(function($) {
     // Create page AJAX handler
@@ -283,6 +340,81 @@ jQuery(document).ready(function($) {
             alert('AJAX request failed');
             $btn.prop('disabled', false).text('+ Create');
         });
+    });
+    
+    // Apply Template AJAX handler - use .off() to prevent duplicate bindings
+    $(document).off('click', '.sfpf-apply-template').on('click', '.sfpf-apply-template', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var $btn = $(this);
+        
+        // Prevent double-click
+        if ($btn.data('processing')) {
+            return false;
+        }
+        
+        var pageId = $btn.data('page-id');
+        var pageKey = $btn.data('page-key');
+        
+        $btn.data('processing', true).prop('disabled', true).text('Applying...');
+        
+        $.post(ajaxurl, {
+            action: 'sfpf_apply_default_template',
+            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>',
+            page_id: pageId,
+            page_key: pageKey,
+            force: 'false'
+        }, function(response) {
+            if (response.success) {
+                // Success toast
+                var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#dcfce7;border:1px solid #16a34a;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"><p style="margin:0;">✅ Template applied!</p></div>');
+                $('body').append($notice);
+                setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 3000);
+                $btn.data('processing', false).prop('disabled', false).text('Apply Template');
+            } else {
+                if (response.data && response.data.code === 'has_content') {
+                    // Show custom confirm dialog - don't use native confirm()
+                    var doOverwrite = window.confirm('Page already has content. Overwrite with default template?');
+                    
+                    if (doOverwrite) {
+                        $.post(ajaxurl, {
+                            action: 'sfpf_apply_default_template',
+                            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>',
+                            page_id: pageId,
+                            page_key: pageKey,
+                            force: 'true'
+                        }, function(resp) {
+                            if (resp.success) {
+                                var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#dcfce7;border:1px solid #16a34a;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"><p style="margin:0;">✅ Template applied!</p></div>');
+                                $('body').append($notice);
+                                setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 3000);
+                            } else {
+                                var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#fef2f2;border:1px solid #dc2626;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"><p style="margin:0;">❌ Error: ' + (resp.data.message || resp.data || 'Unknown error') + '</p></div>');
+                                $('body').append($notice);
+                                setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 5000);
+                            }
+                            $btn.data('processing', false).prop('disabled', false).text('Apply Template');
+                        });
+                    } else {
+                        // User cancelled
+                        $btn.data('processing', false).prop('disabled', false).text('Apply Template');
+                    }
+                } else {
+                    var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#fef2f2;border:1px solid #dc2626;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"><p style="margin:0;">❌ Error: ' + (response.data.message || response.data || 'Unknown error') + '</p></div>');
+                    $('body').append($notice);
+                    setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 5000);
+                    $btn.data('processing', false).prop('disabled', false).text('Apply Template');
+                }
+            }
+        }).fail(function() {
+            var $notice = $('<div style="position:fixed;top:50px;right:20px;z-index:9999;padding:12px 20px;background:#fef2f2;border:1px solid #dc2626;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"><p style="margin:0;">❌ AJAX request failed</p></div>');
+            $('body').append($notice);
+            setTimeout(function() { $notice.fadeOut(function() { $(this).remove(); }); }, 5000);
+            $btn.data('processing', false).prop('disabled', false).text('Apply Template');
+        });
+        
+        return false;
     });
 });
 </script>

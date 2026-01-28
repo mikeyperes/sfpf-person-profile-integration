@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.3.4
+ * Version: 1.3.5
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define('SFPF_PLUGIN_VERSION', '1.3.4');
+define('SFPF_PLUGIN_VERSION', '1.3.5');
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -31,7 +31,7 @@ define('SFPF_PLUGIN_BASENAME', plugin_basename(__FILE__));
  * Config Class
  */
 class Config {
-    public static $version = '1.3.4';
+    public static $version = '1.3.5';
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';

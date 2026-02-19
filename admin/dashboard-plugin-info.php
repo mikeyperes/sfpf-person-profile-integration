@@ -632,6 +632,21 @@ function sfpf_display_plugin_info() {
             <div id="sfpf-version-status" style="margin-top:10px;"></div>
         </div>
         
+        <!-- Upload Local ZIP -->
+        <div style="margin-bottom:15px;padding:15px;background:#f0fdf4;border:1px solid #16a34a;border-radius:6px;">
+            <strong>📤 Upload Local Plugin ZIP</strong>
+            <p style="font-size:12px;color:#666;margin:5px 0 10px;">
+                Upload a local ZIP file to update the plugin. The folder name will be corrected automatically.
+            </p>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="file" id="sfpf-local-zip-file" accept=".zip" style="flex:1;max-width:300px;">
+                <button type="button" id="sfpf-upload-local-zip" class="button button-primary">
+                    📤 Upload & Install
+                </button>
+            </div>
+            <div id="sfpf-upload-status" style="margin-top:10px;"></div>
+        </div>
+        
         <div style="margin-bottom:15px;">
             <strong>GitHub URL:</strong> <a href="https://github.com/<?php echo esc_attr($github_repo); ?>" target="_blank">https://github.com/<?php echo esc_html($github_repo); ?></a>
         </div>

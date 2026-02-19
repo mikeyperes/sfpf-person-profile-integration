@@ -17,36 +17,26 @@ $templates = [
     'biography' => [
         'title' => 'Biography Page',
         'description' => 'Template for the main biography page.',
-        'default' => '<h2>About</h2>
-<p>[founder id="biography"]</p>
-
-<h3>Contact</h3>
-<p>Email: [website_content field="email"]</p>
-
-<h3>Connect</h3>
-<ul>
-<li><a href="[website_url social="linkedin"]">LinkedIn</a></li>
-<li><a href="[website_url social="twitter"]">Twitter/X</a></li>
-<li><a href="[website_url social="instagram"]">Instagram</a></li>
-</ul>',
+        'default' => '[founder id="biography"]
+[founder action="display_professions_with_summary"]
+[founder action="display_socials"]',
     ],
     'education' => [
         'title' => 'Education Page',
         'description' => 'Template for the education sub-page.',
-        'default' => '<h2>Education</h2>
-<p>Learn about the educational background and qualifications.</p>',
+        'default' => '[founder action="display_education"]',
     ],
     'organizations_founded' => [
         'title' => 'Organizations Founded Page',
         'description' => 'Template for organizations founded sub-page.',
-        'default' => '<h2>Organizations Founded</h2>
-<p>A list of organizations and companies founded by [founder id="name"].</p>',
+        'default' => '[founder id="biography_short"]
+[sfpf_loop cpt="organization"]',
     ],
     'professions' => [
         'title' => 'Professions Page',
         'description' => 'Template for professions sub-page.',
-        'default' => '<h2>Professions</h2>
-<p>Professional roles and career information for [founder id="name"].</p>',
+        'default' => '[founder id="biography_short"]
+[founder action="display_professions_with_summary"]',
     ],
 ];
 
@@ -371,17 +361,27 @@ if ($elementor_active) {
 // Get saved assignments
 $loop_assignments = get_option('sfpf_elementor_loop_assignments', []);
 
-// CPT definitions for loops
-$loop_cpts = [];
-if (is_snippet_enabled('sfpf_enable_book_cpt')) {
-    $loop_cpts['book'] = ['name' => 'Books', 'icon' => 'dashicons-book'];
-}
-if (is_snippet_enabled('sfpf_enable_organization_cpt')) {
-    $loop_cpts['organization'] = ['name' => 'Organizations', 'icon' => 'dashicons-building'];
-}
-if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
-    $loop_cpts['testimonial'] = ['name' => 'Testimonials', 'icon' => 'dashicons-format-quote'];
-}
+// CPT definitions for loops - always show all, mark which are enabled
+$loop_cpts = [
+    'book' => [
+        'name' => 'Books', 
+        'icon' => 'dashicons-book',
+        'enabled' => is_snippet_enabled('sfpf_enable_book_cpt'),
+        'snippet' => 'Book CPT',
+    ],
+    'organization' => [
+        'name' => 'Organizations', 
+        'icon' => 'dashicons-building',
+        'enabled' => is_snippet_enabled('sfpf_enable_organization_cpt'),
+        'snippet' => 'Organization CPT',
+    ],
+    'testimonial' => [
+        'name' => 'Testimonials', 
+        'icon' => 'dashicons-format-quote',
+        'enabled' => is_snippet_enabled('sfpf_enable_testimonial_cpt'),
+        'snippet' => 'Testimonial CPT',
+    ],
+];
 ?>
 
 <div class="sfpf-card">
@@ -394,10 +394,6 @@ if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
         <div style="background:#fef3c7;padding:15px;border-radius:6px;color:#92400e;">
             <span class="dashicons dashicons-warning" style="vertical-align:middle;"></span>
             Elementor is not active. Install and activate Elementor to use loop templates.
-        </div>
-    <?php elseif (empty($loop_cpts)): ?>
-        <div style="background:#f3f4f6;padding:15px;border-radius:6px;color:#666;">
-            No custom post types are enabled. Enable Books, Organizations, or Testimonials in the Snippets tab first.
         </div>
     <?php else: ?>
         <p style="color:#666;margin-bottom:20px;">Assign Elementor Loop Item templates to display your custom post types. Create Loop Items in Elementor → Templates → Loop Items.</p>
@@ -412,14 +408,22 @@ if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
         <div style="display:flex;flex-direction:column;gap:15px;">
             <?php foreach ($loop_cpts as $cpt => $info): 
                 $selected = $loop_assignments[$cpt] ?? '';
+                $is_enabled = $info['enabled'];
             ?>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:15px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:15px;background:<?php echo $is_enabled ? '#f9fafb' : '#f3f4f6'; ?>;border-radius:6px;border:1px solid #e5e7eb;<?php echo !$is_enabled ? 'opacity:0.7;' : ''; ?>">
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span class="dashicons <?php echo esc_attr($info['icon']); ?>" style="font-size:20px;color:#6366f1;"></span>
-                    <strong><?php echo esc_html($info['name']); ?></strong>
+                    <span class="dashicons <?php echo esc_attr($info['icon']); ?>" style="font-size:20px;color:<?php echo $is_enabled ? '#6366f1' : '#9ca3af'; ?>;"></span>
+                    <div>
+                        <strong><?php echo esc_html($info['name']); ?></strong>
+                        <?php if (!$is_enabled): ?>
+                            <div style="font-size:11px;color:#dc2626;margin-top:2px;">
+                                ⚠ Enable "<?php echo esc_html($info['snippet']); ?>" in Snippets tab first
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:15px;">
-                    <select class="sfpf-loop-select" data-cpt="<?php echo esc_attr($cpt); ?>" style="min-width:280px;">
+                    <select class="sfpf-loop-select" data-cpt="<?php echo esc_attr($cpt); ?>" style="min-width:280px;" <?php echo !$is_enabled ? 'disabled' : ''; ?>>
                         <option value="">-- Select Loop Template --</option>
                         <?php foreach ($loop_items as $item): ?>
                             <option value="<?php echo esc_attr($item->ID); ?>" <?php selected($selected, $item->ID); ?>>
@@ -428,7 +432,7 @@ if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
                         <?php endforeach; ?>
                     </select>
                     
-                    <?php if ($selected): ?>
+                    <?php if ($selected && $is_enabled): ?>
                         <code style="background:#e8f4fc;padding:4px 10px;border-radius:4px;font-size:11px;">
                             [sfpf_loop cpt="<?php echo esc_attr($cpt); ?>"]
                         </code>
@@ -498,6 +502,20 @@ if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
             'description' => 'Quote card with testimonial text and attribution',
         ],
     ];
+    
+    // Check which templates are already imported
+    $imported_templates = [];
+    foreach ($default_templates as $key => $template) {
+        $existing = get_posts([
+            'post_type' => 'elementor_library',
+            'title' => $template['name'],
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+        ]);
+        if (!empty($existing)) {
+            $imported_templates[$key] = $existing[0]->ID;
+        }
+    }
 ?>
 <div class="sfpf-card">
     <div class="sfpf-card-header">
@@ -511,18 +529,41 @@ if (is_snippet_enabled('sfpf_enable_testimonial_cpt')) {
         <?php foreach ($default_templates as $template_key => $template): 
             $file_path = SFPF_PLUGIN_DIR . 'assets/elementor-templates/' . $template['file'];
             $file_exists = file_exists($file_path);
+            $is_imported = isset($imported_templates[$template_key]);
+            $is_disabled = !$file_exists || $is_imported;
         ?>
-        <label style="display:flex;align-items:flex-start;gap:12px;padding:15px;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;cursor:<?php echo $file_exists ? 'pointer' : 'not-allowed'; ?>;<?php echo !$file_exists ? 'opacity:0.5;' : ''; ?>">
-            <input type="checkbox" class="sfpf-import-template" value="<?php echo esc_attr($template_key); ?>" <?php echo !$file_exists ? 'disabled' : ''; ?> style="margin-top:3px;">
-            <div style="flex:1;">
-                <strong style="display:block;margin-bottom:4px;"><?php echo esc_html($template['name']); ?></strong>
-                <span style="color:#666;font-size:12px;"><?php echo esc_html($template['description']); ?></span>
-                <?php if (!$file_exists): ?>
-                    <span style="display:block;color:#dc2626;font-size:11px;margin-top:4px;">Template file not found</span>
+        <div style="padding:15px;background:<?php echo $is_imported ? '#dcfce7' : '#f9fafb'; ?>;border-radius:6px;border:1px solid <?php echo $is_imported ? '#86efac' : '#e5e7eb'; ?>;">
+            <label style="display:flex;align-items:flex-start;gap:12px;cursor:<?php echo $is_disabled ? 'not-allowed' : 'pointer'; ?>;<?php echo $is_disabled && !$is_imported ? 'opacity:0.5;' : ''; ?>">
+                <input type="checkbox" class="sfpf-import-template" value="<?php echo esc_attr($template_key); ?>" <?php echo $is_disabled ? 'disabled' : ''; ?> <?php echo $is_imported ? 'checked' : ''; ?> style="margin-top:3px;">
+                <div style="flex:1;">
+                    <strong style="display:block;margin-bottom:4px;"><?php echo esc_html($template['name']); ?></strong>
+                    <span style="color:#666;font-size:12px;"><?php echo esc_html($template['description']); ?></span>
+                    <?php if ($is_imported): 
+                        $template_id = $imported_templates[$template_key];
+                    ?>
+                        <div style="margin-top:6px;font-size:11px;">
+                            <span style="color:#16a34a;">✓ Already imported (ID: <?php echo $template_id; ?>)</span>
+                            <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;">
+                                <a href="<?php echo admin_url('post.php?post=' . $template_id . '&action=elementor'); ?>" target="_blank" class="button button-small">Edit in Elementor</a>
+                                <a href="<?php echo admin_url('post.php?post=' . $template_id . '&action=edit'); ?>" target="_blank" class="button button-small">Edit in WP (Raw)</a>
+                                <button type="button" class="button button-small sfpf-delete-template" data-template-id="<?php echo $template_id; ?>" data-template-key="<?php echo esc_attr($template_key); ?>" style="color:#dc2626;">Delete</button>
+                            </div>
+                        </div>
+                    <?php elseif (!$file_exists): ?>
+                        <span style="display:block;color:#dc2626;font-size:11px;margin-top:4px;">Template file not found</span>
+                    <?php endif; ?>
+                </div>
+                <span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:4px;font-size:11px;"><?php echo esc_html($template['cpt']); ?></span>
+            </label>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;">
+                <code style="font-size:10px;color:#6b7280;word-break:break-all;"><?php echo esc_html('assets/elementor-templates/' . $template['file']); ?></code>
+                <?php if ($file_exists): ?>
+                    <span style="color:#16a34a;font-size:10px;margin-left:8px;">✓ exists</span>
+                <?php else: ?>
+                    <span style="color:#dc2626;font-size:10px;margin-left:8px;">✗ missing</span>
                 <?php endif; ?>
             </div>
-            <span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:4px;font-size:11px;"><?php echo esc_html($template['cpt']); ?></span>
-        </label>
+        </div>
         <?php endforeach; ?>
     </div>
     
@@ -543,7 +584,7 @@ jQuery(document).ready(function($) {
         var $status = $('#sfpf-import-status');
         var templates = [];
         
-        $('.sfpf-import-template:checked').each(function() {
+        $('.sfpf-import-template:checked:not(:disabled)').each(function() {
             templates.push($(this).val());
         });
         
@@ -576,6 +617,36 @@ jQuery(document).ready(function($) {
         }).fail(function() {
             $btn.prop('disabled', false);
             $status.text('Error: Request failed').css('color', '#dc2626');
+        });
+    });
+    
+    // Delete Elementor template
+    $('.sfpf-delete-template').on('click', function() {
+        var $btn = $(this);
+        var templateId = $btn.data('template-id');
+        var templateKey = $btn.data('template-key');
+        
+        if (!confirm('Are you sure you want to delete this template? This cannot be undone.')) {
+            return;
+        }
+        
+        $btn.prop('disabled', true).text('Deleting...');
+        
+        $.post(ajaxurl, {
+            action: 'sfpf_delete_elementor_template',
+            template_id: templateId,
+            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                // Reload page to refresh the list
+                location.reload();
+            } else {
+                alert('Error: ' + (response.data || 'Failed to delete'));
+                $btn.prop('disabled', false).text('Delete');
+            }
+        }).fail(function() {
+            alert('AJAX request failed');
+            $btn.prop('disabled', false).text('Delete');
         });
     });
 });

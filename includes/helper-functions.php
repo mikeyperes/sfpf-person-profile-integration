@@ -342,6 +342,8 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder id="last_name"]', 'description' => 'Last name'],
             ['shortcode' => '[founder id="email"]', 'description' => 'Email address'],
             ['shortcode' => '[founder id="biography"]', 'description' => 'Founder biography'],
+            ['shortcode' => '[founder id="biography_short"]', 'description' => 'Short biography'],
+            ['shortcode' => '[founder id="mission_statement"]', 'description' => 'Mission statement'],
             ['shortcode' => '[founder id="avatar"]', 'description' => 'Avatar URL'],
             ['shortcode' => '[founder id="website"]', 'description' => 'Website URL'],
             ['shortcode' => '[founder id="additional_public_email"]', 'description' => 'Public email'],
@@ -353,6 +355,8 @@ function get_all_shortcodes() {
             ['shortcode' => '[company id="title"]', 'description' => 'Company display name'],
             ['shortcode' => '[company id="email"]', 'description' => 'Company email'],
             ['shortcode' => '[company id="biography"]', 'description' => 'Company biography'],
+            ['shortcode' => '[company id="biography_short"]', 'description' => 'Short biography'],
+            ['shortcode' => '[company id="mission_statement"]', 'description' => 'Mission statement'],
             ['shortcode' => '[company id="website"]', 'description' => 'Company website'],
             ['shortcode' => '[company id="avatar"]', 'description' => 'Company logo URL'],
         ],
@@ -376,9 +380,21 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder id="url_facebook"]', 'description' => 'Founder Facebook'],
             ['shortcode' => '[founder id="url_instagram"]', 'description' => 'Founder Instagram'],
             ['shortcode' => '[founder id="url_linkedin"]', 'description' => 'Founder LinkedIn'],
-            ['shortcode' => '[founder id="url_twitter"]', 'description' => 'Founder Twitter'],
+            ['shortcode' => '[founder id="url_twitter"]', 'description' => 'Founder Twitter/X'],
             ['shortcode' => '[founder id="url_youtube"]', 'description' => 'Founder YouTube'],
             ['shortcode' => '[founder id="url_tiktok"]', 'description' => 'Founder TikTok'],
+        ],
+        'Organization URLs' => [
+            ['shortcode' => '[organization field="url"]', 'description' => 'Website URL'],
+            ['shortcode' => '[organization field="url_facebook"]', 'description' => 'Facebook'],
+            ['shortcode' => '[organization field="url_instagram"]', 'description' => 'Instagram'],
+            ['shortcode' => '[organization field="url_linkedin"]', 'description' => 'LinkedIn'],
+            ['shortcode' => '[organization field="url_x"]', 'description' => 'X (Twitter)'],
+            ['shortcode' => '[organization field="url_youtube"]', 'description' => 'YouTube'],
+            ['shortcode' => '[organization field="url_tiktok"]', 'description' => 'TikTok'],
+            ['shortcode' => '[organization field="url_github"]', 'description' => 'GitHub'],
+            ['shortcode' => '[organization field="url_wikipedia"]', 'description' => 'Wikipedia'],
+            ['shortcode' => '[organization field="url_crunchbase"]', 'description' => 'Crunchbase'],
         ],
     ];
 }
@@ -654,8 +670,14 @@ function get_acf_field_structure($snippet_id) {
             'group_title' => 'Schema.org Structured Data',
             'location' => 'user_form == all',
             'tabs' => [
-                'Entity & Education' => [
+                'Entity & Content' => [
                     ['label' => 'Entity Type', 'name' => 'entity_type', 'key' => 'field_sfpf_entity_type', 'type' => 'button_group'],
+                    ['label' => 'Biography', 'name' => 'biography', 'key' => 'field_sfpf_biography', 'type' => 'wysiwyg'],
+                    ['label' => 'Biography (Short)', 'name' => 'biography_short', 'key' => 'field_sfpf_biography_short', 'type' => 'wysiwyg'],
+                    ['label' => 'Mission Statement', 'name' => 'mission_statement', 'key' => 'field_sfpf_mission_statement', 'type' => 'wysiwyg'],
+                ],
+                'Person Fields' => [
+                    ['label' => 'Professions', 'name' => 'professions', 'key' => 'field_sfpf_professions_repeater', 'type' => 'repeater'],
                     ['label' => 'Education History', 'name' => 'education', 'key' => 'field_sfpf_education_repeater', 'type' => 'repeater'],
                 ],
                 'Organization Fields' => [
@@ -848,4 +870,196 @@ function sanitize_schema($schema) {
     }
     
     return $result;
+}
+
+/**
+ * =============================================================================
+ * PRIMARY ORGANIZATION/BOOK HELPERS
+ * =============================================================================
+ */
+
+/**
+ * Get primary organization
+ * 
+ * @return WP_Post|null Primary organization post or null
+ */
+function get_primary_organization() {
+    // Check for option setting first
+    $primary_id = get_option('sfpf_primary_organization', 0);
+    if ($primary_id) {
+        $post = get_post($primary_id);
+        if ($post && $post->post_status === 'publish') {
+            return $post;
+        }
+    }
+    
+    // Fallback to first organization
+    $args = [
+        'post_type' => 'organization',
+        'posts_per_page' => 1,
+        'post_status' => 'publish',
+        'orderby' => 'date',
+        'order' => 'ASC',
+    ];
+    
+    $posts = get_posts($args);
+    return !empty($posts) ? $posts[0] : null;
+}
+
+/**
+ * Get primary book
+ * 
+ * @return WP_Post|null Primary book post or null
+ */
+function get_primary_book() {
+    // Check for option setting first
+    $primary_id = get_option('sfpf_primary_book', 0);
+    if ($primary_id) {
+        $post = get_post($primary_id);
+        if ($post && $post->post_status === 'publish') {
+            return $post;
+        }
+    }
+    
+    // Fallback to first book
+    $args = [
+        'post_type' => 'book',
+        'posts_per_page' => 1,
+        'post_status' => 'publish',
+        'orderby' => 'date',
+        'order' => 'ASC',
+    ];
+    
+    $posts = get_posts($args);
+    return !empty($posts) ? $posts[0] : null;
+}
+
+/**
+ * Get primary organization info array
+ * 
+ * @return array|null Organization data or null
+ */
+function get_primary_organization_info() {
+    $org = get_primary_organization();
+    if (!$org) {
+        return null;
+    }
+    
+    $logo = get_field('image_cropped', $org->ID);
+    $hq = get_field('headquarters', $org->ID);
+    
+    return [
+        'ID' => $org->ID,
+        'title' => $org->post_title,
+        'url' => get_field('url', $org->ID),
+        'logo_url' => $logo['url'] ?? '',
+        'short_summary' => get_field('short_summary', $org->ID),
+        'headquarters_location' => $hq['location'] ?? '',
+        'headquarters_wikipedia' => $hq['wikipedia_url'] ?? '',
+        'founding_date' => get_field('founding_date', $org->ID),
+        'edit_url' => get_edit_post_link($org->ID),
+        'view_url' => get_permalink($org->ID),
+    ];
+}
+
+/**
+ * =============================================================================
+ * FIELD CHECKLIST UTILITIES
+ * =============================================================================
+ */
+
+/**
+ * Check if a field has a non-empty value.
+ * Works with ACF user fields, post fields, and WP user meta.
+ * 
+ * @param string     $field_name  Field name or dot-path (e.g., 'urls.facebook')
+ * @param string|int $context     ACF context ('user_1', post ID, 'option')
+ * @param string     $type        'acf', 'wp_user', or 'post_meta'
+ * @return bool
+ */
+function is_field_populated($field_name, $context, $type = 'acf') {
+    if ($type === 'wp_user' && is_numeric($context)) {
+        return !empty(get_user_meta((int) $context, $field_name, true));
+    }
+    if ($type === 'post_meta' && is_numeric($context)) {
+        return !empty(get_post_meta((int) $context, $field_name, true));
+    }
+    
+    // ACF dot notation for nested group fields
+    if (strpos($field_name, '.') !== false) {
+        $parts = explode('.', $field_name, 2);
+        $group = get_field($parts[0], $context);
+        return is_array($group) && !empty($group[$parts[1]]);
+    }
+    
+    $val = get_field($field_name, $context);
+    if (is_array($val)) {
+        return !empty(array_filter($val));
+    }
+    return !empty($val);
+}
+
+/**
+ * Run a checklist of fields and return results.
+ * 
+ * @param array $checks [['label', 'field', 'context', 'type', 'shortcode']]
+ * @return array ['passed', 'failed', 'items' => [['label', 'shortcode', 'status']]]
+ */
+function run_field_checklist($checks) {
+    $results = ['passed' => 0, 'failed' => 0, 'items' => []];
+    foreach ($checks as $c) {
+        $ok = is_field_populated($c['field'], $c['context'], $c['type'] ?? 'acf');
+        $results['items'][] = [
+            'label'     => $c['label'],
+            'shortcode' => $c['shortcode'] ?? '',
+            'status'    => $ok,
+        ];
+        $ok ? $results['passed']++ : $results['failed']++;
+    }
+    return $results;
+}
+
+/**
+ * Render a field checklist as HTML.
+ * 
+ * @param array  $results Output from run_field_checklist()
+ * @param string $title   Checklist heading
+ * @return string HTML
+ */
+function render_field_checklist($results, $title = 'Content Checklist') {
+    $total = $results['passed'] + $results['failed'];
+    $pct = $total > 0 ? round(($results['passed'] / $total) * 100) : 0;
+    $bar_color = $pct === 100 ? '#dc2626' : '#dc2626';
+    
+    $html = '<div style="margin-top:15px;padding:15px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">';
+    $html .= '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    $html .= '<strong style="font-size:13px;color:#374151;">' . esc_html($title) . '</strong>';
+    $html .= '<span style="font-size:12px;color:#9ca3af;">' . $results['passed'] . '/' . $total . ' complete</span>';
+    $html .= '</div>';
+    
+    // Progress bar
+    $html .= '<div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:12px;overflow:hidden;">';
+    $html .= '<div style="height:100%;width:' . $pct . '%;background:' . $bar_color . ';border-radius:2px;"></div>';
+    $html .= '</div>';
+    
+    // Items — failures first
+    $sorted = $results['items'];
+    usort($sorted, function($a, $b) { return (int)$a['status'] - (int)$b['status']; });
+    
+    foreach ($sorted as $item) {
+        $icon  = $item['status'] ? '✓' : '—';
+        $color = $item['status'] ? '#6b7280' : '#9ca3af';
+        $label_style = $item['status'] ? '' : 'font-style:italic;';
+        $sc = !empty($item['shortcode']) 
+            ? ' <code class="sfpf-copy-sc" style="font-size:10px;background:#f3f4f6;padding:1px 4px;border-radius:2px;cursor:pointer;color:#6b7280;" title="Click to copy">' . esc_html($item['shortcode']) . '</code>' 
+            : '';
+        
+        $html .= '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">';
+        $html .= '<span style="font-size:12px;color:' . $color . ';width:14px;text-align:center;">' . $icon . '</span>';
+        $html .= '<span style="font-size:12px;color:' . $color . ';' . $label_style . '">' . esc_html($item['label']) . $sc . '</span>';
+        $html .= '</div>';
+    }
+    
+    $html .= '</div>';
+    return $html;
 }

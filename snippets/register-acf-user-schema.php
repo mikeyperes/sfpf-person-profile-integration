@@ -9,6 +9,9 @@ namespace sfpf_person_website;
  * 
  * FIELDS:
  *   - entity_type (button_group): Person or Organization
+ *   - biography (wysiwyg): Full biography (Person + Organization)
+ *   - biography_short (wysiwyg): Short biography (Person + Organization)
+ *   - mission_statement (wysiwyg): Mission statement (Person + Organization)
  *   - education (repeater): college, wiki_url, year, designation, major (Person only)
  *   - inception_date (text): Founding date (Organization only)
  *   - headquarters (group): location, wiki_url (Organization only)
@@ -181,15 +184,186 @@ function register_user_schema_acf_fields() {
             ],
             
             // ═══════════════════════════════════════════════════════════════
-            // PERSON FIELDS (shown when entity_type = 'person')
+            // SHARED CONTENT FIELDS (shown when entity_type = person OR organization)
             // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_person_title',
+                'label'             => 'Title',
+                'name'              => 'title',
+                'type'              => 'text',
+                'instructions'      => 'Professional title or role. <code>[founder id="title"]</code>',
+                'required'          => 0,
+                'conditional_logic' => [
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'person',
+                        ],
+                    ],
+                ],
+                'wrapper'           => ['width' => '100'],
+                'placeholder'       => 'e.g., Entrepreneur, Author, Software Engineer',
+            ],
+            [
+                'key'               => 'field_sfpf_biography',
+                'label'             => 'Biography',
+                'name'              => 'biography',
+                'type'              => 'wysiwyg',
+                'instructions'      => 'Full biography text. <code>[founder id="biography"]</code> or <code>[company id="biography"]</code>',
+                'required'          => 0,
+                'conditional_logic' => [
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'person',
+                        ],
+                    ],
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'organization',
+                        ],
+                    ],
+                ],
+                'wrapper'           => [],
+                'tabs'              => 'all',
+                'toolbar'           => 'full',
+                'media_upload'      => 1,
+                'delay'             => 1,
+            ],
+            [
+                'key'               => 'field_sfpf_biography_short',
+                'label'             => 'Biography (Short)',
+                'name'              => 'biography_short',
+                'type'              => 'wysiwyg',
+                'instructions'      => 'Short biography for summaries. <code>[founder id="biography_short"]</code> or <code>[company id="biography_short"]</code>',
+                'required'          => 0,
+                'conditional_logic' => [
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'person',
+                        ],
+                    ],
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'organization',
+                        ],
+                    ],
+                ],
+                'wrapper'           => [],
+                'tabs'              => 'all',
+                'toolbar'           => 'basic',
+                'media_upload'      => 0,
+                'delay'             => 1,
+            ],
+            [
+                'key'               => 'field_sfpf_mission_statement',
+                'label'             => 'Mission Statement',
+                'name'              => 'mission_statement',
+                'type'              => 'wysiwyg',
+                'instructions'      => 'Mission statement or organizational purpose. <code>[founder id="mission_statement"]</code> or <code>[company id="mission_statement"]</code>',
+                'required'          => 0,
+                'conditional_logic' => [
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'person',
+                        ],
+                    ],
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'organization',
+                        ],
+                    ],
+                ],
+                'wrapper'           => [],
+                'tabs'              => 'all',
+                'toolbar'           => 'full',
+                'media_upload'      => 1,
+                'delay'             => 1,
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON-ONLY FIELDS (shown when entity_type = 'person')
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_professions_repeater',
+                'label'             => 'Professions',
+                'name'              => 'professions',
+                'type'              => 'repeater',
+                'instructions'      => 'List of professions/roles.<br>
+<code>[founder id="professions"]</code> — Text list<br>
+<code>[founder action="display_professions_with_summary"]</code> — With links and content',
+                'required'          => 0,
+                'conditional_logic' => [
+                    [
+                        [
+                            'field'    => 'field_sfpf_entity_type',
+                            'operator' => '==',
+                            'value'    => 'person',
+                        ],
+                    ],
+                ],
+                'wrapper'           => [],
+                'layout'            => 'block',
+                'pagination'        => 0,
+                'min'               => 0,
+                'max'               => 20,
+                'collapsed'         => 'field_sfpf_profession_name',
+                'button_label'      => 'Add Profession',
+                'rows_per_page'     => 20,
+                'sub_fields'        => [
+                    [
+                        'key'               => 'field_sfpf_profession_name',
+                        'label'             => 'Profession Name',
+                        'name'              => 'name',
+                        'type'              => 'text',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '50'],
+                        'placeholder'       => 'e.g., Entrepreneur, Author',
+                    ],
+                    [
+                        'key'               => 'field_sfpf_profession_page',
+                        'label'             => 'Linked Page',
+                        'name'              => 'page',
+                        'type'              => 'post_object',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '50'],
+                        'post_type'         => ['page'],
+                        'return_format'     => 'id',
+                        'allow_null'        => 1,
+                    ],
+                    [
+                        'key'               => 'field_sfpf_profession_summary',
+                        'label'             => 'Summary',
+                        'name'              => 'summary',
+                        'type'              => 'wysiwyg',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '100'],
+                        'tabs'              => 'all',
+                        'toolbar'           => 'basic',
+                        'media_upload'      => 0,
+                        'delay'             => 1,
+                    ],
+                ],
+            ],
             [
                 'key'               => 'field_sfpf_education_repeater',
                 'label'             => 'Education History',
                 'name'              => 'education',
                 'type'              => 'repeater',
                 'instructions'      => '<code>[founder id="education"]</code> — HTML list &nbsp;|&nbsp; <code>[founder id="education" format="json"]</code> — JSON<br>
-<code>[founder id="education" index="0" field="college"]</code> — Specific field<br>
+<code>[founder action="display_education"]</code> — Full display with links<br>
 <strong>Fields:</strong> college, wiki_url, year, designation, major',
                 'required'          => 0,
                 'conditional_logic' => [
@@ -519,7 +693,7 @@ function sfpf_render_education_shortcode($atts, $user_key) {
     }
     
     // Default: HTML output
-    $output = '<div class="sfpf-education-list">';
+    $output = '<div class="founder-education">';
     foreach ($education as $i => $entry) {
         $output .= sfpf_format_education_entry_html($entry, $i);
     }
@@ -546,11 +720,10 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
         return '';
     }
     
-    $html = '<div class="sfpf-education-entry sfpf-education-entry-' . $index . '">';
+    $html = '<div class="founder-education education-item">';
     
-    // College name (linked if wiki_url exists)
     if ($college) {
-        $html .= '<div class="sfpf-education-college">';
+        $html .= '<div class="college">';
         if ($wiki_url) {
             $html .= '<a href="' . $wiki_url . '" target="_blank" rel="noopener">' . $college . '</a>';
         } else {
@@ -559,24 +732,22 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
         $html .= '</div>';
     }
     
-    // Designation and Major
     if ($designation || $major) {
-        $html .= '<div class="sfpf-education-degree">';
+        $html .= '<div class="degree">';
         if ($designation) {
-            $html .= '<span class="sfpf-education-designation">' . $designation . '</span>';
+            $html .= '<span class="designation">' . $designation . '</span>';
         }
         if ($designation && $major) {
             $html .= ' in ';
         }
         if ($major) {
-            $html .= '<span class="sfpf-education-major">' . $major . '</span>';
+            $html .= '<span class="major">' . $major . '</span>';
         }
         $html .= '</div>';
     }
     
-    // Year
     if ($year) {
-        $html .= '<div class="sfpf-education-year">' . $year . '</div>';
+        $html .= '<div class="year">' . $year . '</div>';
     }
     
     $html .= '</div>';
@@ -614,9 +785,9 @@ function sfpf_render_sameas_shortcode($atts, $user_key) {
     
     // Format: UL (unordered list)
     if ($format === 'ul') {
-        $output = '<ul class="sfpf-sameas-list">';
+        $output = '<ul class="founder-sameas">';
         foreach ($urls as $url) {
-            $output .= '<li class="sfpf-sameas-item"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html($url) . '</a></li>';
+            $output .= '<li class="sameas-item"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html($url) . '</a></li>';
         }
         $output .= '</ul>';
         return $output;

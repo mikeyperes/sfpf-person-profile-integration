@@ -36,6 +36,14 @@ function render_dashboard() {
             'label' => 'Overview',
             'icon' => 'dashicons-dashboard',
         ],
+        'settings' => [
+            'label' => 'Settings',
+            'icon' => 'dashicons-admin-settings',
+        ],
+        'shortcodes' => [
+            'label' => 'Shortcodes',
+            'icon' => 'dashicons-shortcode',
+        ],
         'schema' => [
             'label' => 'Schema',
             'icon' => 'dashicons-media-code',
@@ -55,6 +63,10 @@ function render_dashboard() {
         'snippets' => [
             'label' => 'Snippets',
             'icon' => 'dashicons-admin-plugins',
+        ],
+        'debug' => [
+            'label' => 'Debug',
+            'icon' => 'dashicons-admin-tools',
         ],
     ];
     

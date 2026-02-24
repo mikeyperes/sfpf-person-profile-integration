@@ -202,6 +202,17 @@ function register_book_acf_fields() {
                 'required' => 0,
             ],
             [
+                'key' => 'field_sfpf_book_knowledge_graph_id',
+                'label' => 'Google Knowledge Graph ID',
+                'name' => 'knowledge_graph_id',
+                'type' => 'text',
+                'instructions' => 'Enter the KGMID (e.g., <code>/g/11gyz2y3lp</code>). If you paste the full Google URL, the ID will be extracted automatically.<br>
+<code>[book field="knowledge_graph_id"]</code> — Raw KGMID<br>
+<span class="sfpf-kgid-book-link">Enter a KGMID above to see the full Knowledge Panel URL.</span>',
+                'required' => 0,
+                'placeholder' => '/g/11gyz2y3lp',
+            ],
+            [
                 'key' => 'field_sfpf_book_sameas_urls',
                 'label' => 'SameAs URLs',
                 'name' => 'sameas_urls',
@@ -277,6 +288,80 @@ function register_book_acf_fields() {
                 'required' => 0,
             ],
             [
+                'key' => 'field_sfpf_book_isbn',
+                'label' => 'ISBN',
+                'name' => 'isbn',
+                'type' => 'text',
+                'instructions' => 'International Standard Book Number (ISBN-10 or ISBN-13).<br><code>[book field="isbn"]</code>',
+                'required' => 0,
+                'placeholder' => '978-0-123456-78-9',
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_book_number_of_pages',
+                'label' => 'Number of Pages',
+                'name' => 'number_of_pages',
+                'type' => 'number',
+                'instructions' => 'Total page count.<br><code>[book field="number_of_pages"]</code>',
+                'required' => 0,
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_book_date_published',
+                'label' => 'Date Published',
+                'name' => 'date_published',
+                'type' => 'text',
+                'instructions' => 'Publication date. Example: 2024-03-15<br><code>[book field="date_published"]</code>',
+                'required' => 0,
+                'placeholder' => '2024-03-15',
+                'wrapper' => ['width' => '34'],
+            ],
+            [
+                'key' => 'field_sfpf_book_edition',
+                'label' => 'Book Edition',
+                'name' => 'book_edition',
+                'type' => 'text',
+                'instructions' => 'Edition of the book (e.g. "First Edition", "2nd Revised Edition").<br><code>[book field="book_edition"]</code>',
+                'required' => 0,
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_book_format',
+                'label' => 'Book Format',
+                'name' => 'book_format',
+                'type' => 'select',
+                'instructions' => 'Schema.org BookFormatType.<br><code>[book field="book_format"]</code>',
+                'required' => 0,
+                'choices' => [
+                    ''              => '— Select —',
+                    'Hardcover'     => 'Hardcover',
+                    'Paperback'     => 'Paperback',
+                    'EBook'         => 'EBook',
+                    'AudiobookFormat' => 'Audiobook',
+                ],
+                'default_value' => '',
+                'return_format' => 'value',
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_book_in_language',
+                'label' => 'Language',
+                'name' => 'in_language',
+                'type' => 'text',
+                'instructions' => 'Language code (e.g. "en", "es", "fr").<br><code>[book field="in_language"]</code>',
+                'required' => 0,
+                'placeholder' => 'en',
+                'wrapper' => ['width' => '34'],
+            ],
+            [
+                'key' => 'field_sfpf_book_genre',
+                'label' => 'Genre',
+                'name' => 'genre',
+                'type' => 'text',
+                'instructions' => 'Book genre or category.<br><code>[book field="genre"]</code>',
+                'required' => 0,
+            ],
+            [
                 'key' => 'field_sfpf_book_press',
                 'label' => 'Press',
                 'name' => 'press',
@@ -330,83 +415,15 @@ function register_book_acf_fields() {
 }
 
 /**
- * Build Book schema on save
+ * Build Book schema on save — delegates to unified schema-builder.php
  */
 add_action('acf/save_post', __NAMESPACE__ . '\\build_book_schema_on_save', 20);
 function build_book_schema_on_save($post_id) {
-    // Skip if not book
-    if (get_post_type($post_id) !== 'book') {
-        return;
+    if (get_post_type($post_id) !== 'book') return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    
+    $schema = build_book_schema($post_id);
+    if (!empty($schema)) {
+        update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);
     }
-    
-    // Skip autosave
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-    
-    // Build schema inline
-    $site_url = rtrim(get_site_url(), '/');
-    $post = get_post($post_id);
-    $slug = $post->post_name;
-    $founder = get_founder_full_info();
-    
-    $schema = [
-        '@type' => 'Book',
-        '@id' => $site_url . '#book-' . $slug,
-        'name' => get_the_title($post_id),
-    ];
-    
-    // URL (Google Books preferred)
-    $google_books = get_field('google_books_url', $post_id);
-    if ($google_books) {
-        $schema['url'] = $google_books;
-    }
-    
-    // Author (from site owner)
-    if ($founder) {
-        $schema['author'] = [
-            '@type' => 'Person',
-            '@id' => $site_url . '#person-' . sanitize_title($founder['display_name']),
-            'name' => $founder['display_name'],
-            'url' => $site_url,
-        ];
-    }
-    
-    // Cover Image
-    $cover = get_field('cover', $post_id);
-    if ($cover && isset($cover['url'])) {
-        $schema['image'] = [
-            '@type' => 'ImageObject',
-            'url' => $cover['url'],
-        ];
-    }
-    
-    // Main Entity Of Page
-    $schema['mainEntityOfPage'] = get_permalink($post_id);
-    
-    // SameAs URLs
-    $sameas_array = [];
-    $amazon = get_field('amazon_url', $post_id);
-    $audible = get_field('audible_url', $post_id);
-    $goodreads = get_field('goodreads_url', $post_id);
-    
-    if ($google_books) $sameas_array[] = $google_books;
-    if ($amazon) $sameas_array[] = $amazon;
-    if ($audible) $sameas_array[] = $audible;
-    if ($goodreads) $sameas_array[] = $goodreads;
-    
-    // Add custom sameAs (from textarea, one per line)
-    $sameas_raw = get_field('sameas_urls', $post_id);
-    if ($sameas_raw) {
-        $sameas_array = array_merge($sameas_array, array_filter(array_map('trim', explode("\n", $sameas_raw))));
-    }
-    
-    $sameas_array[] = get_permalink($post_id);
-    
-    if (!empty($sameas_array)) {
-        $schema['sameAs'] = array_values(array_unique($sameas_array));
-    }
-    
-    // Save to ACF field
-    update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);
 }

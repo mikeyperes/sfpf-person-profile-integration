@@ -152,6 +152,38 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.3
+- Dashboard: Reordered schema previews — Book and Organization now appear right after Biography (before RankMath control)
+- Dashboard: All 4 schema preview cards now have Schema.org Validator + Google Rich Results Test buttons with dynamic URLs
+- Dashboard: Progress bar now green at 100% complete, yellow at 70%+, red below 70% (was always red)
+- Schema Detection: Shows expectations section based on configured schema types and RankMath status
+- Schema Detection: Properly identifies SFPF Plugin blocks (via HTML comment markers) vs RankMath blocks (via content heuristics)
+- Schema Detection: Each RankMath block now has direct "Edit in RankMath →" link
+- ACF: Added `knowledge_graph_id` field to Book and Organization CPTs (with auto-extract from URL, shortcode support)
+- Schema: Book and Organization schemas now include `identifier` with `googleKgMID` when Knowledge Graph ID is set
+
+### v1.6.2
+- Unified schema builder: all 4 schema types (Person, ProfilePage, Book, Organization) now share a single codebase in `schema-builder.php`
+- Person schema: KG gallery images now included with avatar dedup, education adds `hasCredential` with degree/major, professions add `hasOccupation`
+- ProfilePage schema: now always includes full Person data in `@graph` (not just `@id` reference)
+- Book schema: added ISBN, numberOfPages, datePublished, bookEdition, bookFormat, inLanguage, genre fields
+- Organization schema: added legal_name, email, telephone, naics_code, number_of_employees, structured address group, contact_point group, awards, brands, seeks fields
+- Dashboard: Book and Organization now have live schema previews with Schema.org Validator and Google Rich Results Test buttons
+- Book/Org injection now generates live from unified builder instead of reading stale stored meta
+- Removed duplicate inline schema builders from register-acf-book.php and register-acf-organization.php
+
+### v1.6.1
+- Fixed critical bug: ACF `conditional_logic` on repeater fields caused data to be wiped when entity type was switched or saved. Replaced all `conditional_logic` with CSS/JS visibility system — fields are always in the DOM, never removed
+- Fixed: ACF repeater hydration on user profile pages — ACF returns "shell rows" (correct count but empty subfields) which caused blank renders and data loss on save. Added three-layer fix: load_value rebuild, prepare_field injection, and save guard
+- Fixed: ACF mutates `$field['name']` during prepare_field rendering, breaking meta key lookups. All meta access now uses hardcoded key→name mapping
+- Fixed: Bulk Import Articles and Articles repeater now hidden when entity type is "none"
+- Fixed: DB-stored ACF field groups with `group_sfpf_*` prefix now blocked from overriding code-registered groups
+
+### v1.6.0
+- Added nationality field as repeater (supports multiple nationalities)
+- Added gender, telephone, honorific prefix/suffix fields
+- Added languages (knows_language) and awards repeaters
+
 ### 1.3.3
 - Fixed: Plugin Dependencies section simplified (removed duplicate HWS Snippets checks)
 - Fixed: Version and Author now display one per row in dependencies

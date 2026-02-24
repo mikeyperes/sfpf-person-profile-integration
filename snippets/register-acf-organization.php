@@ -285,6 +285,17 @@ function register_organization_acf_fields() {
                 'wrapper' => ['width' => '50'],
             ],
             [
+                'key' => 'field_sfpf_org_knowledge_graph_id',
+                'label' => 'Google Knowledge Graph ID',
+                'name' => 'knowledge_graph_id',
+                'type' => 'text',
+                'instructions' => 'Enter the KGMID (e.g., <code>/g/11gyz2y3lp</code>). If you paste the full Google URL, the ID will be extracted automatically.<br>
+<code>[organization field="knowledge_graph_id"]</code> — Raw KGMID<br>
+<span class="sfpf-kgid-org-link">Enter a KGMID above to see the full Knowledge Panel URL.</span>',
+                'required' => 0,
+                'placeholder' => '/g/11gyz2y3lp',
+            ],
+            [
                 'key' => 'field_sfpf_org_social_urls',
                 'label' => 'Social URLs',
                 'name' => 'social_urls',
@@ -301,6 +312,236 @@ function register_organization_acf_fields() {
                 'instructions' => 'Additional URLs that represent the same organization (for schema.org sameAs). One URL per line.<br><code>[organization field="sameas_urls"]</code>',
                 'required' => 0,
                 'rows' => 5,
+            ],
+            
+            // ═══════════════════════════════════════════════════════════
+            // DETAILS
+            // ═══════════════════════════════════════════════════════════
+            [
+                'key' => 'field_sfpf_org_header_details',
+                'label' => '🏢 Details',
+                'name' => '',
+                'type' => 'accordion',
+                'open' => 1,
+                'multi_expand' => 1,
+                'endpoint' => 0,
+            ],
+            [
+                'key' => 'field_sfpf_org_legal_name',
+                'label' => 'Legal Name',
+                'name' => 'legal_name',
+                'type' => 'text',
+                'instructions' => 'Registered legal name if different from display name.<br><code>[organization field="legal_name"]</code>',
+                'required' => 0,
+                'placeholder' => 'Company Name, Inc.',
+            ],
+            [
+                'key' => 'field_sfpf_org_email',
+                'label' => 'Email',
+                'name' => 'email',
+                'type' => 'email',
+                'instructions' => 'Primary contact email.<br><code>[organization field="email"]</code>',
+                'required' => 0,
+                'placeholder' => 'info@company.com',
+                'wrapper' => ['width' => '50'],
+            ],
+            [
+                'key' => 'field_sfpf_org_telephone',
+                'label' => 'Telephone',
+                'name' => 'telephone',
+                'type' => 'text',
+                'instructions' => 'Primary phone number in international format.<br><code>[organization field="telephone"]</code>',
+                'required' => 0,
+                'placeholder' => '+1-555-123-4567',
+                'wrapper' => ['width' => '50'],
+            ],
+            [
+                'key' => 'field_sfpf_org_naics_code',
+                'label' => 'NAICS Code',
+                'name' => 'naics_code',
+                'type' => 'text',
+                'instructions' => 'North American Industry Classification System code.<br><code>[organization field="naics_code"]</code>',
+                'required' => 0,
+                'placeholder' => '541512',
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_org_number_of_employees',
+                'label' => 'Number of Employees',
+                'name' => 'number_of_employees',
+                'type' => 'text',
+                'instructions' => 'Approximate number of employees.<br><code>[organization field="number_of_employees"]</code>',
+                'required' => 0,
+                'placeholder' => '50',
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_org_awards',
+                'label' => 'Awards',
+                'name' => 'awards',
+                'type' => 'text',
+                'instructions' => 'Awards or recognitions received.<br><code>[organization field="awards"]</code>',
+                'required' => 0,
+                'wrapper' => ['width' => '33'],
+            ],
+            [
+                'key' => 'field_sfpf_org_brands',
+                'label' => 'Brands',
+                'name' => 'brands',
+                'type' => 'text',
+                'instructions' => 'Brands owned (comma-separated).<br><code>[organization field="brands"]</code>',
+                'required' => 0,
+            ],
+            [
+                'key' => 'field_sfpf_org_seeks',
+                'label' => 'Seeks',
+                'name' => 'seeks',
+                'type' => 'text',
+                'instructions' => 'What the organization is looking for (hiring, partnerships, etc).<br><code>[organization field="seeks"]</code>',
+                'required' => 0,
+            ],
+            
+            // ═══════════════════════════════════════════════════════════
+            // ADDRESS
+            // ═══════════════════════════════════════════════════════════
+            [
+                'key' => 'field_sfpf_org_header_address',
+                'label' => '📍 Address',
+                'name' => '',
+                'type' => 'accordion',
+                'open' => 1,
+                'multi_expand' => 1,
+                'endpoint' => 0,
+            ],
+            [
+                'key' => 'field_sfpf_org_address',
+                'label' => 'Address',
+                'name' => 'address',
+                'type' => 'group',
+                'instructions' => 'Structured postal address for schema.org. If empty, falls back to HQ location above.',
+                'required' => 0,
+                'layout' => 'block',
+                'sub_fields' => [
+                    [
+                        'key' => 'field_sfpf_org_addr_street',
+                        'label' => 'Street Address',
+                        'name' => 'street_address',
+                        'type' => 'text',
+                        'instructions' => '<code>[organization field="address_street"]</code>',
+                        'placeholder' => '8 The Green, Suite A',
+                        'wrapper' => ['width' => '100'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_addr_locality',
+                        'label' => 'City',
+                        'name' => 'address_locality',
+                        'type' => 'text',
+                        'instructions' => '<code>[organization field="address_city"]</code>',
+                        'placeholder' => 'Dover',
+                        'wrapper' => ['width' => '34'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_addr_region',
+                        'label' => 'State / Region',
+                        'name' => 'address_region',
+                        'type' => 'text',
+                        'instructions' => '<code>[organization field="address_region"]</code>',
+                        'placeholder' => 'DE',
+                        'wrapper' => ['width' => '22'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_addr_postal',
+                        'label' => 'Postal Code',
+                        'name' => 'postal_code',
+                        'type' => 'text',
+                        'instructions' => '<code>[organization field="address_postal"]</code>',
+                        'placeholder' => '19901',
+                        'wrapper' => ['width' => '22'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_addr_country',
+                        'label' => 'Country',
+                        'name' => 'address_country',
+                        'type' => 'text',
+                        'instructions' => '<code>[organization field="address_country"]</code>',
+                        'placeholder' => 'US',
+                        'wrapper' => ['width' => '22'],
+                    ],
+                ],
+            ],
+            
+            // ═══════════════════════════════════════════════════════════
+            // CONTACT POINT
+            // ═══════════════════════════════════════════════════════════
+            [
+                'key' => 'field_sfpf_org_header_contact',
+                'label' => '📞 Contact Point',
+                'name' => '',
+                'type' => 'accordion',
+                'open' => 1,
+                'multi_expand' => 1,
+                'endpoint' => 0,
+            ],
+            [
+                'key' => 'field_sfpf_org_contact_point',
+                'label' => 'Contact Point',
+                'name' => 'contact_point',
+                'type' => 'group',
+                'instructions' => 'Structured contact information for schema.org ContactPoint.',
+                'required' => 0,
+                'layout' => 'block',
+                'sub_fields' => [
+                    [
+                        'key' => 'field_sfpf_org_cp_type',
+                        'label' => 'Contact Type',
+                        'name' => 'contact_type',
+                        'type' => 'text',
+                        'instructions' => 'E.g. "Help", "Sales", "Support"',
+                        'placeholder' => 'Help',
+                        'wrapper' => ['width' => '33'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_cp_email',
+                        'label' => 'Email',
+                        'name' => 'email',
+                        'type' => 'email',
+                        'placeholder' => 'support@company.com',
+                        'wrapper' => ['width' => '33'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_cp_telephone',
+                        'label' => 'Telephone',
+                        'name' => 'telephone',
+                        'type' => 'text',
+                        'placeholder' => '+14152129449',
+                        'wrapper' => ['width' => '34'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_cp_product',
+                        'label' => 'Product Supported',
+                        'name' => 'product_supported',
+                        'type' => 'text',
+                        'placeholder' => 'Support',
+                        'wrapper' => ['width' => '33'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_cp_hours',
+                        'label' => 'Hours Available',
+                        'name' => 'hours_available',
+                        'type' => 'text',
+                        'instructions' => 'E.g. "Mo-Fri 08:00-20:00"',
+                        'placeholder' => 'Mo-Fri 08:00-20:00',
+                        'wrapper' => ['width' => '33'],
+                    ],
+                    [
+                        'key' => 'field_sfpf_org_cp_url',
+                        'label' => 'Contact URL',
+                        'name' => 'url',
+                        'type' => 'url',
+                        'placeholder' => 'https://company.com/contact',
+                        'wrapper' => ['width' => '34'],
+                    ],
+                ],
             ],
             
             // ═══════════════════════════════════════════════════════════
@@ -360,122 +601,11 @@ function register_organization_acf_fields() {
  */
 add_action('acf/save_post', __NAMESPACE__ . '\\build_organization_schema_on_save', 20);
 function build_organization_schema_on_save($post_id) {
-    // Skip if not organization
-    if (get_post_type($post_id) !== 'organization') {
-        return;
+    if (get_post_type($post_id) !== 'organization') return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    
+    $schema = build_organization_schema($post_id);
+    if (!empty($schema)) {
+        update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);
     }
-    
-    // Skip autosave
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-    
-    // Build schema inline
-    $site_url = rtrim(get_site_url(), '/');
-    $post = get_post($post_id);
-    $slug = $post->post_name;
-    $founder = get_founder_full_info();
-    
-    $schema = [
-        '@type' => 'Organization',
-        '@id' => $site_url . '#organization-' . $slug,
-        'name' => get_the_title($post_id),
-    ];
-    
-    // Legal Name (use title if not set)
-    $schema['legalName'] = get_the_title($post_id);
-    
-    // URL
-    $url = get_field('url', $post_id);
-    if ($url) {
-        $schema['url'] = $url;
-    }
-    
-    // Description
-    $short_summary = get_field('short_summary', $post_id);
-    if ($short_summary) {
-        $schema['description'] = wp_strip_all_tags($short_summary);
-    }
-    
-    // Alternate Names (from textarea, one per line)
-    $alt_names_raw = get_field('alternate_names', $post_id);
-    if ($alt_names_raw) {
-        $names = array_filter(array_map('trim', explode("\n", $alt_names_raw)));
-        if (!empty($names)) {
-            $schema['alternateName'] = array_values($names);
-        }
-    }
-    
-    // Main Entity Of Page
-    $schema['mainEntityOfPage'] = [
-        get_permalink($post_id),
-    ];
-    if ($url) {
-        $schema['mainEntityOfPage'][] = $url;
-    }
-    
-    // Logo
-    $logo = get_field('image_cropped', $post_id);
-    if ($logo && isset($logo['url'])) {
-        $schema['logo'] = $logo['url'];
-        $schema['image'] = [$logo['url']];
-    }
-    
-    // Headquarters / Address
-    $hq = get_field('headquarters', $post_id);
-    if ($hq && !empty($hq['location'])) {
-        $schema['address'] = [
-            '@type' => 'PostalAddress',
-            'addressLocality' => $hq['location'],
-        ];
-    }
-    
-    // Founder (from site owner)
-    if ($founder) {
-        $schema['founder'] = [
-            '@type' => 'Person',
-            '@id' => $site_url . '#person-' . sanitize_title($founder['display_name']),
-            'name' => $founder['display_name'],
-            'url' => $site_url,
-        ];
-    }
-    
-    // Founding Date
-    $founding_date = get_field('founding_date', $post_id);
-    if ($founding_date) {
-        $timestamp = strtotime($founding_date);
-        if ($timestamp) {
-            $schema['foundingDate'] = date('Y-m-d', $timestamp);
-        } else {
-            $schema['foundingDate'] = $founding_date;
-        }
-    }
-    
-    // SameAs URLs (from textarea, one per line, plus individual URL fields)
-    $sameas_raw = get_field('sameas_urls', $post_id);
-    $social_raw = get_field('social_urls', $post_id);
-    $sameas_array = [];
-    
-    if ($sameas_raw) {
-        $sameas_array = array_merge($sameas_array, array_filter(array_map('trim', explode("\n", $sameas_raw))));
-    }
-    if ($social_raw) {
-        $sameas_array = array_merge($sameas_array, array_filter(array_map('trim', explode("\n", $social_raw))));
-    }
-    
-    // Include individual social URL fields
-    $social_platforms = ['facebook', 'instagram', 'linkedin', 'x', 'youtube', 'tiktok', 'github', 'wikipedia', 'crunchbase'];
-    foreach ($social_platforms as $platform) {
-        $platform_url = get_field('url_' . $platform, $post_id);
-        if (!empty($platform_url)) {
-            $sameas_array[] = $platform_url;
-        }
-    }
-    
-    if (!empty($sameas_array)) {
-        $schema['sameAs'] = array_values(array_unique($sameas_array));
-    }
-    
-    // Save to ACF field
-    update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);
 }

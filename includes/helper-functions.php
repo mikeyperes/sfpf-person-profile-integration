@@ -1074,7 +1074,7 @@ function run_field_checklist($checks) {
 function render_field_checklist($results, $title = 'Content Checklist') {
     $total = $results['passed'] + $results['failed'];
     $pct = $total > 0 ? round(($results['passed'] / $total) * 100) : 0;
-    $bar_color = $pct === 100 ? '#dc2626' : '#dc2626';
+    $bar_color = $pct === 100 ? '#16a34a' : ($pct >= 70 ? '#f59e0b' : '#dc2626');
     
     $html = '<div style="margin-top:15px;padding:15px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">';
     $html .= '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';

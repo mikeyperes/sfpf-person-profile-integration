@@ -62,6 +62,7 @@ function ajax_save_schema_type() {
     }
     
     update_option('sfpf_homepage_schema_type', $schema_type);
+    update_option('sfpf_homepage_schema_explicitly_saved', true);
     write_log("Homepage schema type set to: {$schema_type}");
     
     wp_send_json_success(['schema_type' => $schema_type]);
@@ -202,6 +203,36 @@ function ajax_detect_schema() {
     $scan_time = current_time('Y-m-d H:i:s');
     $output .= '<div style="color:#10b981;margin-bottom:5px;font-size:14px;">📊 Schema Detection Results: ' . strtoupper($type) . '</div>';
     $output .= '<div style="color:#6b7280;font-size:11px;margin-bottom:10px;">🕐 Scanned at: ' . esc_html($scan_time) . ' (cache bypassed)</div>';
+    
+    // ── Schema Expectations ──
+    $expected = [];
+    if ($type === 'homepage') {
+        $hp_type = get_option('sfpf_homepage_schema_type', 'person');
+        $expected_map = ['person' => 'Person', 'profile_page_only' => 'ProfilePage + Person', 'profile_page' => 'ProfilePage + Person', 'none' => 'None (disabled)'];
+        $expected[] = '<strong>SFPF Expected:</strong> ' . ($expected_map[$hp_type] ?? $hp_type);
+    } elseif ($type === 'biography') {
+        $bio_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
+        $expected_map = ['person' => 'Person', 'profile_page_only' => 'ProfilePage + Person', 'profile_page' => 'ProfilePage + Person', 'none' => 'None (disabled)'];
+        $expected[] = '<strong>SFPF Expected:</strong> ' . ($expected_map[$bio_type] ?? $bio_type);
+    } elseif ($type === 'books') {
+        $expected[] = '<strong>SFPF Expected:</strong> Book';
+    } elseif ($type === 'organizations') {
+        $expected[] = '<strong>SFPF Expected:</strong> Organization';
+    }
+    $rm_active = defined('RANK_MATH_VERSION');
+    if ($rm_active) {
+        $rm_disabled = false;
+        if ($type === 'homepage') $rm_disabled = get_option('sfpf_rankmath_disable_homepage', false);
+        elseif ($type === 'books') $rm_disabled = get_option('sfpf_rankmath_disable_books', false);
+        elseif ($type === 'organizations') $rm_disabled = get_option('sfpf_rankmath_disable_organizations', false);
+        $expected[] = '<strong>RankMath:</strong> ' . ($rm_disabled ? '<span style="color:#f59e0b;">Disabled for this type</span>' : '<span style="color:#e91e63;">Active — may inject its own schema</span>');
+    }
+    if (!empty($expected)) {
+        $output .= '<div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#94a3b8;line-height:1.8;">';
+        $output .= '🎯 ' . implode('<br>', $expected);
+        $output .= '</div>';
+    }
+    
     $output .= '<div style="border-top:1px solid #374151;padding-top:10px;">';
     
     foreach ($urls as $item) {
@@ -239,32 +270,61 @@ function ajax_detect_schema() {
             $output .= '📡 HTTP ' . $status_code . ' | ⏱️ ' . $fetch_time . 'ms | 📦 ' . number_format($body_size) . ' bytes';
             $output .= '</div>';
             
-            // Find all JSON-LD scripts
-            preg_match_all('/<script[^>]*type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/si', $body, $matches);
+            // Find all JSON-LD scripts with surrounding context for source detection
+            preg_match_all('/(.{0,200})<script[^>]*type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/si', $body, $matches, PREG_SET_ORDER);
             
-            if (!empty($matches[1])) {
-                $output .= '<div style="color:#10b981;font-size:12px;margin-bottom:8px;">✅ Found ' . count($matches[1]) . ' schema block(s)</div>';
+            if (!empty($matches)) {
+                $output .= '<div style="color:#10b981;font-size:12px;margin-bottom:8px;">✅ Found ' . count($matches) . ' schema block(s)</div>';
                 
-                foreach ($matches[1] as $i => $json_str) {
+                // Track types per source for conflict detection
+                $types_by_source = [];
+                $all_types_flat = [];
+                
+                foreach ($matches as $i => $match) {
+                    $context_before = $match[1];
+                    $json_str = $match[2];
                     $schema = json_decode(trim($json_str), true);
                     
                     if ($schema) {
-                        // Detect source based on various markers
+                        // Detect source using HTML comment markers + content heuristics
                         $source = 'Unknown';
                         $source_color = '#9ca3af';
+                        $source_icon = '❓';
                         
-                        if (strpos($json_str, 'rank-math') !== false || strpos($json_str, 'rankmath') !== false) {
-                            $source = 'RankMath';
-                            $source_color = '#e91e63';
-                        } elseif (strpos($json_str, 'yoast') !== false) {
-                            $source = 'Yoast SEO';
-                            $source_color = '#a4286a';
-                        } elseif (strpos($json_str, 'sfpf') !== false || strpos($json_str, 'SFPF') !== false) {
+                        // SFPF wraps output in <!-- SFPF Person Website Schema -->
+                        if (strpos($context_before, 'SFPF') !== false || strpos($context_before, 'sfpf') !== false) {
                             $source = 'SFPF Plugin';
                             $source_color = '#6366f1';
-                        } elseif (strpos($json_str, 'WebSite') !== false && strpos($json_str, 'SearchAction') !== false) {
-                            $source = 'RankMath (WebSite)';
+                            $source_icon = '🟣';
+                        }
+                        // RankMath detection
+                        elseif (strpos($json_str, 'rank-math') !== false || strpos($json_str, 'rankmath') !== false
+                            || strpos($context_before, 'rank-math') !== false || strpos($context_before, 'rank_math') !== false) {
+                            $source = 'RankMath';
                             $source_color = '#e91e63';
+                            $source_icon = '🔴';
+                        }
+                        // RankMath often outputs WebSite+SearchAction, BreadcrumbList, WebPage+Article combos
+                        elseif (isset($schema['@graph']) && is_array($schema['@graph'])) {
+                            $graph_types = array_map(function($n) {
+                                return is_array($n['@type'] ?? null) ? implode(',', $n['@type']) : ($n['@type'] ?? '');
+                            }, $schema['@graph']);
+                            $gt = implode(',', $graph_types);
+                            if (strpos($gt, 'WebSite') !== false && strpos($gt, 'BreadcrumbList') !== false) {
+                                $source = 'RankMath';
+                                $source_color = '#e91e63';
+                                $source_icon = '🔴';
+                            } elseif (strpos($gt, 'WebPage') !== false && strpos($gt, 'Article') !== false) {
+                                $source = 'RankMath';
+                                $source_color = '#e91e63';
+                                $source_icon = '🔴';
+                            }
+                        }
+                        // Yoast
+                        elseif (strpos($json_str, 'yoast') !== false) {
+                            $source = 'Yoast SEO';
+                            $source_color = '#a4286a';
+                            $source_icon = '🟤';
                         }
                         
                         // Get types
@@ -281,10 +341,21 @@ function ajax_detect_schema() {
                             }
                         }
                         
+                        // Track for conflict detection
+                        foreach ($types as $t) {
+                            $types_by_source[$source][] = $t;
+                            $all_types_flat[] = $t;
+                        }
+                        
                         $output .= '<div style="margin:8px 0 0 0;padding:10px;background:#0d1117;border-radius:4px;border-left:3px solid ' . $source_color . ';">';
-                        $output .= '<div style="margin-bottom:6px;">';
+                        $output .= '<div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
                         $output .= '<span style="color:#a78bfa;font-weight:bold;">Block ' . ($i + 1) . '</span>';
-                        $output .= ' <span style="color:' . $source_color . ';font-size:11px;background:#1e1e2e;padding:2px 6px;border-radius:3px;">' . $source . '</span>';
+                        $output .= ' <span style="color:' . $source_color . ';font-size:11px;background:#1e1e2e;padding:2px 6px;border-radius:3px;">' . $source_icon . ' ' . $source . '</span>';
+                        // Add RankMath edit link for RankMath blocks
+                        if (stripos($source, 'RankMath') !== false) {
+                            $rm_schema_url = admin_url('admin.php?page=rank-math-options-titles');
+                            $output .= '<a href="' . esc_url($rm_schema_url) . '" target="_blank" style="color:#60a5fa;font-size:10px;background:#1e293b;padding:2px 8px;border-radius:3px;text-decoration:none;margin-left:auto;">⚙️ Edit in RankMath →</a>';
+                        }
                         $output .= '</div>';
                         $output .= '<div style="color:#fbbf24;font-size:12px;margin-bottom:8px;">Types: ' . implode(', ', array_unique($types)) . '</div>';
                         
@@ -380,6 +451,72 @@ function ajax_detect_schema() {
                     $output .= '<div style="color:#6b7280;font-size:11px;margin-top:4px;">Found ' . count($script_matches[0]) . ' total script tags (none are JSON-LD)</div>';
                 }
             }
+            
+            // ── Conflict Detection ──
+            if (!empty($all_types_flat)) {
+                $type_counts = array_count_values($all_types_flat);
+                $conflicts = [];
+                
+                // Check for duplicate Person or ProfilePage objects
+                foreach (['Person', 'ProfilePage', 'Organization', 'WebSite'] as $check_type) {
+                    if (($type_counts[$check_type] ?? 0) > 1) {
+                        $conflict_sources = [];
+                        foreach ($types_by_source as $src => $src_types) {
+                            if (in_array($check_type, $src_types)) {
+                                $conflict_sources[] = $src;
+                            }
+                        }
+                        $conflicts[] = [
+                            'type' => $check_type,
+                            'count' => $type_counts[$check_type],
+                            'sources' => $conflict_sources,
+                        ];
+                    }
+                }
+                
+                // Check if both Person AND ProfilePage exist on same page (not necessarily a conflict, but flag it)
+                $has_person = in_array('Person', $all_types_flat);
+                $has_profile = in_array('ProfilePage', $all_types_flat);
+                
+                if (!empty($conflicts)) {
+                    $output .= '<div style="margin-top:10px;padding:10px;background:#451a1a;border:1px solid #dc2626;border-radius:6px;">';
+                    $output .= '<div style="color:#f87171;font-weight:bold;font-size:13px;margin-bottom:6px;">⚠️ Schema Conflicts Detected</div>';
+                    foreach ($conflicts as $c) {
+                        $output .= '<div style="color:#fca5a5;font-size:12px;margin-bottom:4px;">';
+                        $output .= '• <strong>' . $c['count'] . 'x ' . esc_html($c['type']) . '</strong> objects found';
+                        if (count($c['sources']) > 1) {
+                            $output .= ' — coming from <strong>' . esc_html(implode(' + ', $c['sources'])) . '</strong>';
+                        }
+                        $output .= '</div>';
+                    }
+                    
+                    // Check if RankMath is a source in any conflict
+                    $rm_involved = false;
+                    foreach ($conflicts as $c) {
+                        foreach ($c['sources'] as $src) {
+                            if (stripos($src, 'RankMath') !== false) {
+                                $rm_involved = true;
+                                break 2;
+                            }
+                        }
+                    }
+                    
+                    if ($rm_involved) {
+                        $rm_schema_url = admin_url('admin.php?page=rank-math-options-titles');
+                        $output .= '<div style="margin-top:8px;display:flex;gap:8px;">';
+                        $output .= '<a href="' . esc_url($rm_schema_url) . '" target="_blank" style="color:#60a5fa;font-size:11px;background:#1e293b;padding:4px 10px;border-radius:4px;text-decoration:none;">🔧 RankMath Schema Settings →</a>';
+                        $output .= '<a href="' . esc_url(admin_url('admin.php?page=rank-math-options-general')) . '" target="_blank" style="color:#60a5fa;font-size:11px;background:#1e293b;padding:4px 10px;border-radius:4px;text-decoration:none;">⚙️ RankMath General Settings →</a>';
+                        $output .= '</div>';
+                        $output .= '<div style="color:#94a3b8;font-size:11px;margin-top:6px;">💡 To fix: Disable RankMath schema for this page type in the Schema tab, or disable it in RankMath\'s settings above.</div>';
+                    }
+                    $output .= '</div>';
+                } elseif ($has_person && $has_profile && count(array_keys($types_by_source)) > 1) {
+                    // Multiple sources but no type duplicates — informational
+                    $output .= '<div style="margin-top:10px;padding:8px 10px;background:#1e293b;border:1px solid #334155;border-radius:6px;color:#94a3b8;font-size:11px;">';
+                    $output .= 'ℹ️ Multiple schema sources detected (' . esc_html(implode(', ', array_keys($types_by_source))) . '). No conflicts found.';
+                    $output .= '</div>';
+                }
+            }
         }
         
         $output .= '</div>';
@@ -468,7 +605,7 @@ function sfpf_run_full_site_checklist($debug = false) {
     };
     
     // ── CHECK 1: Homepage Schema ──
-    $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'none');
+    $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $hp_result = $fetch_schemas(home_url('/'));
     
     if ($homepage_schema_type === 'none') {
@@ -488,7 +625,54 @@ function sfpf_run_full_site_checklist($debug = false) {
         }
     }
     
-    // ── CHECK 2: FAQ Schema on Homepage ──
+    // ── CHECK 2: Schema Conflicts on Homepage ──
+    if (!empty($hp_result['blocks'])) {
+        $hp_all_types = [];
+        $hp_types_by_source = [];
+        foreach ($hp_result['blocks'] as $block) {
+            $block_json = json_encode($block);
+            $src = 'Unknown';
+            if (strpos($block_json, 'rank-math') !== false || strpos($block_json, 'rankmath') !== false) $src = 'RankMath';
+            elseif (strpos($block_json, 'sfpf') !== false || strpos($block_json, 'SFPF') !== false) $src = 'SFPF';
+            
+            $block_types = [];
+            if (isset($block['@type'])) $block_types[] = is_array($block['@type']) ? implode(',', $block['@type']) : $block['@type'];
+            if (isset($block['@graph'])) {
+                foreach ($block['@graph'] as $node) {
+                    if (isset($node['@type'])) $block_types[] = is_array($node['@type']) ? implode(',', $node['@type']) : $node['@type'];
+                }
+            }
+            foreach ($block_types as $bt) {
+                $hp_all_types[] = $bt;
+                $hp_types_by_source[$src][] = $bt;
+            }
+        }
+        
+        $hp_type_counts = array_count_values($hp_all_types);
+        $hp_conflicts = [];
+        foreach (['Person', 'ProfilePage', 'Organization'] as $cht) {
+            if (($hp_type_counts[$cht] ?? 0) > 1) {
+                $hp_conflicts[] = $cht . ' ×' . $hp_type_counts[$cht];
+            }
+        }
+        
+        if (!empty($hp_conflicts)) {
+            $conflict_detail = 'Duplicate schema types on homepage: ' . implode(', ', $hp_conflicts) . '. Sources: ' . implode(' + ', array_keys($hp_types_by_source));
+            $rm_in_conflict = false;
+            foreach (array_keys($hp_types_by_source) as $s) { if (stripos($s, 'RankMath') !== false) $rm_in_conflict = true; }
+            $check_entry = ['status' => 'fail', 'label' => 'Homepage Schema Conflicts', 'detail' => $conflict_detail, 'time' => 0];
+            if ($rm_in_conflict) {
+                $check_entry['action'] = admin_url('admin.php?page=rank-math-options-titles');
+            }
+            $checks[] = $check_entry;
+            $fail_count++;
+        } else {
+            $checks[] = ['status' => 'pass', 'label' => 'Homepage Schema Conflicts', 'detail' => 'No duplicate schema types detected. Sources: ' . implode(', ', array_keys($hp_types_by_source)), 'time' => 0];
+            $pass_count++;
+        }
+    }
+    
+    // ── CHECK 3: FAQ Schema on Homepage ──
     $faq_found = in_array('FAQPage', $hp_result['types']);
     if ($faq_found) {
         $checks[] = ['status' => 'pass', 'label' => 'Homepage FAQ Schema', 'detail' => 'FAQPage schema detected on homepage', 'time' => 0];
@@ -512,7 +696,33 @@ function sfpf_run_full_site_checklist($debug = false) {
         } else {
             $bc_hidden_front = get_option('sfpf_breadcrumb_hide_frontpage', false);
             if ($bc_hidden_front) {
-                $checks[] = ['status' => 'info', 'label' => 'Breadcrumb Schema', 'detail' => 'Breadcrumbs hidden on front page (by plugin setting). Check a subpage instead.', 'time' => 0];
+                // Scan a subpage instead — try biography first, then contact
+                $bc_scan_url = '';
+                $bc_scan_label = '';
+                $bc_bio_page_id = get_option('sfpf_page_biography');
+                $bc_contact_page_id = get_option('sfpf_page_connect');
+                
+                if ($bc_bio_page_id && get_post_status($bc_bio_page_id) === 'publish') {
+                    $bc_scan_url = get_permalink($bc_bio_page_id);
+                    $bc_scan_label = get_the_title($bc_bio_page_id);
+                } elseif ($bc_contact_page_id && get_post_status($bc_contact_page_id) === 'publish') {
+                    $bc_scan_url = get_permalink($bc_contact_page_id);
+                    $bc_scan_label = get_the_title($bc_contact_page_id);
+                }
+                
+                if ($bc_scan_url) {
+                    $bc_result = $fetch_schemas($bc_scan_url);
+                    $bc_found_subpage = in_array('BreadcrumbList', $bc_result['types']);
+                    if ($bc_found_subpage) {
+                        $checks[] = ['status' => 'pass', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. Found BreadcrumbList on "' . $bc_scan_label . '" (' . $bc_result['time_ms'] . 'ms)', 'time' => $bc_result['time_ms']];
+                        $pass_count++;
+                    } else {
+                        $checks[] = ['status' => 'fail', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. NOT found on "' . $bc_scan_label . '" either. Check RankMath breadcrumb settings.', 'time' => $bc_result['time_ms'], 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
+                        $fail_count++;
+                    }
+                } else {
+                    $checks[] = ['status' => 'info', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. No biography or contact page assigned to scan instead. Set one in Critical Pages.', 'time' => 0];
+                }
             } else {
                 $checks[] = ['status' => 'fail', 'label' => 'Breadcrumb Schema', 'detail' => 'RankMath breadcrumbs enabled but BreadcrumbList schema not found on homepage.', 'time' => 0, 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
                 $fail_count++;
@@ -523,7 +733,7 @@ function sfpf_run_full_site_checklist($debug = false) {
     }
     
     // ── CHECK 4: Biography Page Schema ──
-    $bio_schema_type = get_option('sfpf_biography_schema_type', 'none');
+    $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
     $bio_page_id = get_option('sfpf_page_biography');
     if ($bio_page_id && get_post_status($bio_page_id) === 'publish') {
         if ($bio_schema_type !== 'none') {
@@ -644,7 +854,7 @@ function ajax_reprocess_schema() {
         case 'homepage':
             // Rebuild homepage schema using the injection builder (which works)
             $front_page_id = get_front_page_id();
-            $schema_type = get_option('sfpf_homepage_schema_type', 'profile_page');
+            $schema_type = get_option('sfpf_homepage_schema_type', 'person');
             if ($front_page_id && $schema_type !== 'none') {
                 $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
                     ? build_homepage_schema_for_injection($schema_type) 
@@ -721,7 +931,7 @@ function ajax_rebuild_all_schema() {
     
     // Homepage
     $front_page_id = get_front_page_id();
-    $hp_schema_type = get_option('sfpf_homepage_schema_type', 'profile_page');
+    $hp_schema_type = get_option('sfpf_homepage_schema_type', 'person');
     if ($front_page_id && $hp_schema_type !== 'none') {
         $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
             ? build_homepage_schema_for_injection($hp_schema_type) : null;
@@ -1640,7 +1850,7 @@ function debug_homepage_schema() {
     $output .= "page_on_front: {$page_on_front}\n\n";
     
     // Check schema type option
-    $schema_type = get_option('sfpf_homepage_schema_type', 'none');
+    $schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $output .= "sfpf_homepage_schema_type: {$schema_type}\n\n";
     
     if ($show_on_front !== 'page') {
@@ -1769,7 +1979,7 @@ function debug_test_schema_build() {
         return $output;
     }
     
-    $schema_type = get_option('sfpf_homepage_schema_type', 'none');
+    $schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $output .= "Schema type setting: {$schema_type}\n\n";
     
     if ($schema_type === 'none') {

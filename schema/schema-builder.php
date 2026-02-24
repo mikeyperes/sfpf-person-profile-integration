@@ -2,416 +2,662 @@
 namespace sfpf_person_website;
 
 /**
- * Schema Builder
- * 
- * Builds schema objects by populating templates with dynamic content.
- * Pulls data from ACF fields, website settings, and post content.
- * 
+ * Schema Builder — single source of truth for all schema generation.
+ * Each build_*_schema() returns a PHP array. Callers encode to JSON.
+ *
  * @package sfpf_person_website
- * @since 1.0.0
+ * @since 1.6.2
  */
 
 defined('ABSPATH') || exit;
 
-/**
- * Build Person schema from website settings
- * 
- * @param bool $include_context Whether to include @context
- * @return array Person schema
- */
-function build_person_schema_from_settings($include_context = false) {
-    $site_url = get_site_url_clean();
-    
-    // Get website user info
-    $user_id = get_website_user_info('ID');
-    $user_data = $user_id ? get_userdata($user_id) : null;
-    
-    // Get founder info
-    $founder = get_acf_field('founder', 'option', []);
-    $founder_user_id = isset($founder['user']['ID']) ? $founder['user']['ID'] : null;
-    $founder_user = $founder_user_id ? get_userdata($founder_user_id) : null;
-    
-    // Prioritize founder user if set, otherwise use website user
-    $primary_user = $founder_user ?: $user_data;
-    $primary_user_id = $founder_user_id ?: $user_id;
-    
-    if (!$primary_user) {
-        write_log('No user found for Person schema', true, 'Schema Builder');
-        return [];
-    }
-    
-    // Build person data
-    $person = [];
-    
-    if ($include_context) {
-        $person['@context'] = 'https://schema.org';
-    }
-    
-    $person['@type'] = 'Person';
-    $person['@id'] = $site_url . '/#person';
-    
-    // Name
-    $display_name = $primary_user->display_name;
-    if ($display_name) {
-        $person['name'] = sanitize_text_field($display_name);
-    }
-    
-    // Given/Family name
-    if ($primary_user->first_name) {
-        $person['givenName'] = sanitize_text_field($primary_user->first_name);
-    }
-    if ($primary_user->last_name) {
-        $person['familyName'] = sanitize_text_field($primary_user->last_name);
-    }
-    
-    // URL - use site URL for homepage person
-    $person['url'] = $site_url . '/';
-    
-    // Email from website settings
-    $email = get_nested_acf_field('website.email', 'option');
-    if ($email && is_email($email)) {
-        $person['email'] = sanitize_email($email);
-    }
-    
-    // Biography
-    $bio = get_nested_acf_field('website.biography_short', 'option');
-    if (empty($bio)) {
-        $bio = get_nested_acf_field('website.biography', 'option');
-    }
-    if ($bio) {
-        $person['description'] = wp_strip_all_tags($bio);
-    }
-    
-    // Job title from user meta
-    $job_title = get_field('job_title', 'user_' . $primary_user_id);
-    if ($job_title) {
-        $person['jobTitle'] = sanitize_text_field($job_title);
-    }
-    
-    // Image - avatar or custom
-    $avatar_url = get_avatar_url($primary_user_id, ['size' => 400]);
-    if ($avatar_url) {
-        $person['image'] = esc_url_raw($avatar_url);
-    }
-    
-    // Social URLs as sameAs
-    $social_urls = get_user_social_urls($primary_user_id);
-    if (!empty($social_urls)) {
-        $same_as = array_values(array_filter($social_urls, function($url) {
-            return filter_var($url, FILTER_VALIDATE_URL);
-        }));
-        if (!empty($same_as)) {
-            $person['sameAs'] = array_map('esc_url_raw', $same_as);
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/** Safe ACF getter with fallback */
+function _sf($field, $post_id, $default = '') {
+    if (!function_exists('get_field')) return $default;
+    $v = get_field($field, $post_id);
+    return (!empty($v)) ? $v : $default;
+}
+
+/** Collect valid URLs from mixed args, deduplicated */
+function _collect_urls(...$sources) {
+    $urls = [];
+    foreach ($sources as $src) {
+        if (is_string($src) && filter_var(trim($src), FILTER_VALIDATE_URL)) {
+            $urls[] = trim($src);
+        } elseif (is_array($src)) {
+            foreach ($src as $u) {
+                if (is_string($u) && ($u = trim($u)) && filter_var($u, FILTER_VALIDATE_URL)) {
+                    $urls[] = $u;
+                }
+            }
         }
     }
-    
-    return $person;
+    return array_values(array_unique(array_map('esc_url_raw', $urls)));
 }
 
+/** Parse textarea of URLs (one per line) */
+function _parse_url_textarea($text) {
+    if (empty($text)) return [];
+    return array_values(array_filter(array_map(function($l) {
+        $l = trim(wp_strip_all_tags($l));
+        return filter_var($l, FILTER_VALIDATE_URL) ? $l : null;
+    }, preg_split('/[\r\n]+/', $text))));
+}
+
+/** Pull one subfield value from each row of a repeater */
+function _repeater_values($rows, $subfield = 'name') {
+    if (!is_array($rows) || empty($rows)) return [];
+    return array_values(array_filter(array_map(function($r) use ($subfield) {
+        return trim($r[$subfield] ?? '');
+    }, $rows)));
+}
+
+/** Return string if 1 item, array if 2+, null if 0 */
+function _single_or_array($arr) {
+    $arr = array_values(array_filter($arr));
+    if (empty($arr)) return null;
+    return count($arr) === 1 ? $arr[0] : $arr;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PERSON
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
- * Build Homepage schema (Person or ProfilePage)
- * 
- * @param int $post_id Post ID
- * @param string $schema_type 'person' or 'profile_page'
- * @return array Schema
+ * Build comprehensive Person schema from founder user-profile ACF fields.
+ *
+ * @return array  Person schema node (no @context).
  */
-function build_homepage_schema($post_id, $schema_type = 'profile_page') {
-    $site_url = get_site_url_clean();
-    $site_name = get_bloginfo('name');
-    
-    if ($schema_type === 'person') {
-        // Return just the Person schema
-        return build_person_schema_from_settings(true);
-    }
-    
-    // Build ProfilePage with Person
-    $person = build_person_schema_from_settings(false);
-    
-    if (empty($person)) {
-        return [];
-    }
-    
-    // Build ProfilePage wrapper
-    $profile_page = [
-        '@type' => 'ProfilePage',
-        '@id' => $site_url . '/#profilepage',
-        'url' => $site_url . '/',
-        'name' => isset($person['name']) ? $person['name'] : $site_name,
-        'inLanguage' => get_bloginfo('language') ?: 'en-US',
-        'isPartOf' => [
-            '@type' => 'WebSite',
-            '@id' => $site_url . '/#website',
-            'url' => $site_url . '/',
-            'name' => $site_name,
-        ],
-        'mainEntity' => [
-            '@id' => $site_url . '/#person',
-        ],
+function build_person_schema() {
+    $founder = get_founder_full_info();
+    if (!$founder) return [];
+
+    $site_url = rtrim(get_site_url(), '/');
+    $uid      = $founder['id'];
+    $uk       = 'user_' . $uid;
+
+    $p = [
+        '@type'            => 'Person',
+        '@id'              => $site_url . '/#person',
+        'name'             => $founder['display_name'],
+        'url'              => $site_url . '/',
+        'mainEntityOfPage' => $site_url,
     ];
-    
-    // Add description if available
-    if (isset($person['description'])) {
-        $profile_page['description'] = $person['description'];
+
+    // ── identity ──
+    if (!empty($founder['first_name']))  $p['givenName']  = $founder['first_name'];
+    if (!empty($founder['last_name']))   $p['familyName'] = $founder['last_name'];
+
+    $an = _sf('additional_name', $uk);
+    if ($an) $p['additionalName'] = sanitize_text_field($an);
+
+    $alt = _repeater_values(_sf('alternate_names', $uk, []), 'name');
+    $alt = _single_or_array(array_map('sanitize_text_field', $alt));
+    if ($alt) $p['alternateName'] = $alt;
+
+    // ── professional ──
+    $tf = _sf('title', $uk);
+    $jt = !empty($tf) ? wp_strip_all_tags($tf) : ($founder['job_title'] ?? '');
+    if ($jt) $p['jobTitle'] = sanitize_text_field($jt);
+
+    if (!empty($founder['email'])) $p['email'] = $founder['email'];
+
+    $tel = _sf('telephone', $uk);
+    if ($tel) $p['telephone'] = sanitize_text_field($tel);
+
+    $hp = _sf('honorific_prefix', $uk);
+    if ($hp) $p['honorificPrefix'] = sanitize_text_field($hp);
+
+    $hs = _sf('honorific_suffix', $uk);
+    if ($hs) $p['honorificSuffix'] = sanitize_text_field($hs);
+
+    $g = _sf('gender', $uk);
+    if ($g) $p['gender'] = sanitize_text_field($g);
+
+    // ── biography / description ──
+    $bio = _sf('biography', $uk);
+    if (empty($bio)) $bio = $founder['biography'] ?? '';
+    if ($bio) $p['description'] = wp_strip_all_tags(mb_substr($bio, 0, 500));
+
+    // ── birth ──
+    $bd = _sf('birth_date', $uk);
+    if ($bd) $p['birthDate'] = sanitize_text_field($bd);
+
+    $lb = _sf('location_born', $uk, []);
+    if (!empty($lb['location'])) {
+        $bp = ['@type' => 'Place', 'name' => sanitize_text_field($lb['location'])];
+        if (!empty($lb['wikipedia_url'])) $bp['sameAs'] = esc_url_raw($lb['wikipedia_url']);
+        $p['birthPlace'] = $bp;
     }
-    
-    // Add primary image if person has image
-    if (isset($person['image'])) {
-        $profile_page['primaryImageOfPage'] = [
-            '@type' => 'ImageObject',
-            '@id' => $site_url . '/#headshot',
-            'url' => $person['image'],
-            'contentUrl' => $person['image'],
+
+    // ── nationality (repeater) ──
+    $nat = _sf('nationality', $uk, []);
+    $nats = [];
+    if (is_array($nat))        $nats = _repeater_values($nat, 'value');
+    elseif (is_string($nat) && $nat) $nats = array_filter(array_map('trim', explode(',', $nat)));
+    $nout = _single_or_array(array_map('sanitize_text_field', $nats));
+    if ($nout) $p['nationality'] = $nout;
+
+    // ── languages (repeater) ──
+    $langs = _repeater_values(_sf('knows_language', $uk, []), 'value');
+    $lo = _single_or_array(array_map('sanitize_text_field', $langs));
+    if ($lo) $p['knowsLanguage'] = $lo;
+
+    // ── awards (repeater) ──
+    $aw = _repeater_values(_sf('awards', $uk, []), 'value');
+    $ao = _single_or_array(array_map('sanitize_text_field', $aw));
+    if ($ao) $p['award'] = $ao;
+
+    // ── images: KG gallery + avatar, deduplicated ──
+    $img_urls = [];
+    $kg = _sf('knowledge_graph_images', $uk, []);
+    if (is_array($kg)) {
+        foreach ($kg as $i) {
+            if (is_array($i) && !empty($i['url'])) $img_urls[] = esc_url_raw($i['url']);
+        }
+    }
+    $avatar = $founder['avatar_url'] ?? '';
+    if (empty($avatar)) $avatar = get_avatar_url($uid, ['size' => 400]);
+    if ($avatar) $img_urls[] = esc_url_raw($avatar);
+    $img_urls = array_values(array_unique($img_urls));
+    if (!empty($img_urls)) {
+        $p['image'] = count($img_urls) === 1 ? $img_urls[0] : $img_urls;
+    }
+
+    // ── education / alumniOf + hasCredential ──
+    $edu = _sf('education', $uk, []);
+    if (is_array($edu) && !empty($edu)) {
+        $alumni = [];
+        $creds  = [];
+        foreach ($edu as $e) {
+            if (empty($e['college'])) continue;
+            $entry = ['@type' => 'CollegeOrUniversity', 'name' => sanitize_text_field($e['college'])];
+            if (!empty($e['wiki_url'])) $entry['sameAs'] = esc_url_raw($e['wiki_url']);
+            $alumni[] = $entry;
+
+            if (!empty($e['designation']) || !empty($e['major'])) {
+                $c = ['@type' => 'EducationalOccupationalCredential'];
+                $parts = [];
+                if (!empty($e['designation'])) $parts[] = sanitize_text_field($e['designation']);
+                if (!empty($e['major']))       $parts[] = sanitize_text_field($e['major']);
+                $c['name'] = implode(' in ', $parts);
+                $c['recognizedBy'] = ['@type' => 'CollegeOrUniversity', 'name' => sanitize_text_field($e['college'])];
+                if (!empty($e['year'])) $c['dateCreated'] = sanitize_text_field($e['year']);
+                $creds[] = $c;
+            }
+        }
+        if ($alumni) $p['alumniOf']       = $alumni;
+        if ($creds)  $p['hasCredential']  = $creds;
+    }
+
+    // ── professions / hasOccupation ──
+    $profs = _sf('professions', $uk, []);
+    if (is_array($profs) && !empty($profs)) {
+        $occs = [];
+        foreach ($profs as $pr) {
+            if (empty($pr['name'])) continue;
+            $o = ['@type' => 'Occupation', 'name' => sanitize_text_field($pr['name'])];
+            if (!empty($pr['summary'])) $o['description'] = sanitize_text_field(wp_strip_all_tags($pr['summary']));
+            $occs[] = $o;
+        }
+        if ($occs) $p['hasOccupation'] = $occs;
+    }
+
+    // ── worksFor (Organization CPT) ──
+    $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => -1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
+    if ($orgs) {
+        $wf = [];
+        foreach ($orgs as $org) {
+            $e = ['@type' => 'Organization', 'name' => sanitize_text_field($org->post_title)];
+            $ou = get_field('url', $org->ID);
+            if ($ou && filter_var($ou, FILTER_VALIDATE_URL)) $e['url'] = esc_url_raw($ou);
+            $wf[] = $e;
+        }
+        $p['worksFor'] = $wf;
+    }
+
+    // ── sameAs ──
+    $sa = [];
+    if (!empty($founder['urls'])) {
+        foreach ($founder['urls'] as $u) {
+            if (!empty($u) && filter_var($u, FILTER_VALIDATE_URL)) $sa[] = $u;
+        }
+    }
+    $sa = array_merge($sa, _parse_url_textarea(_sf('sameas', $uk)));
+    // Social media from website options
+    if (function_exists('get_field')) {
+        $wo = get_field('website', 'option');
+        $sm = is_array($wo) ? ($wo['social_media'] ?? []) : [];
+        if (is_array($sm)) {
+            foreach ($sm as $u) {
+                if (!empty($u) && filter_var($u, FILTER_VALIDATE_URL)) $sa[] = $u;
+            }
+        }
+    }
+    // Article URLs
+    $arts = _sf('articles', $uk, []);
+    if (is_array($arts)) {
+        foreach ($arts as $a) {
+            $au = $a['url'] ?? '';
+            if ($au && filter_var($au, FILTER_VALIDATE_URL)) $sa[] = $au;
+        }
+    }
+    $sa = array_values(array_unique(array_map('esc_url_raw', $sa)));
+    if ($sa) $p['sameAs'] = $sa;
+
+    // ── Knowledge Graph ID ──
+    $kgid = _sf('knowledge_graph_id', $uk);
+    if ($kgid) {
+        $p['identifier'] = [
+            '@type'      => 'PropertyValue',
+            'propertyID' => 'googleKgMID',
+            'value'      => sanitize_text_field($kgid),
         ];
     }
-    
-    // Add dateModified from post
-    $profile_page['dateModified'] = get_post_modified_time('c', true, $post_id);
-    
-    // Build the full graph schema
-    $schema = [
-        '@context' => 'https://schema.org',
-        '@graph' => [
-            $profile_page,
-            $person,
-        ],
-    ];
-    
-    return $schema;
+
+    return $p;
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HOMEPAGE / BIOGRAPHY  (Person ± ProfilePage)
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
- * Build Book schema
- * 
- * @param int $post_id Post ID
- * @return array Schema
+ * Build homepage / biography schema for injection AND dashboard preview.
+ *
+ * @param string $schema_type  person | profile_page_only | profile_page
+ * @return string|null  JSON string
+ */
+function build_homepage_schema_for_injection($schema_type) {
+    $person = build_person_schema();
+    if (empty($person)) return null;
+
+    $site_url  = rtrim(get_site_url(), '/');
+    $site_name = get_bloginfo('name');
+    $site_desc = get_bloginfo('description');
+
+    $schema = ['@context' => 'https://schema.org', '@graph' => []];
+
+    // ProfilePage node
+    $pp = [
+        '@type'      => 'ProfilePage',
+        '@id'        => $site_url . '/#profilepage',
+        'url'        => $site_url . '/',
+        'name'       => $site_name,
+        'inLanguage' => 'en-US',
+        'isPartOf'   => [
+            '@type' => 'WebSite',
+            '@id'   => $site_url . '/#website',
+            'url'   => $site_url . '/',
+            'name'  => $site_name,
+        ],
+    ];
+    if ($site_desc) $pp['description'] = $site_desc;
+
+    $fp = get_option('page_on_front');
+    if ($fp) {
+        $dm = get_post_modified_time('c', true, $fp);
+        $dc = get_post_time('c', true, $fp);
+        if ($dm) $pp['dateModified'] = $dm;
+        if ($dc) $pp['dateCreated']  = $dc;
+    }
+
+    // Primary image from person
+    $pi = isset($person['image'])
+        ? (is_array($person['image']) ? ($person['image'][0] ?? '') : $person['image'])
+        : '';
+    if ($pi) {
+        $pp['primaryImageOfPage'] = [
+            '@type' => 'ImageObject', '@id' => $site_url . '/#headshot',
+            'url' => $pi, 'contentUrl' => $pi,
+        ];
+    }
+
+    switch ($schema_type) {
+        case 'person':
+            $schema['@graph'][] = $person;
+            break;
+        case 'profile_page_only':
+            $pp['about'] = ['@id' => $site_url . '/#person'];
+            $schema['@graph'][] = $pp;
+            // Include full Person so @id resolves
+            $schema['@graph'][] = $person;
+            break;
+        case 'profile_page':
+        default:
+            $pp['mainEntity'] = ['@id' => $site_url . '/#person'];
+            $pp['about']      = ['@id' => $site_url . '/#person'];
+            $schema['@graph'][] = $pp;
+            $schema['@graph'][] = $person;
+            break;
+    }
+
+    return json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+}
+
+// Backward-compat wrappers
+function build_person_schema_from_settings($include_context = false) {
+    $p = build_person_schema();
+    if ($include_context) $p = array_merge(['@context' => 'https://schema.org'], $p);
+    return $p;
+}
+function build_homepage_schema($post_id, $schema_type = 'profile_page') {
+    $j = build_homepage_schema_for_injection($schema_type);
+    return $j ? json_decode($j, true) : [];
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  BOOK
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Build comprehensive Book schema.
+ *
+ * @param int $post_id  Book CPT post ID
+ * @return array  Schema array (with @context)
  */
 function build_book_schema($post_id) {
+    $site_url  = rtrim(get_site_url(), '/');
     $permalink = get_permalink($post_id);
-    $title = get_the_title($post_id);
-    $site_url = get_site_url_clean();
-    
-    $schema = [
+    $title     = get_the_title($post_id);
+    $slug      = get_post_field('post_name', $post_id);
+    $founder   = get_founder_full_info();
+
+    $s = [
         '@context' => 'https://schema.org',
-        '@type' => 'Book',
-        '@id' => $permalink . '#book',
-        'name' => sanitize_text_field($title),
-        'url' => $permalink,
+        '@type'    => 'Book',
+        '@id'      => $site_url . '#book-' . $slug,
+        'name'     => sanitize_text_field($title),
     ];
-    
-    // Subtitle
-    $subtitle = get_field('subtitle', $post_id);
-    if ($subtitle) {
-        $schema['alternativeHeadline'] = sanitize_text_field($subtitle);
+
+    // URL — prefer Google Books if present, else permalink
+    $gbu = _sf('google_books_url', $post_id);
+    $s['url'] = ($gbu && filter_var($gbu, FILTER_VALIDATE_URL)) ? esc_url_raw($gbu) : $permalink;
+
+    // Author — full Person ref
+    if ($founder) {
+        $s['author'] = [
+            '@type' => 'Person',
+            '@id'   => $site_url . '/#person',
+            'name'  => $founder['display_name'],
+            'url'   => $site_url,
+        ];
     }
-    
-    // Description
-    $description = get_field('description', $post_id);
-    if ($description) {
-        $schema['description'] = wp_strip_all_tags($description);
-    }
-    
+
     // Cover image
-    $cover = get_field('cover', $post_id);
+    $cover = _sf('cover', $post_id);
     if (is_array($cover) && !empty($cover['url'])) {
-        $schema['image'] = [
-            '@type' => 'ImageObject',
-            'url' => esc_url_raw($cover['url']),
-        ];
-        if (!empty($cover['width'])) {
-            $schema['image']['width'] = (int) $cover['width'];
-        }
-        if (!empty($cover['height'])) {
-            $schema['image']['height'] = (int) $cover['height'];
-        }
-    } elseif ($thumbnail = get_the_post_thumbnail_url($post_id, 'full')) {
-        $schema['image'] = [
-            '@type' => 'ImageObject',
-            'url' => esc_url_raw($thumbnail),
-        ];
+        $img = ['@type' => 'ImageObject', 'url' => esc_url_raw($cover['url'])];
+        if (!empty($cover['width']))  $img['width']  = (int)$cover['width'];
+        if (!empty($cover['height'])) $img['height'] = (int)$cover['height'];
+        $s['image'] = $img;
+    } elseif ($th = get_the_post_thumbnail_url($post_id, 'full')) {
+        $s['image'] = ['@type' => 'ImageObject', 'url' => esc_url_raw($th)];
     }
-    
-    // Author - reference the site's person
-    $schema['author'] = [
-        '@id' => $site_url . '/#person',
-    ];
-    
-    // Publishing company
-    $publisher = get_field('publishing_company', $post_id);
-    if ($publisher) {
-        $schema['publisher'] = [
-            '@type' => 'Organization',
-            'name' => sanitize_text_field(wp_strip_all_tags($publisher)),
-        ];
+
+    $s['mainEntityOfPage'] = $permalink;
+
+    // sameAs — all book URLs + permalink
+    $sa = _collect_urls(
+        $permalink,
+        _sf('amazon_url', $post_id),
+        _sf('audible_url', $post_id),
+        _sf('google_books_url', $post_id),
+        _sf('goodreads_url', $post_id),
+        _sf('knowledge_graph_url', $post_id),
+        _parse_url_textarea(_sf('sameas_urls', $post_id))
+    );
+    if ($sa) $s['sameAs'] = $sa;
+
+    // Subtitle
+    $sub = _sf('subtitle', $post_id);
+    if ($sub) $s['alternativeHeadline'] = sanitize_text_field($sub);
+
+    // Alternate names (repeater)
+    $altr = _sf('alternate_names', $post_id, []);
+    if (is_array($altr) && !empty($altr)) {
+        $names = _repeater_values($altr, 'name');
+        $out = _single_or_array(array_map('sanitize_text_field', $names));
+        if ($out) $s['alternateName'] = $out;
     }
-    
+
+    // Description
+    $desc = _sf('description', $post_id);
+    if ($desc) $s['description'] = wp_strip_all_tags($desc);
+
+    // Publisher
+    $pub = _sf('publishing_company', $post_id);
+    if ($pub) $s['publisher'] = ['@type' => 'Organization', 'name' => sanitize_text_field(wp_strip_all_tags($pub))];
+
+    // ISBN
+    $isbn = _sf('isbn', $post_id);
+    if ($isbn) $s['isbn'] = sanitize_text_field($isbn);
+
+    // Number of pages
+    $np = _sf('number_of_pages', $post_id);
+    if ($np) $s['numberOfPages'] = (int)$np;
+
+    // Date published
+    $dp = _sf('date_published', $post_id);
+    if ($dp) $s['datePublished'] = sanitize_text_field($dp);
+
+    // Book edition
+    $ed = _sf('book_edition', $post_id);
+    if ($ed) $s['bookEdition'] = sanitize_text_field($ed);
+
+    // Book format
+    $fmt = _sf('book_format', $post_id);
+    if ($fmt) $s['bookFormat'] = 'https://schema.org/' . sanitize_text_field($fmt);
+
     // Language
-    $schema['inLanguage'] = 'en';
-    
-    // Build sameAs from URLs
-    $same_as = [];
-    $url_fields = [
-        'amazon_url',
-        'audible_url',
-        'google_books_url',
-        'goodreads_url',
-    ];
-    
-    foreach ($url_fields as $field) {
-        $url = get_field($field, $post_id);
-        if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
-            $same_as[] = esc_url_raw($url);
-        }
+    $lang = _sf('in_language', $post_id);
+    $s['inLanguage'] = $lang ? sanitize_text_field($lang) : 'en';
+
+    // Genre
+    $genre = _sf('genre', $post_id);
+    if ($genre) $s['genre'] = sanitize_text_field($genre);
+
+    // Knowledge Graph ID
+    $kgid = _sf('knowledge_graph_id', $post_id);
+    if ($kgid) {
+        $s['identifier'] = [
+            '@type'      => 'PropertyValue',
+            'propertyID' => 'googleKgMID',
+            'value'      => sanitize_text_field($kgid),
+        ];
     }
-    
-    // Add permalink as sameAs
-    $same_as[] = $permalink;
-    
-    if (!empty($same_as)) {
-        $schema['sameAs'] = array_unique($same_as);
-    }
-    
-    return $schema;
+
+    return $s;
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ORGANIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
- * Build Organization schema
- * 
- * @param int $post_id Post ID
- * @return array Schema
+ * Build comprehensive Organization schema.
+ *
+ * @param int $post_id  Organization CPT post ID
+ * @return array  Schema array (with @context)
  */
 function build_organization_schema($post_id) {
+    $site_url  = rtrim(get_site_url(), '/');
     $permalink = get_permalink($post_id);
-    $title = get_the_title($post_id);
-    $site_url = get_site_url_clean();
-    
-    $schema = [
+    $title     = get_the_title($post_id);
+    $slug      = get_post_field('post_name', $post_id);
+    $founder   = get_founder_full_info();
+
+    $s = [
         '@context' => 'https://schema.org',
-        '@type' => 'Organization',
-        '@id' => $permalink . '#organization',
-        'name' => sanitize_text_field($title),
+        '@type'    => 'Organization',
+        '@id'      => $site_url . '#organization-' . $slug,
+        'name'     => sanitize_text_field($title),
     ];
-    
-    // URL - use custom URL if set, otherwise permalink
-    $url = get_field('url', $post_id);
-    $schema['url'] = $url && filter_var($url, FILTER_VALIDATE_URL) 
-        ? esc_url_raw($url) 
-        : $permalink;
-    
+
+    // Legal name
+    $ln = _sf('legal_name', $post_id);
+    $s['legalName'] = $ln ? sanitize_text_field($ln) : sanitize_text_field($title);
+
+    // URL
+    $url = _sf('url', $post_id);
+    if ($url && filter_var($url, FILTER_VALIDATE_URL)) $s['url'] = esc_url_raw($url);
+
+    // NAICS
+    $naics = _sf('naics_code', $post_id);
+    if ($naics) $s['naics'] = sanitize_text_field($naics);
+
+    // Email
+    $email = _sf('email', $post_id);
+    if ($email) $s['email'] = sanitize_email($email);
+
     // Description
-    $description = get_field('short_summary', $post_id);
-    if (empty($description)) {
-        $description = get_field('mission_statement', $post_id);
+    $desc = _sf('short_summary', $post_id);
+    if (empty($desc)) $desc = _sf('mission_statement', $post_id);
+    if ($desc) $s['description'] = wp_strip_all_tags($desc);
+
+    // Alternate names (repeater or legacy textarea)
+    $altr = _sf('alternate_names', $post_id, []);
+    if (is_array($altr) && !empty($altr)) {
+        $names = _repeater_values($altr, 'name');
+        $out = _single_or_array(array_map('sanitize_text_field', $names));
+        if ($out) $s['alternateName'] = $out;
+    } elseif (is_string($altr) && $altr) {
+        $names = array_filter(array_map('trim', explode("\n", $altr)));
+        if ($names) $s['alternateName'] = array_values($names);
     }
-    if ($description) {
-        $schema['description'] = wp_strip_all_tags($description);
-    }
-    
-    // Logo/Image
-    $logo = get_field('image_cropped', $post_id);
+
+    // mainEntityOfPage
+    $meop = [$permalink];
+    if (!empty($s['url'])) $meop[] = $s['url'];
+    $s['mainEntityOfPage'] = array_values(array_unique($meop));
+
+    // Logo / image
+    $logo = _sf('image_cropped', $post_id);
     if (is_array($logo) && !empty($logo['url'])) {
-        $schema['logo'] = [
-            '@type' => 'ImageObject',
-            'url' => esc_url_raw($logo['url']),
-        ];
-    } elseif ($thumbnail = get_the_post_thumbnail_url($post_id, 'full')) {
-        $schema['logo'] = [
-            '@type' => 'ImageObject',
-            'url' => esc_url_raw($thumbnail),
-        ];
+        $s['logo']  = esc_url_raw($logo['url']);
+        $s['image'] = [esc_url_raw($logo['url'])];
+    } elseif ($th = get_the_post_thumbnail_url($post_id, 'full')) {
+        $s['logo']  = esc_url_raw($th);
+        $s['image'] = [esc_url_raw($th)];
     }
-    
+
+    // Awards
+    $aw = _sf('awards', $post_id);
+    if ($aw) $s['award'] = sanitize_text_field($aw);
+
+    // Brands
+    $br = _sf('brands', $post_id);
+    if ($br) {
+        $bl = array_filter(array_map('trim', explode(',', $br)));
+        if ($bl) $s['brand'] = array_values($bl);
+    }
+
+    // Address (ACF group)
+    $addr = _sf('address', $post_id, []);
+    if (is_array($addr) && !empty(array_filter($addr))) {
+        $a = ['@type' => 'PostalAddress'];
+        if (!empty($addr['street_address']))   $a['streetAddress']   = sanitize_text_field($addr['street_address']);
+        if (!empty($addr['address_locality']))  $a['addressLocality'] = sanitize_text_field($addr['address_locality']);
+        if (!empty($addr['address_region']))    $a['addressRegion']   = sanitize_text_field($addr['address_region']);
+        if (!empty($addr['postal_code']))       $a['postalCode']      = sanitize_text_field($addr['postal_code']);
+        if (!empty($addr['address_country']))   $a['addressCountry']  = sanitize_text_field($addr['address_country']);
+        if (count($a) > 1) $s['address'] = $a;
+    } else {
+        // Fallback: HQ location
+        $hq = _sf('headquarters', $post_id, []);
+        if (!empty($hq['location'])) {
+            $s['address'] = ['@type' => 'PostalAddress', 'addressLocality' => sanitize_text_field($hq['location'])];
+        }
+    }
+
+    // Contact point (ACF group)
+    $cp = _sf('contact_point', $post_id, []);
+    if (is_array($cp) && !empty(array_filter($cp))) {
+        $c = ['@type' => 'ContactPoint'];
+        if (!empty($cp['contact_type']))      $c['contactType']      = sanitize_text_field($cp['contact_type']);
+        if (!empty($cp['email']))             $c['email']            = sanitize_email($cp['email']);
+        if (!empty($cp['telephone']))         $c['telephone']        = sanitize_text_field($cp['telephone']);
+        if (!empty($cp['product_supported'])) $c['productSupported'] = sanitize_text_field($cp['product_supported']);
+        if (!empty($cp['hours_available']))   $c['hoursAvailable']   = sanitize_text_field($cp['hours_available']);
+        if (!empty($cp['url']))              $c['url']              = esc_url_raw($cp['url']);
+        if (count($c) > 1) $s['contactPoint'] = $c;
+    }
+
     // Founder
-    $founder = get_field('founder', $post_id);
     if ($founder) {
-        // Check if it references the site person
-        $schema['founder'] = [
-            '@id' => $site_url . '/#person',
+        $s['founder'] = [
+            '@type' => 'Person',
+            '@id'   => $site_url . '/#person',
+            'name'  => $founder['display_name'],
+            'url'   => $site_url,
         ];
     }
-    
+
     // Founding date
-    $founding_date = get_field('founding_date', $post_id);
-    if ($founding_date) {
-        $schema['foundingDate'] = sanitize_text_field($founding_date);
+    $fd = _sf('founding_date', $post_id);
+    if ($fd) {
+        $ts = strtotime($fd);
+        $s['foundingDate'] = $ts ? date('Y-m-d', $ts) : sanitize_text_field($fd);
     }
-    
-    // Headquarters as address
-    $headquarters = get_field('headquarters', $post_id);
-    if ($headquarters) {
-        $schema['address'] = [
-            '@type' => 'PostalAddress',
-            'name' => sanitize_text_field(wp_strip_all_tags($headquarters)),
+
+    // Number of employees
+    $ne = _sf('number_of_employees', $post_id);
+    if ($ne) $s['numberOfEmployees'] = sanitize_text_field($ne);
+
+    // Telephone
+    $tel = _sf('telephone', $post_id);
+    if ($tel) $s['telephone'] = sanitize_text_field($tel);
+
+    // Seeks
+    $seeks = _sf('seeks', $post_id);
+    if ($seeks) $s['seeks'] = sanitize_text_field($seeks);
+
+    // sameAs — individual platforms + textareas
+    $platforms = ['facebook', 'instagram', 'linkedin', 'x', 'youtube', 'tiktok', 'github', 'wikipedia', 'crunchbase'];
+    $purls = [];
+    foreach ($platforms as $pl) {
+        $pu = _sf('url_' . $pl, $post_id);
+        if ($pu) $purls[] = $pu;
+    }
+    $sa = _collect_urls(
+        $purls,
+        _parse_url_textarea(_sf('sameas_urls', $post_id)),
+        _parse_url_textarea(_sf('social_urls', $post_id))
+    );
+    if ($sa) $s['sameAs'] = $sa;
+
+    // Knowledge Graph ID
+    $kgid = _sf('knowledge_graph_id', $post_id);
+    if ($kgid) {
+        $s['identifier'] = [
+            '@type'      => 'PropertyValue',
+            'propertyID' => 'googleKgMID',
+            'value'      => sanitize_text_field($kgid),
         ];
     }
-    
-    // Build sameAs from URLs
-    $same_as = [];
-    
-    // Parse social URLs field (one per line)
-    $social_urls = get_field('social_urls', $post_id);
-    if ($social_urls) {
-        $lines = preg_split('/[\r\n]+/', wp_strip_all_tags($social_urls));
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line && filter_var($line, FILTER_VALIDATE_URL)) {
-                $same_as[] = esc_url_raw($line);
-            }
-        }
-    }
-    
-    // Parse sameas URLs field
-    $sameas_urls = get_field('sameas_urls', $post_id);
-    if ($sameas_urls) {
-        $lines = preg_split('/[\r\n]+/', wp_strip_all_tags($sameas_urls));
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line && filter_var($line, FILTER_VALIDATE_URL)) {
-                $same_as[] = esc_url_raw($line);
-            }
-        }
-    }
-    
-    if (!empty($same_as)) {
-        $schema['sameAs'] = array_unique($same_as);
-    }
-    
-    return $schema;
+
+    return $s;
 }
 
-/**
- * Build schema for a post on save
- * 
- * Hook into save_post action.
- * 
- * @param int $post_id Post ID
- */
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  SAVE HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+
 function enable_schema_on_save() {
     add_action('save_post', __NAMESPACE__ . '\\handle_schema_on_save', 20, 2);
 }
 
-/**
- * Handle schema generation on post save
- * 
- * @param int $post_id Post ID
- * @param WP_Post $post Post object
- */
 function handle_schema_on_save($post_id, $post) {
-    // Skip autosaves and revisions
-    if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
-        return;
-    }
-    
-    // Skip if not a supported post type
-    $supported_types = ['book', 'organization', 'page'];
-    if (!in_array($post->post_type, $supported_types, true)) {
-        return;
-    }
-    
-    // For pages, only process the front page
-    if ($post->post_type === 'page' && !is_front_page_id($post_id)) {
-        return;
-    }
-    
-    // Generate and save schema
+    if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
+    $ok = ['book', 'organization', 'page'];
+    if (!in_array($post->post_type, $ok, true)) return;
+    if ($post->post_type === 'page' && !is_front_page_id($post_id)) return;
     generate_and_save_schema($post_id);
 }

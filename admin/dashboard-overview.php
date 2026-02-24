@@ -62,6 +62,320 @@ $site_url = get_site_url_clean();
     </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- System Checks — comprehensive health audit                        -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<?php
+// ── Gather all check data up front ──
+$sc_pass = 0;
+$sc_fail = 0;
+$sc_warn = 0;
+$sc_items = [];
+
+$uid = $founder ? $founder['id'] : 0;
+$user_key = $uid ? 'user_' . $uid : '';
+
+// Helper: add a check result
+$sc_add = function($category, $label, $status, $detail = '', $action_url = '', $action_label = '') use (&$sc_items, &$sc_pass, &$sc_fail, &$sc_warn) {
+    $sc_items[] = compact('category', 'label', 'status', 'detail', 'action_url', 'action_label');
+    if ($status === 'pass') $sc_pass++;
+    elseif ($status === 'fail') $sc_fail++;
+    elseif ($status === 'warn') $sc_warn++;
+};
+
+// ────────────────────────────────────────
+// CATEGORY: Plugin Dependencies
+// ────────────────────────────────────────
+$sc_add('Plugins', 'HWS Base Tools', $hws_info['active'] ? 'pass' : 'fail', 
+    $hws_info['active'] ? 'v' . $hws_info['version'] : 'Required plugin not active',
+    admin_url('plugins.php'), 'Plugins');
+
+$sc_add('Plugins', 'ACF Pro', class_exists('ACF') ? 'pass' : 'fail',
+    class_exists('ACF') ? 'Active' : 'Required for all data fields',
+    admin_url('plugins.php'), 'Plugins');
+
+$sc_add('Plugins', 'Elementor', defined('ELEMENTOR_VERSION') ? 'pass' : 'warn',
+    defined('ELEMENTOR_VERSION') ? 'v' . ELEMENTOR_VERSION : 'Not active — templates won\'t work',
+    admin_url('plugins.php'), 'Plugins');
+
+$rm_active = is_plugin_active('seo-by-rank-math/rank-math.php');
+$sc_add('Plugins', 'RankMath SEO', $rm_active ? 'pass' : 'warn',
+    $rm_active ? 'Active' : 'Recommended for breadcrumbs & sitemaps',
+    admin_url('plugins.php'), 'Plugins');
+
+// ────────────────────────────────────────
+// CATEGORY: WordPress Settings
+// ────────────────────────────────────────
+
+// Favicon
+$favicon_url = get_site_icon_url();
+$sc_add('WordPress', 'Favicon / Site Icon', !empty($favicon_url) ? 'pass' : 'fail',
+    !empty($favicon_url) ? 'Set' : 'No favicon configured — looks unprofessional in browser tabs',
+    admin_url('customize.php?autofocus[section]=title_tagline'), 'Customizer → Site Identity');
+
+// Comments disabled
+$comments_open = get_option('default_comment_status', 'open') === 'open';
+$sc_add('WordPress', 'Default Comments Disabled', !$comments_open ? 'pass' : 'fail',
+    !$comments_open ? 'Comments disabled by default' : 'Comments still open — personal sites should disable these',
+    admin_url('options-discussion.php'), 'Discussion Settings');
+
+// Pingbacks disabled
+$pings_open = get_option('default_ping_status', 'open') === 'open';
+$sc_add('WordPress', 'Default Pingbacks Disabled', !$pings_open ? 'pass' : 'fail',
+    !$pings_open ? 'Pingbacks disabled' : 'Pingbacks still open — should be disabled',
+    admin_url('options-discussion.php'), 'Discussion Settings');
+
+// Search engine visibility
+$blog_public = get_option('blog_public', '1');
+$sc_add('WordPress', 'Search Engine Visibility', $blog_public == '1' ? 'pass' : 'fail',
+    $blog_public == '1' ? 'Site is visible to search engines' : 'Site is hidden from search engines — fix immediately!',
+    admin_url('options-reading.php'), 'Reading Settings');
+
+// Permalink structure (not plain)
+$permalink = get_option('permalink_structure', '');
+$sc_add('WordPress', 'Pretty Permalinks', !empty($permalink) ? 'pass' : 'fail',
+    !empty($permalink) ? esc_html($permalink) : 'Using plain permalinks — bad for SEO',
+    admin_url('options-permalink.php'), 'Permalink Settings');
+
+// Site title set
+$site_title = get_bloginfo('name');
+$sc_add('WordPress', 'Site Title', !empty($site_title) ? 'pass' : 'fail',
+    !empty($site_title) ? esc_html($site_title) : 'No site title configured',
+    admin_url('options-general.php'), 'General Settings');
+
+// Tagline / description
+$tagline = get_bloginfo('description');
+$has_tagline = !empty($tagline) && $tagline !== 'Just another WordPress site';
+$sc_add('WordPress', 'Site Tagline', $has_tagline ? 'pass' : 'warn',
+    $has_tagline ? esc_html($tagline) : 'Default or empty tagline',
+    admin_url('options-general.php'), 'General Settings');
+
+// ────────────────────────────────────────
+// CATEGORY: Founder / Person Setup
+// ────────────────────────────────────────
+$sc_add('Person', 'Founder User Assigned', !empty($founder) ? 'pass' : 'fail',
+    !empty($founder) ? esc_html($founder['display_name']) : 'No founder user set — this is critical',
+    get_website_settings_url(), 'Website Settings');
+
+if ($founder && function_exists('get_field')) {
+    $profile_url = get_edit_user_link($uid);
+    
+    // Profile photo (avatar or KG images)
+    $avatar = get_avatar_url($uid, ['size' => 200]);
+    $has_custom_avatar = !empty($avatar) && strpos($avatar, 'gravatar.com/avatar') === false;
+    $kg_images = get_field('knowledge_graph_images', $user_key);
+    $has_kg_images = !empty($kg_images) && is_array($kg_images) && count($kg_images) > 0;
+    $sc_add('Person', 'Profile Photo', ($has_custom_avatar || $has_kg_images) ? 'pass' : 'fail',
+        $has_kg_images ? count($kg_images) . ' Knowledge Graph image(s)' : ($has_custom_avatar ? 'Custom avatar set' : 'No profile photo — uses default Gravatar'),
+        $profile_url, 'Edit Profile');
+    
+    // Public email
+    $pub_email = get_field('additional', $user_key);
+    $has_pub_email = is_array($pub_email) && !empty($pub_email['public_email']);
+    $sc_add('Person', 'Public Email', $has_pub_email ? 'pass' : 'fail',
+        $has_pub_email ? esc_html($pub_email['public_email']) : 'Not set — needed for schema & contact pages',
+        $profile_url, 'Edit Profile');
+    
+    // Title
+    $title_val = get_field('title', $user_key);
+    $sc_add('Person', 'Title / Job Role', !empty($title_val) ? 'pass' : 'fail',
+        !empty($title_val) ? esc_html(wp_strip_all_tags($title_val)) : 'Not set',
+        $profile_url, 'Edit Profile');
+    
+    // Socials
+    $urls_val = get_field('urls', $user_key);
+    $socials = ['facebook' => 'Facebook', 'instagram' => 'Instagram', 'linkedin' => 'LinkedIn', 'crunchbase' => 'Crunchbase'];
+    foreach ($socials as $key => $label) {
+        $has_social = is_array($urls_val) && !empty($urls_val[$key]);
+        $sc_add('Person', $label . ' URL', $has_social ? 'pass' : 'fail',
+            $has_social ? '✓ Set' : 'Missing',
+            $profile_url, 'Edit Profile');
+    }
+    
+    // Knowledge Graph ID
+    $kgid = get_field('knowledge_graph_id', $user_key);
+    $sc_add('Person', 'Google Knowledge Graph ID', !empty($kgid) ? 'pass' : 'fail',
+        !empty($kgid) ? esc_html($kgid) : 'Not set — important for Knowledge Panel',
+        $profile_url, 'Edit Profile');
+    
+    // Location Born
+    $loc_born = get_field('location_born', $user_key);
+    $has_loc = is_array($loc_born) && !empty($loc_born['location']);
+    $sc_add('Person', 'Location Born', $has_loc ? 'pass' : 'fail',
+        $has_loc ? esc_html($loc_born['location']) : 'Not set',
+        $profile_url, 'Edit Profile');
+    
+    // Language (at least one)
+    $languages = get_field('knows_language', $user_key);
+    $lang_count = is_array($languages) ? count(array_filter($languages, function($l) { return !empty($l['value']); })) : 0;
+    $sc_add('Person', 'Languages', $lang_count > 0 ? 'pass' : 'fail',
+        $lang_count > 0 ? $lang_count . ' language(s)' : 'None set — add at least one',
+        $profile_url, 'Edit Profile');
+    
+    // Knowledge Graph Images (at least one)
+    $sc_add('Person', 'Knowledge Graph Images', $has_kg_images ? 'pass' : 'fail',
+        $has_kg_images ? count($kg_images) . ' image(s)' : 'None uploaded — needed for Knowledge Panel',
+        $profile_url, 'Edit Profile');
+    
+    // Biography
+    $bio = get_field('biography', $user_key);
+    $sc_add('Person', 'Biography', !empty($bio) ? 'pass' : 'fail',
+        !empty($bio) ? wp_trim_words(wp_strip_all_tags($bio), 8, '...') : 'Not set',
+        $profile_url, 'Edit Profile');
+    
+    // Biography Short
+    $bio_short = get_field('biography_short', $user_key);
+    $sc_add('Person', 'Short Biography', !empty($bio_short) ? 'pass' : 'fail',
+        !empty($bio_short) ? wp_trim_words(wp_strip_all_tags($bio_short), 8, '...') : 'Not set',
+        $profile_url, 'Edit Profile');
+    
+    // Mission Statement
+    $mission = get_field('mission_statement', $user_key);
+    $sc_add('Person', 'Mission Statement', !empty($mission) ? 'pass' : 'fail',
+        !empty($mission) ? wp_trim_words(wp_strip_all_tags($mission), 8, '...') : 'Not set',
+        $profile_url, 'Edit Profile');
+    
+    // Education (at least one)
+    $education = get_field('education', $user_key);
+    $edu_count = is_array($education) ? count(array_filter($education, function($e) { return !empty($e['college']); })) : 0;
+    $sc_add('Person', 'Education', $edu_count > 0 ? 'pass' : 'fail',
+        $edu_count > 0 ? $edu_count . ' institution(s)' : 'None set — add at least one',
+        $profile_url, 'Edit Profile');
+    
+    // Articles (at least one)
+    $articles = get_field('articles', $user_key);
+    $article_count = is_array($articles) ? count(array_filter($articles, function($a) { return !empty($a['url']); })) : 0;
+    $sc_add('Person', 'Articles / Press', $article_count > 0 ? 'pass' : 'fail',
+        $article_count > 0 ? $article_count . ' article(s)' : 'None set — add at least one for sameAs links',
+        $profile_url, 'Edit Profile');
+}
+
+// ────────────────────────────────────────
+// CATEGORY: Company / Organization Setup
+// ────────────────────────────────────────
+$primary_org_id = get_option('sfpf_primary_organization', 0);
+$sc_add('Company', 'Primary Organization Set', !empty($primary_org_id) ? 'pass' : 'fail',
+    !empty($primary_org_id) ? get_the_title($primary_org_id) : 'Not set — go to SFPF Settings → Set Primary Company',
+    admin_url('admin.php?page=sfpf-settings'), 'SFPF Settings');
+
+$org_count = wp_count_posts('organization');
+$pub_orgs = isset($org_count->publish) ? (int)$org_count->publish : 0;
+$sc_add('Company', 'Published Organizations', $pub_orgs > 0 ? 'pass' : 'warn',
+    $pub_orgs > 0 ? $pub_orgs . ' organization(s)' : 'No published organizations',
+    admin_url('edit.php?post_type=organization'), 'Organizations');
+
+// ────────────────────────────────────────
+// CATEGORY: Schema Configuration
+// ────────────────────────────────────────
+$hp_schema = get_option('sfpf_homepage_schema_type', 'person');
+$sc_add('Schema', 'Homepage Schema Type', $hp_schema !== 'none' ? 'pass' : 'fail',
+    $hp_schema !== 'none' ? ucfirst(str_replace('_', ' ', $hp_schema)) : 'Schema injection disabled — turn it on!',
+    admin_url('admin.php?page=sfpf-dashboard&tab=schema'), 'Schema Tab');
+
+$bio_schema = get_option('sfpf_biography_schema_type', 'profile_page_only');
+$bio_page_id_sc = get_option('sfpf_page_biography');
+if ($bio_page_id_sc) {
+    $sc_add('Schema', 'Biography Schema Type', $bio_schema !== 'none' ? 'pass' : 'warn',
+        $bio_schema !== 'none' ? ucfirst(str_replace('_', ' ', $bio_schema)) : 'Biography schema disabled',
+        admin_url('admin.php?page=sfpf-dashboard&tab=schema'), 'Schema Tab');
+}
+
+// ────────────────────────────────────────
+// CATEGORY: Critical Pages
+// ────────────────────────────────────────
+$critical_pages = [
+    'sfpf_page_biography' => 'Biography Page',
+    'sfpf_page_connect'   => 'Connect / Contact Page',
+];
+foreach ($critical_pages as $opt_key => $page_label) {
+    $page_id = get_option($opt_key);
+    $page_ok = $page_id && get_post_status($page_id) === 'publish';
+    $sc_add('Pages', $page_label, $page_ok ? 'pass' : 'warn',
+        $page_ok ? get_the_title($page_id) : 'Not assigned',
+        admin_url('admin.php?page=sfpf-dashboard&tab=pages'), 'Critical Pages');
+}
+
+// ── Compute totals ──
+$sc_total = $sc_pass + $sc_fail + $sc_warn;
+$sc_pct = $sc_total > 0 ? round(($sc_pass / $sc_total) * 100) : 0;
+$sc_bar_color = $sc_pct === 100 ? '#16a34a' : ($sc_pct >= 70 ? '#f59e0b' : '#dc2626');
+?>
+
+<div class="sfpf-card" id="sfpf-system-checks">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-yes-alt" style="color:<?php echo $sc_fail > 0 ? '#dc2626' : '#10b981'; ?>;"></span>
+        <h3>System Checks</h3>
+        <span style="margin-left:auto;font-size:13px;color:#666;">
+            <?php echo $sc_pass; ?>/<?php echo $sc_total; ?> passed
+            <?php if ($sc_fail > 0): ?> <span style="color:#dc2626;font-weight:600;">(<?php echo $sc_fail; ?> issues)</span><?php endif; ?>
+        </span>
+    </div>
+    
+    <!-- Progress bar -->
+    <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:16px;overflow:hidden;">
+        <div style="height:100%;width:<?php echo $sc_pct; ?>%;background:<?php echo $sc_bar_color; ?>;border-radius:3px;transition:width 0.3s;"></div>
+    </div>
+    
+    <?php
+    // Group items by category
+    $sc_grouped = [];
+    foreach ($sc_items as $item) {
+        $sc_grouped[$item['category']][] = $item;
+    }
+    
+    // Category icons + colors
+    $cat_meta = [
+        'Plugins'   => ['icon' => 'dashicons-admin-plugins', 'color' => '#6366f1'],
+        'WordPress' => ['icon' => 'dashicons-wordpress',     'color' => '#0073aa'],
+        'Person'    => ['icon' => 'dashicons-admin-users',   'color' => '#2563eb'],
+        'Company'   => ['icon' => 'dashicons-building',      'color' => '#059669'],
+        'Schema'    => ['icon' => 'dashicons-editor-code',   'color' => '#8b5cf6'],
+        'Pages'     => ['icon' => 'dashicons-admin-page',    'color' => '#d97706'],
+    ];
+    
+    foreach ($sc_grouped as $cat_name => $items):
+        $meta = $cat_meta[$cat_name] ?? ['icon' => 'dashicons-marker', 'color' => '#666'];
+        $cat_fails = count(array_filter($items, function($i) { return $i['status'] === 'fail'; }));
+        $cat_passes = count(array_filter($items, function($i) { return $i['status'] === 'pass'; }));
+    ?>
+    <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;">
+            <span class="dashicons <?php echo esc_attr($meta['icon']); ?>" style="font-size:16px;color:<?php echo $meta['color']; ?>;"></span>
+            <strong style="font-size:13px;color:#374151;"><?php echo esc_html($cat_name); ?></strong>
+            <span style="font-size:11px;color:#9ca3af;margin-left:auto;">
+                <?php echo $cat_passes; ?>/<?php echo count($items); ?>
+                <?php if ($cat_fails > 0): ?><span style="color:#dc2626;">  (<?php echo $cat_fails; ?> ✗)</span><?php endif; ?>
+            </span>
+        </div>
+        
+        <?php foreach ($items as $item):
+            if ($item['status'] === 'pass') { $icon = '✓'; $icon_color = '#059669'; $bg = ''; }
+            elseif ($item['status'] === 'fail') { $icon = '✗'; $icon_color = '#dc2626'; $bg = 'background:#fef2f2;'; }
+            else { $icon = '⚠'; $icon_color = '#d97706'; $bg = 'background:#fffbeb;'; }
+        ?>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;<?php echo $bg; ?>margin-bottom:2px;">
+            <span style="font-size:12px;color:<?php echo $icon_color; ?>;width:14px;text-align:center;flex-shrink:0;"><?php echo $icon; ?></span>
+            <span style="font-size:12px;color:#374151;min-width:160px;"><?php echo esc_html($item['label']); ?></span>
+            <span style="font-size:11px;color:#6b7280;flex:1;"><?php echo esc_html($item['detail']); ?></span>
+            <?php if (!empty($item['action_url']) && $item['status'] !== 'pass'): ?>
+                <a href="<?php echo esc_url($item['action_url']); ?>" target="_blank" style="font-size:10px;color:#2563eb;white-space:nowrap;text-decoration:none;"><?php echo esc_html($item['action_label'] ?: 'Fix →'); ?> →</a>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endforeach; ?>
+    
+    <?php if ($sc_fail === 0 && $sc_warn === 0): ?>
+        <div style="padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:13px;margin-top:8px;">
+            🎉 <strong>All checks passed!</strong> Your site is properly configured.
+        </div>
+    <?php elseif ($sc_fail > 0): ?>
+        <div style="padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px;margin-top:8px;">
+            ⚠️ <strong><?php echo $sc_fail; ?> issue(s) need attention.</strong> Click the links above to fix them.
+        </div>
+    <?php endif; ?>
+</div>
+
 <!-- Profile Cards -->
 <div class="sfpf-grid-2">
     <!-- Founder/Person Profile -->
@@ -736,43 +1050,6 @@ if (!empty($faq_sets)):
     </div>
 </div>
 <?php endif; ?>
-
-<!-- System Checks -->
-<div class="sfpf-card">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-yes-alt" style="color:#10b981;"></span>
-        <h3>System Checks</h3>
-    </div>
-    
-    <table class="widefat striped" style="margin-top:10px;">
-        <tbody>
-            <?php
-            $checks = [
-                'HWS Base Tools' => $hws_info['active'],
-                'Founder User Configured' => !empty($founder),
-                'Primary Organization Set' => !empty(get_option('sfpf_primary_organization', 0)),
-                'Primary Book Set' => !empty(get_option('sfpf_primary_book', 0)),
-                'ACF Pro Active' => class_exists('ACF'),
-                'Elementor Active' => defined('ELEMENTOR_VERSION'),
-                'RankMath Active' => $rm_active,
-            ];
-            
-            foreach ($checks as $label => $status):
-            ?>
-            <tr>
-                <td style="width:250px;font-weight:500;"><?php echo esc_html($label); ?></td>
-                <td>
-                    <?php if ($status): ?>
-                        <span style="color:#059669;">✓ OK</span>
-                    <?php else: ?>
-                        <span style="color:#dc2626;">✗ Not configured</span>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
 
 <!-- SFPF Plugin Info Section -->
 <?php sfpf_display_plugin_info(); ?>

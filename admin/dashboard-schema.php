@@ -11,7 +11,7 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 $site_url = get_site_url_clean();
-$homepage_schema_type = get_option('sfpf_homepage_schema_type', 'none');
+$homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
 
 // RankMath disable options
 $rankmath_disable_homepage = get_option('sfpf_rankmath_disable_homepage', false);
@@ -154,169 +154,162 @@ $rankmath_disable_testimonials = get_option('sfpf_rankmath_disable_testimonials'
     <div class="sfpf-card-header">
         <span class="dashicons dashicons-visibility" style="color:#059669;"></span>
         <h3>Homepage Schema Preview</h3>
-        <span style="margin-left:auto;font-size:12px;color:#666;">Built with actual website content</span>
+        <span style="margin-left:auto;font-size:12px;color:#666;">Live output — exactly what gets injected</span>
     </div>
     
     <?php
     $founder = get_founder_full_info();
-    $built_schema = ['@context' => 'https://schema.org', '@graph' => []];
     
-    if ($founder && $homepage_schema_type !== 'none') {
-        // Build Person
-        $person = [
-            '@type' => 'Person',
-            '@id' => $site_url . '/#person',
-            'name' => $founder['display_name'],
-            'url' => $site_url . '/',
-        ];
-        
-        if ($founder['first_name']) $person['givenName'] = $founder['first_name'];
-        if ($founder['last_name']) $person['familyName'] = $founder['last_name'];
-        if ($founder['job_title']) $person['jobTitle'] = $founder['job_title'];
-        if ($founder['email']) $person['email'] = $founder['email'];
-        if ($founder['avatar_url']) $person['image'] = $founder['avatar_url'];
-        
-        $same_as = array_values(array_filter($founder['urls'] ?? []));
-        if (!empty($same_as)) $person['sameAs'] = $same_as;
-        
-        // Add ProfilePage if selected
-        if (in_array($homepage_schema_type, ['profile_page', 'profile_page_only'])) {
-            $profile_page = [
-                '@type' => 'ProfilePage',
-                '@id' => $site_url . '/#profilepage',
-                'url' => $site_url . '/',
-                'name' => get_bloginfo('name'),
-                'description' => get_bloginfo('description'),
-                'inLanguage' => 'en-US',
-                'isPartOf' => [
-                    '@type' => 'WebSite',
-                    '@id' => $site_url . '/#website',
-                    'url' => $site_url . '/',
-                    'name' => get_bloginfo('name'),
-                ],
-            ];
-            
-            if ($homepage_schema_type === 'profile_page') {
-                $profile_page['mainEntity'] = ['@id' => $site_url . '/#person'];
-            }
-            
-            if ($founder['avatar_url']) {
-                $profile_page['primaryImageOfPage'] = [
-                    '@type' => 'ImageObject',
-                    '@id' => $site_url . '/#headshot',
-                    'url' => $founder['avatar_url'],
-                    'contentUrl' => $founder['avatar_url'],
-                ];
-            }
-            
-            $built_schema['@graph'][] = $profile_page;
-        }
-        
-        // Add Person if not profile_page_only
-        if ($homepage_schema_type !== 'profile_page_only') {
-            $built_schema['@graph'][] = $person;
-        }
-    }
-    
-    $built_schema = function_exists(__NAMESPACE__ . '\\sanitize_schema') ? sanitize_schema($built_schema) : $built_schema;
-    ?>
-    
-    <?php if ($homepage_schema_type === 'none'): ?>
+    if ($homepage_schema_type === 'none'): ?>
         <p style="color:#666;text-align:center;padding:20px;">Schema injection is disabled. Select a schema type above.</p>
     <?php elseif (!$founder): ?>
         <p style="color:#dc2626;text-align:center;padding:20px;">No founder configured. Set the founder in Website Settings.</p>
-    <?php else: ?>
+    <?php else:
+        // Use the REAL builder — same function that injects on the live site
+        $hp_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
+            ? build_homepage_schema_for_injection($homepage_schema_type) : null;
+        if ($hp_json):
+            $hp_decoded = json_decode($hp_json, true);
+    ?>
         <div style="margin-bottom:20px;">
-            <?php echo format_json_display($built_schema, true); ?>
+            <?php echo format_json_display($hp_decoded, true); ?>
         </div>
-    <?php endif; ?>
+    <?php else: ?>
+        <p style="color:#dc2626;text-align:center;padding:20px;">Schema builder returned empty. Check founder configuration.</p>
+    <?php endif; endif; ?>
     
-    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
         <button type="button" class="button button-primary" id="sfpf-reprocess-homepage">🔄 Reprocess & Save Homepage Schema</button>
+        <a href="https://validator.schema.org/#url=<?php echo urlencode(home_url('/')); ?>" target="_blank" class="button button-secondary">
+            🔍 Schema.org Validator
+        </a>
+        <a href="https://search.google.com/test/rich-results?url=<?php echo urlencode(home_url('/')); ?>" target="_blank" class="button button-secondary">
+            📊 Google Rich Results Test
+        </a>
         <span id="sfpf-homepage-reprocess-status" style="color:#666;font-size:13px;line-height:28px;"></span>
     </div>
 </div>
 
 <!-- Biography Schema Preview -->
 <?php
-$bio_page_id = get_option('sfpf_page_biography');
-if ($bio_page_id && $biography_schema_type !== 'none'):
-    $bio_built_schema = ['@context' => 'https://schema.org', '@graph' => []];
-    
-    if ($founder) {
-        $bio_person = [
-            '@type' => 'Person',
-            '@id' => $site_url . '/#person',
-            'name' => $founder['display_name'],
-            'url' => $site_url . '/',
-        ];
-        
-        if ($founder['first_name']) $bio_person['givenName'] = $founder['first_name'];
-        if ($founder['last_name']) $bio_person['familyName'] = $founder['last_name'];
-        if ($founder['job_title']) $bio_person['jobTitle'] = $founder['job_title'];
-        if ($founder['email']) $bio_person['email'] = $founder['email'];
-        if ($founder['avatar_url']) $bio_person['image'] = $founder['avatar_url'];
-        
-        $bio_same_as = array_values(array_filter($founder['urls'] ?? []));
-        if (!empty($bio_same_as)) $bio_person['sameAs'] = $bio_same_as;
-        
-        if (in_array($biography_schema_type, ['profile_page', 'profile_page_only'])) {
-            $bio_profile_page = [
-                '@type' => 'ProfilePage',
-                '@id' => $site_url . '/#profilepage',
-                'url' => get_permalink($bio_page_id),
-                'name' => get_the_title($bio_page_id),
-                'description' => get_bloginfo('description'),
-                'inLanguage' => 'en-US',
-                'isPartOf' => [
-                    '@type' => 'WebSite',
-                    '@id' => $site_url . '/#website',
-                    'url' => $site_url . '/',
-                    'name' => get_bloginfo('name'),
-                ],
-            ];
-            
-            if ($biography_schema_type === 'profile_page') {
-                $bio_profile_page['mainEntity'] = ['@id' => $site_url . '/#person'];
-            }
-            
-            if ($founder['avatar_url']) {
-                $bio_profile_page['primaryImageOfPage'] = [
-                    '@type' => 'ImageObject',
-                    '@id' => $site_url . '/#headshot',
-                    'url' => $founder['avatar_url'],
-                    'contentUrl' => $founder['avatar_url'],
-                ];
-            }
-            
-            $bio_built_schema['@graph'][] = $bio_profile_page;
-        }
-        
-        if ($biography_schema_type !== 'profile_page_only') {
-            $bio_built_schema['@graph'][] = $bio_person;
-        }
-    }
-    
-    $bio_built_schema = function_exists(__NAMESPACE__ . '\\sanitize_schema') ? sanitize_schema($bio_built_schema) : $bio_built_schema;
+$bio_page_id_preview = get_option('sfpf_page_biography');
+if ($bio_page_id_preview && $biography_schema_type !== 'none'):
 ?>
 <div class="sfpf-card">
     <div class="sfpf-card-header">
         <span class="dashicons dashicons-visibility" style="color:#8b5cf6;"></span>
         <h3>Biography Page Schema Preview</h3>
-        <span style="margin-left:auto;font-size:12px;color:#666;">Built with actual website content</span>
+        <span style="margin-left:auto;font-size:12px;color:#666;">Live output — exactly what gets injected</span>
     </div>
     
     <?php if (!$founder): ?>
         <p style="color:#dc2626;text-align:center;padding:20px;">No founder configured.</p>
-    <?php else: ?>
+    <?php else:
+        $bio_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
+            ? build_homepage_schema_for_injection($biography_schema_type) : null;
+        if ($bio_json):
+            $bio_decoded = json_decode($bio_json, true);
+    ?>
         <div style="margin-bottom:20px;">
-            <?php echo format_json_display($bio_built_schema, true); ?>
+            <?php echo format_json_display($bio_decoded, true); ?>
         </div>
-    <?php endif; ?>
+    <?php else: ?>
+        <p style="color:#dc2626;text-align:center;padding:20px;">Schema builder returned empty.</p>
+    <?php endif; endif; ?>
     
-    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
         <button type="button" class="button button-primary" id="sfpf-reprocess-biography">🔄 Reprocess & Save Biography Schema</button>
+        <?php if ($bio_page_id_preview): ?>
+        <a href="https://validator.schema.org/#url=<?php echo urlencode(get_permalink($bio_page_id_preview)); ?>" target="_blank" class="button button-secondary">
+            🔍 Schema.org Validator
+        </a>
+        <a href="https://search.google.com/test/rich-results?url=<?php echo urlencode(get_permalink($bio_page_id_preview)); ?>" target="_blank" class="button button-secondary">
+            📊 Google Rich Results Test
+        </a>
+        <?php endif; ?>
         <span id="sfpf-biography-reprocess-status" style="color:#666;font-size:13px;line-height:28px;"></span>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Book Schema Preview -->
+<?php if (is_snippet_enabled('sfpf_enable_book_cpt')):
+    $books = get_posts(['post_type' => 'book', 'posts_per_page' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
+?>
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-book" style="color:#f59e0b;"></span>
+        <h3>Book Schema Preview</h3>
+        <span style="margin-left:auto;font-size:12px;color:#666;">
+            <?php $all_books = wp_count_posts('book'); echo ((int)($all_books->publish ?? 0)); ?> published book(s)
+            <?php if (!empty($books)): ?> — showing: <strong><?php echo esc_html($books[0]->post_title); ?></strong><?php endif; ?>
+        </span>
+    </div>
+    
+    <?php if (empty($books)): ?>
+        <p style="color:#666;text-align:center;padding:20px;">No published books found.</p>
+    <?php else:
+        $book_schema = build_book_schema($books[0]->ID);
+        if (!empty($book_schema)):
+    ?>
+        <div style="margin-bottom:20px;">
+            <?php echo format_json_display($book_schema, true); ?>
+        </div>
+    <?php else: ?>
+        <p style="color:#dc2626;text-align:center;padding:20px;">Schema builder returned empty.</p>
+    <?php endif; endif; ?>
+    
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <button type="button" class="button button-primary" id="sfpf-reprocess-books">🔄 Reprocess All Book Schemas</button>
+        <?php if (!empty($books)): ?>
+        <a href="https://validator.schema.org/#url=<?php echo urlencode(get_permalink($books[0]->ID)); ?>" target="_blank" class="button button-secondary">
+            🔍 Schema.org Validator
+        </a>
+        <a href="https://search.google.com/test/rich-results?url=<?php echo urlencode(get_permalink($books[0]->ID)); ?>" target="_blank" class="button button-secondary">
+            📊 Google Rich Results Test
+        </a>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Organization Schema Preview -->
+<?php if (is_snippet_enabled('sfpf_enable_organization_cpt')):
+    $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
+?>
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-building" style="color:#ec4899;"></span>
+        <h3>Organization Schema Preview</h3>
+        <span style="margin-left:auto;font-size:12px;color:#666;">
+            <?php $all_orgs = wp_count_posts('organization'); echo ((int)($all_orgs->publish ?? 0)); ?> published org(s)
+            <?php if (!empty($orgs)): ?> — showing: <strong><?php echo esc_html($orgs[0]->post_title); ?></strong><?php endif; ?>
+        </span>
+    </div>
+    
+    <?php if (empty($orgs)): ?>
+        <p style="color:#666;text-align:center;padding:20px;">No published organizations found.</p>
+    <?php else:
+        $org_schema = build_organization_schema($orgs[0]->ID);
+        if (!empty($org_schema)):
+    ?>
+        <div style="margin-bottom:20px;">
+            <?php echo format_json_display($org_schema, true); ?>
+        </div>
+    <?php else: ?>
+        <p style="color:#dc2626;text-align:center;padding:20px;">Schema builder returned empty.</p>
+    <?php endif; endif; ?>
+    
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <button type="button" class="button button-primary" id="sfpf-reprocess-organizations">🔄 Reprocess All Organization Schemas</button>
+        <?php if (!empty($orgs)): ?>
+        <a href="https://validator.schema.org/#url=<?php echo urlencode(get_permalink($orgs[0]->ID)); ?>" target="_blank" class="button button-secondary">
+            🔍 Schema.org Validator
+        </a>
+        <a href="https://search.google.com/test/rich-results?url=<?php echo urlencode(get_permalink($orgs[0]->ID)); ?>" target="_blank" class="button button-secondary">
+            📊 Google Rich Results Test
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -573,35 +566,6 @@ if ($bio_page_id && $biography_schema_type !== 'none'):
         </div>
     </div>
 </div>
-
-<!-- CPT Schema Reprocessing -->
-<?php if (is_snippet_enabled('sfpf_enable_book_cpt')): ?>
-<div class="sfpf-card">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-book" style="color:#f59e0b;"></span>
-        <h3>Book Schema</h3>
-    </div>
-    
-    <?php $books = get_posts(['post_type' => 'book', 'posts_per_page' => -1, 'post_status' => 'publish']); ?>
-    
-    <p style="color:#666;margin-bottom:15px;">Found <strong><?php echo count($books); ?></strong> published books.</p>
-    <button type="button" class="button button-primary" id="sfpf-reprocess-books">🔄 Reprocess All Book Schemas</button>
-</div>
-<?php endif; ?>
-
-<?php if (is_snippet_enabled('sfpf_enable_organization_cpt')): ?>
-<div class="sfpf-card">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-building" style="color:#ec4899;"></span>
-        <h3>Organization Schema</h3>
-    </div>
-    
-    <?php $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => -1, 'post_status' => 'publish']); ?>
-    
-    <p style="color:#666;margin-bottom:15px;">Found <strong><?php echo count($orgs); ?></strong> published organizations.</p>
-    <button type="button" class="button button-primary" id="sfpf-reprocess-organizations">🔄 Reprocess All Organization Schemas</button>
-</div>
-<?php endif; ?>
 
 <!-- Rebuild All -->
 <div class="sfpf-card">

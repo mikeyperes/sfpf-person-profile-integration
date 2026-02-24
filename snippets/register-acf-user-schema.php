@@ -80,23 +80,8 @@ function register_user_schema_acf_fields() {
 <code>[founder action="display_knowledge_panel"]</code> — Link to Knowledge Panel<br>
 <span id="sfpf-kgid-link-display">Enter a KGMID above to see the full Knowledge Panel URL.</span>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '100'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org', 'width' => '100'],
                 'placeholder'       => '/g/11gyz2y3lp',
             ],
             
@@ -110,16 +95,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'text',
                 'instructions'      => 'Middle name, nickname, or other additional name. <code>[founder id="additional_name"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '100'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '100'],
                 'placeholder'       => 'e.g., Mike, Jr., III',
             ],
             
@@ -135,23 +112,8 @@ function register_user_schema_acf_fields() {
 <code>[founder id="alternate_names"]</code> or <code>[company id="alternate_names"]</code> — Text list<br>
 <code>[founder id="alternate_names" format="json"]</code> — JSON array',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'layout'            => 'table',
                 'pagination'        => 0,
                 'min'               => 0,
@@ -180,6 +142,7 @@ function register_user_schema_acf_fields() {
                 'label'             => 'Location Born',
                 'name'              => 'location_born',
                 'type'              => 'group',
+                'wrapper'           => ['class' => 'sfpf-entity-person'],
                 'instructions'      => 'Birthplace location for schema.org birthPlace.<br>
 <code>[founder action="display_location_born"]</code> — Linked display (default)<br>
 <code>[founder action="display_location_born" format="text"]</code> — Plain text, no link<br>
@@ -187,15 +150,7 @@ function register_user_schema_acf_fields() {
 <code>[founder id="location_born_location"]</code> — Raw location text<br>
 <code>[founder id="location_born_url"]</code> — Raw Wikipedia URL',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
+                'conditional_logic' => 0,
                 'layout'            => 'block',
                 'sub_fields'        => [
                     [
@@ -229,16 +184,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'text',
                 'instructions'      => 'ISO format preferred (YYYY-MM-DD). <code>[founder id="birth_date"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '50'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '50'],
                 'placeholder'       => '1990-01-13',
             ],
             
@@ -254,16 +201,8 @@ function register_user_schema_acf_fields() {
 <code>[founder id="nationality" format="json"]</code> — JSON array<br>
 <code>[founder action="display_nationality"]</code> — Formatted display',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '50'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '50'],
                 'layout'            => 'table',
                 'min'               => 0,
                 'max'               => 10,
@@ -282,6 +221,127 @@ function register_user_schema_acf_fields() {
             ],
             
             // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Gender
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_gender',
+                'label'             => 'Gender',
+                'name'              => 'gender',
+                'type'              => 'select',
+                'instructions'      => '<code>[founder id="gender"]</code>',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
+                'choices'           => ['' => '— Select —', 'Male' => 'Male', 'Female' => 'Female', 'Non-binary' => 'Non-binary', 'Other' => 'Other'],
+                'default_value'     => '',
+                'allow_null'        => 1,
+                'return_format'     => 'value',
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Telephone
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_telephone',
+                'label'             => 'Telephone',
+                'name'              => 'telephone',
+                'type'              => 'text',
+                'instructions'      => 'Public phone number for schema. <code>[founder id="telephone"]</code>',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
+                'placeholder'       => '(415) 212-9449',
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Honorific Prefix
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_honorific_prefix',
+                'label'             => 'Honorific Prefix',
+                'name'              => 'honorific_prefix',
+                'type'              => 'text',
+                'instructions'      => 'e.g. Mr., Dr., Prof. <code>[founder id="honorific_prefix"]</code>',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
+                'placeholder'       => 'Dr.',
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Honorific Suffix
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_honorific_suffix',
+                'label'             => 'Honorific Suffix',
+                'name'              => 'honorific_suffix',
+                'type'              => 'text',
+                'instructions'      => 'e.g. PhD, MBA, Esq. <code>[founder id="honorific_suffix"]</code>',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
+                'placeholder'       => 'MBA',
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Knows Language (repeater)
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_knows_language',
+                'label'             => 'Languages',
+                'name'              => 'knows_language',
+                'type'              => 'repeater',
+                'instructions'      => '<code>[founder id="knows_language"]</code> — Comma list &nbsp;|&nbsp; <code>[founder id="knows_language" format="json"]</code> — JSON',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '50'],
+                'layout'            => 'table',
+                'min'               => 0,
+                'max'               => 20,
+                'button_label'      => 'Add Language',
+                'sub_fields'        => [
+                    [
+                        'key'               => 'field_sfpf_knows_language_value',
+                        'label'             => 'Language',
+                        'name'              => 'value',
+                        'type'              => 'text',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '100'],
+                        'placeholder'       => 'English',
+                    ],
+                ],
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
+            // PERSON FIELD: Awards (repeater)
+            // ═══════════════════════════════════════════════════════════════
+            [
+                'key'               => 'field_sfpf_awards',
+                'label'             => 'Awards',
+                'name'              => 'awards',
+                'type'              => 'repeater',
+                'instructions'      => '<code>[founder id="awards"]</code> — Comma list &nbsp;|&nbsp; <code>[founder id="awards" format="json"]</code> — JSON',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '50'],
+                'layout'            => 'table',
+                'min'               => 0,
+                'max'               => 50,
+                'button_label'      => 'Add Award',
+                'sub_fields'        => [
+                    [
+                        'key'               => 'field_sfpf_award_value',
+                        'label'             => 'Award',
+                        'name'              => 'value',
+                        'type'              => 'text',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '100'],
+                        'placeholder'       => 'Forbes 30 Under 30',
+                    ],
+                ],
+            ],
+            
+            // ═══════════════════════════════════════════════════════════════
             // SHARED FIELD: Knowledge Graph Images (person OR organization)
             // ═══════════════════════════════════════════════════════════════
             [
@@ -293,23 +353,8 @@ function register_user_schema_acf_fields() {
 <code>[founder id="knowledge_graph_images"]</code> — Image URLs<br>
 <code>[founder id="knowledge_graph_images" format="json"]</code> — Full image data',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'return_format'     => 'array',
                 'library'           => 'all',
                 'min'               => 0,
@@ -335,16 +380,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'wysiwyg',
                 'instructions'      => 'Professional title or role. Supports basic HTML.<br><code>[founder id="title"]</code> or <code>[company id="title"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '100'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '100'],
                 'tabs'              => 'all',
                 'toolbar'           => 'basic',
                 'media_upload'      => 0,
@@ -357,23 +394,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'wysiwyg',
                 'instructions'      => 'Full biography text. <code>[founder id="biography"]</code> or <code>[company id="biography"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'tabs'              => 'all',
                 'toolbar'           => 'full',
                 'media_upload'      => 1,
@@ -386,23 +408,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'wysiwyg',
                 'instructions'      => 'Short biography for summaries. <code>[founder id="biography_short"]</code> or <code>[company id="biography_short"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'tabs'              => 'all',
                 'toolbar'           => 'basic',
                 'media_upload'      => 0,
@@ -415,23 +422,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'wysiwyg',
                 'instructions'      => 'Mission statement or organizational purpose. <code>[founder id="mission_statement"]</code> or <code>[company id="mission_statement"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'tabs'              => 'all',
                 'toolbar'           => 'full',
                 'media_upload'      => 1,
@@ -450,16 +442,8 @@ function register_user_schema_acf_fields() {
 <code>[founder id="professions"]</code> — Text list<br>
 <code>[founder action="display_professions_with_summary"]</code> — With links and content',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person'],
                 'layout'            => 'block',
                 'pagination'        => 0,
                 'min'               => 0,
@@ -511,16 +495,8 @@ function register_user_schema_acf_fields() {
 <code>[founder action="display_education"]</code> — Full display with links<br>
 <strong>Fields:</strong> college, wiki_url, year, designation, major',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'person',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person'],
                 'layout'            => 'block',
                 'pagination'        => 0,
                 'min'               => 0,
@@ -587,16 +563,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'text',
                 'instructions'      => 'When founded. Shortcode: <code>[company id="inception_date"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => ['width' => '50'],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-organization', 'width' => '50'],
                 'placeholder'       => '2015 or January 1, 2015',
             ],
             
@@ -607,16 +575,8 @@ function register_user_schema_acf_fields() {
                 'type'              => 'group',
                 'instructions'      => '<code>[company id="headquarters_location"]</code> &nbsp;|&nbsp; <code>[company id="headquarters_wiki"]</code>',
                 'required'          => 0,
-                'conditional_logic' => [
-                    [
-                        [
-                            'field'    => 'field_sfpf_entity_type',
-                            'operator' => '==',
-                            'value'    => 'organization',
-                        ],
-                    ],
-                ],
-                'wrapper'           => [],
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-organization'],
                 'layout'            => 'block',
                 'sub_fields'        => [
                     [
@@ -648,6 +608,7 @@ function register_user_schema_acf_fields() {
                 'label'             => 'SameAs URLs',
                 'name'              => 'sameas',
                 'type'              => 'textarea',
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'instructions'      => 'One URL per line. Used in JSON-LD structured data.<br>
 <code>[founder id="sameas"]</code> or <code>[company id="sameas"]</code> — Text<br>
 <code>[founder id="sameas" format="json"]</code> — JSON &nbsp;|&nbsp; <code>[founder id="sameas" format="ul"]</code> — HTML list',
@@ -667,7 +628,7 @@ function register_user_schema_acf_fields() {
                 'instructions'      => '',
                 'required'          => 0,
                 'conditional_logic' => 0,
-                'wrapper'           => [],
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'message'           => '<div id="sfpf-articles-import-area">
 <p style="margin:0 0 8px;font-size:12px;color:#666;">Paste article URLs below — plain URLs, comma-separated, or even raw HTML (it will extract <code>href</code> values and link text automatically). Click <strong>Process &amp; Import</strong> to sanitize, fetch titles, extract sources, detect duplicates, and append to the Articles repeater.</p>
 <textarea id="sfpf-articles-bulk-input" rows="5" style="width:100%;font-family:monospace;font-size:12px;" placeholder="Paste URLs, HTML, or mixed content:&#10;https://forbes.com/article-1&#10;https://nytimes.com/article-2&#10;Or paste raw HTML with &lt;a href=&quot;...&quot;&gt; tags"></textarea>
@@ -698,7 +659,7 @@ function register_user_schema_acf_fields() {
 <code>[founder id="articles" format="json"]</code> — JSON array of all articles',
                 'required'          => 0,
                 'conditional_logic' => 0,
-                'wrapper'           => [],
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org'],
                 'layout'            => 'table',
                 'pagination'        => 0,
                 'min'               => 0,
@@ -760,18 +721,24 @@ function register_user_schema_acf_fields() {
         'show_in_rest'          => 0,
     ]);
     
-    // Add admin CSS for better styling
-    add_action('admin_head', __NAMESPACE__ . '\\user_schema_admin_styles');
+    // Add admin CSS/JS for entity type visibility + styling
+    // Use BOTH hooks for maximum reliability
+    add_action('admin_head', __NAMESPACE__ . '\\user_schema_admin_styles', 99);
+    add_action('admin_footer', __NAMESPACE__ . '\\user_schema_admin_styles', 5);
 }
 
 /**
  * Add admin styles for user schema fields
  */
 function user_schema_admin_styles() {
+    static $already_output = false;
+    if ($already_output) return;
+    
     $screen = get_current_screen();
     if (!$screen || ($screen->base !== 'user-edit' && $screen->base !== 'profile')) {
         return;
     }
+    $already_output = true;
     ?>
     <style>
         /* Main wrapper styling */
@@ -852,7 +819,66 @@ function user_schema_admin_styles() {
         #acf-group_sfpf_user_schema_structures textarea {
             border-radius: 4px !important;
         }
+        
+        /* ============================================================
+         * ENTITY TYPE VISIBILITY: JS-controlled (replaces conditional_logic)
+         * Fields are always in the DOM/form — never removed on save.
+         * JS directly toggles display on each field based on entity_type.
+         * The .sfpf-entity-hidden class is added/removed by JS.
+         * ============================================================ */
+        .acf-field.sfpf-entity-hidden {
+            display: none !important;
+        }
     </style>
+    <script>
+    jQuery(function($) {
+        /**
+         * Entity type visibility controller.
+         * Replaces ACF conditional_logic to prevent data loss on save.
+         * Targets fields directly by their wrapper CSS class — no container dependency.
+         */
+        function sfpfUpdateEntityVisibility() {
+            // Find entity type value — try multiple selectors for compatibility
+            var entityType = 'none';
+            
+            // ACF button_group on user profile: input radios
+            var $checked = $('input[name="acf[field_sfpf_entity_type]"]:checked');
+            if ($checked.length) {
+                entityType = $checked.val();
+            } else {
+                // Fallback: look for the selected button group label
+                var $selected = $('[data-key="field_sfpf_entity_type"] .acf-button-group label.selected input');
+                if ($selected.length) {
+                    entityType = $selected.val();
+                }
+            }
+            
+            // Person-only fields
+            $('.acf-field.sfpf-entity-person').each(function() {
+                $(this).toggleClass('sfpf-entity-hidden', entityType !== 'person');
+            });
+            
+            // Organization-only fields
+            $('.acf-field.sfpf-entity-organization').each(function() {
+                $(this).toggleClass('sfpf-entity-hidden', entityType !== 'organization');
+            });
+            
+            // Person-or-org fields (visible for either, hidden for none)
+            $('.acf-field.sfpf-entity-person-or-org').each(function() {
+                $(this).toggleClass('sfpf-entity-hidden', entityType !== 'person' && entityType !== 'organization');
+            });
+        }
+        
+        // Run on page load (with small delay for ACF to finish rendering)
+        setTimeout(sfpfUpdateEntityVisibility, 100);
+        
+        // Run when entity type changes — listen broadly for ACF button groups
+        $(document).on('change', 'input[name="acf[field_sfpf_entity_type]"]', sfpfUpdateEntityVisibility);
+        $(document).on('click', '[data-key="field_sfpf_entity_type"] .acf-button-group label', function() {
+            setTimeout(sfpfUpdateEntityVisibility, 50);
+        });
+    });
+    </script>
     <?php
 }
 

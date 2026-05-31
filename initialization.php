@@ -26,6 +26,7 @@ define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SFPF_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
 
 /**
  * Config Class
@@ -1629,6 +1630,11 @@ function founder_shortcode($atts) {
             ];
             $size = $atts['size'];
             $px = isset($size_map[$size]) ? $size_map[$size] : 0;
+            // Prefer real uploaded avatar (wp-user-avatars) to bypass Gravatar/LiteSpeed avatar-cache localization (which can serve a stale blank placeholder).
+            $wpua_id = (int) get_user_meta($user_id, 'wp_user_avatar', true);
+            if ($wpua_id) { $real = wp_get_attachment_image_url($wpua_id, 'full'); if ($real) { return esc_url($real); } }
+            $wpua_meta = get_user_meta($user_id, 'wp_user_avatars', true);
+            if (is_array($wpua_meta) && !empty($wpua_meta['full'])) { return esc_url($wpua_meta['full']); }
             if ($px > 0) {
                 return esc_url(get_avatar_url($user_id, ['size' => $px]));
             }
@@ -2159,7 +2165,7 @@ function founder_display_location_born($user_id, $format = 'link') {
             if ($wiki_url) {
                 $location_html = '<a href="' . esc_url($wiki_url) . '" target="_blank" rel="noopener">' . $location . '</a>';
             }
-            return '<div class="founder-location-born"><span class="location-born-label">Location Born:</span> <span class="location-born-value">' . $location_html . '</span></div>';
+            return '<div class="founder-location-born"><span class="location-born-label">Birthplace:</span> <span class="location-born-value">' . $location_html . '</span></div>';
     }
 }
 

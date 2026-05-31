@@ -21,6 +21,13 @@ $founder_user_id = get_founder_user_id();
         <h3>Debug Tools</h3>
     </div>
     <p style="color:#666;">Run diagnostic scripts to troubleshoot issues. Share the output with support.</p>
+    <?php $sfpf_public_debug = home_url('/sfpf-profile-debug/'); ?>
+    <div style="margin-top:12px;padding:12px;border:1px solid #fde68a;background:#fffbeb;border-radius:8px;">
+        <strong>Public noindex debug URL:</strong>
+        <a href="<?php echo esc_url($sfpf_public_debug); ?>" target="_blank" rel="noopener"><?php echo esc_html($sfpf_public_debug); ?></a><br>
+        <strong>JSON URL:</strong>
+        <a href="<?php echo esc_url(add_query_arg('format', 'json', $sfpf_public_debug)); ?>" target="_blank" rel="noopener"><?php echo esc_html(add_query_arg('format', 'json', $sfpf_public_debug)); ?></a>
+    </div>
 </div>
 
 <!-- System Info -->

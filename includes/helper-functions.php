@@ -345,6 +345,7 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder id="biography_short"]', 'description' => 'Short biography'],
             ['shortcode' => '[founder id="mission_statement"]', 'description' => 'Mission statement'],
             ['shortcode' => '[founder id="avatar"]', 'description' => 'Avatar URL'],
+            ['shortcode' => '[founder action="display_gallery"]', 'description' => 'Founder photo gallery'],
             ['shortcode' => '[founder id="website"]', 'description' => 'Website URL'],
             ['shortcode' => '[founder id="additional_public_email"]', 'description' => 'Public email'],
             ['shortcode' => '[founder id="additional_public_phone"]', 'description' => 'Public phone'],
@@ -395,8 +396,128 @@ function get_all_shortcodes() {
             ['shortcode' => '[organization field="url_github"]', 'description' => 'GitHub'],
             ['shortcode' => '[organization field="url_wikipedia"]', 'description' => 'Wikipedia'],
             ['shortcode' => '[organization field="url_crunchbase"]', 'description' => 'Crunchbase'],
+            ['shortcode' => '[organization field="gallery"]', 'description' => 'Organization photo gallery'],
         ],
     ];
+}
+
+
+/**
+ * =============================================================================
+ * GALLERY UTILITIES
+ * =============================================================================
+ */
+
+function sfpf_gallery_image_from_attachment($attachment_id, $size = 'large') {
+    $attachment_id = (int) $attachment_id;
+    if ($attachment_id <= 0) return null;
+    $src = wp_get_attachment_image_src($attachment_id, $size ?: 'large');
+    $full = wp_get_attachment_image_src($attachment_id, 'full');
+    $url = is_array($src) && !empty($src[0]) ? $src[0] : (is_array($full) && !empty($full[0]) ? $full[0] : '');
+    if (!$url) return null;
+    return [
+        'id' => $attachment_id,
+        'url' => esc_url_raw($url),
+        'full_url' => is_array($full) && !empty($full[0]) ? esc_url_raw($full[0]) : esc_url_raw($url),
+        'alt' => (string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true),
+        'title' => (string) get_the_title($attachment_id),
+        'caption' => (string) wp_get_attachment_caption($attachment_id),
+    ];
+}
+
+function sfpf_normalize_gallery_images($raw, $size = 'large') {
+    $images = [];
+    $add = function($item) use (&$images, $size) {
+        if (is_numeric($item)) {
+            $image = sfpf_gallery_image_from_attachment((int) $item, $size);
+            if ($image) $images[] = $image;
+            return;
+        }
+        if (is_array($item)) {
+            $id = $item['ID'] ?? $item['id'] ?? 0;
+            if ($id) {
+                $image = sfpf_gallery_image_from_attachment((int) $id, $size);
+                if ($image) {
+                    $image['alt'] = $item['alt'] ?? $image['alt'];
+                    $image['title'] = $item['title'] ?? $image['title'];
+                    $image['caption'] = $item['caption'] ?? $image['caption'];
+                    $images[] = $image;
+                    return;
+                }
+            }
+            $url = $item['url'] ?? $item['sizes'][$size] ?? $item['full_url'] ?? '';
+            if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
+                $images[] = [
+                    'id' => (int) $id,
+                    'url' => esc_url_raw($url),
+                    'full_url' => esc_url_raw($item['full_url'] ?? $url),
+                    'alt' => (string) ($item['alt'] ?? ''),
+                    'title' => (string) ($item['title'] ?? ''),
+                    'caption' => (string) ($item['caption'] ?? ''),
+                ];
+            }
+            return;
+        }
+        $value = trim((string) $item);
+        if ($value === '') return;
+        if (ctype_digit($value)) {
+            $image = sfpf_gallery_image_from_attachment((int) $value, $size);
+            if ($image) $images[] = $image;
+            return;
+        }
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $images[] = [
+                'id' => 0,
+                'url' => esc_url_raw($value),
+                'full_url' => esc_url_raw($value),
+                'alt' => '',
+                'title' => basename((string) parse_url($value, PHP_URL_PATH)),
+                'caption' => '',
+            ];
+        }
+    };
+    if (is_array($raw)) {
+        foreach ($raw as $item) $add($item);
+    } elseif (is_string($raw) && trim($raw) !== '') {
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            foreach ($decoded as $item) $add($item);
+        } else {
+            preg_match_all('#https?://[^\s,<>]+#', $raw, $matches);
+            if (!empty($matches[0])) foreach ($matches[0] as $url) $add(rtrim($url, '.,;:) ]'));
+            else foreach (preg_split('/[\r\n,]+/', $raw) as $part) $add($part);
+        }
+    }
+    $deduped = [];
+    foreach ($images as $image) {
+        $url = $image['url'] ?? '';
+        if (!$url || isset($deduped[$url])) continue;
+        $deduped[$url] = $image;
+    }
+    return array_values($deduped);
+}
+
+function sfpf_render_gallery_html($images, $context = 'sfpf-gallery', $columns = 3) {
+    $images = sfpf_normalize_gallery_images($images);
+    if (empty($images)) return '';
+    $columns = max(1, min(6, (int) $columns));
+    $class = sanitize_html_class($context ?: 'sfpf-gallery');
+    $html = '<div class="sfpf-gallery ' . esc_attr($class) . '" data-sfpf-gallery-count="' . count($images) . '" style="display:grid;grid-template-columns:repeat(' . $columns . ',minmax(0,1fr));gap:16px;align-items:start;margin:20px 0;">';
+    foreach ($images as $image) {
+        $url = esc_url($image['url'] ?? '');
+        if (!$url) continue;
+        $full = esc_url($image['full_url'] ?? $url);
+        $alt = esc_attr($image['alt'] ?: $image['title'] ?: 'Gallery photo');
+        $caption = trim((string) ($image['caption'] ?: $image['title'] ?: ''));
+        $html .= '<figure class="sfpf-gallery-item" style="margin:0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.08);">';
+        $html .= '<a href="' . $full . '" target="_blank" rel="noopener" style="display:block;color:inherit;text-decoration:none;">';
+        $html .= '<img src="' . $url . '" alt="' . $alt . '" loading="lazy" decoding="async" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#f8fafc;">';
+        $html .= '</a>';
+        if ($caption !== '') $html .= '<figcaption style="padding:10px 12px;font-size:13px;line-height:1.35;color:#475569;">' . esc_html($caption) . '</figcaption>';
+        $html .= '</figure>';
+    }
+    $html .= '</div><style>@media(max-width:900px){.sfpf-gallery{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:560px){.sfpf-gallery{grid-template-columns:1fr!important}}</style>';
+    return $html;
 }
 
 /**
@@ -542,6 +663,8 @@ function get_default_page_template($page_key) {
 
         'recent_articles' => '[founder action="display_articles"]',
 
+        'gallery' => '[founder action="display_gallery"]',
+
         'connect' => '<h2>Connect</h2>
 <p>Get in touch with [founder id="name"].</p>
 
@@ -613,6 +736,36 @@ function get_front_page_id() {
         return (int) get_option('page_on_front');
     }
     return false;
+}
+
+/**
+ * Check whether a post ID is the configured front page.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_front_page_id($post_id) {
+    return (int) $post_id > 0 && (int) $post_id === (int) get_front_page_id();
+}
+
+/**
+ * Check whether a post ID is the configured biography page.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_biography_page_id($post_id) {
+    return (int) $post_id > 0 && (int) $post_id === (int) get_option('sfpf_page_biography', 0);
+}
+
+/**
+ * Check whether a page should receive SFPF-generated page schema.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_schema_managed_page_id($post_id) {
+    return is_front_page_id($post_id) || is_biography_page_id($post_id);
 }
 
 /**

@@ -3,9 +3,9 @@ namespace sfpf_person_website;
 
 /**
  * Organization ACF Fields Registration
- * 
+ *
  * Registers Advanced Custom Fields for the Organization post type.
- * 
+ *
  * @package sfpf_person_website
  * @since 1.0.0
  */
@@ -16,16 +16,16 @@ defined('ABSPATH') || exit;
  * Register the Organization ACF field group
  */
 function register_organization_acf_fields() {
-    
+
     if (!function_exists('acf_add_local_field_group')) {
         return;
     }
-    
+
     acf_add_local_field_group([
         'key' => 'group_sfpf_organization',
         'title' => 'Organization Details',
         'fields' => [
-            
+
             // ═══════════════════════════════════════════════════════════
             // SCHEMA
             // ═══════════════════════════════════════════════════════════
@@ -48,7 +48,7 @@ function register_organization_acf_fields() {
                 'readonly' => 1,
                 'rows' => 10,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // BASIC INFO
             // ═══════════════════════════════════════════════════════════
@@ -114,7 +114,7 @@ function register_organization_acf_fields() {
                 'required' => 0,
                 'rows' => 3,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // FOUNDING
             // ═══════════════════════════════════════════════════════════
@@ -173,7 +173,7 @@ function register_organization_acf_fields() {
                 'instructions' => 'Additional office location.<br><code>[organization field="secondary_location"]</code>',
                 'required' => 0,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // URLs
             // ═══════════════════════════════════════════════════════════
@@ -313,7 +313,7 @@ function register_organization_acf_fields() {
                 'required' => 0,
                 'rows' => 5,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // DETAILS
             // ═══════════════════════════════════════════════════════════
@@ -400,7 +400,7 @@ function register_organization_acf_fields() {
                 'instructions' => 'What the organization is looking for (hiring, partnerships, etc).<br><code>[organization field="seeks"]</code>',
                 'required' => 0,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // ADDRESS
             // ═══════════════════════════════════════════════════════════
@@ -469,7 +469,7 @@ function register_organization_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // CONTACT POINT
             // ═══════════════════════════════════════════════════════════
@@ -543,7 +543,7 @@ function register_organization_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════
             // MEDIA
             // ═══════════════════════════════════════════════════════════
@@ -567,7 +567,23 @@ function register_organization_acf_fields() {
                 'library' => 'all',
                 'preview_size' => 'thumbnail',
             ],
-            
+
+            [
+                'key' => 'field_sfpf_org_gallery',
+                'label' => 'Gallery',
+                'name' => 'gallery',
+                'type' => 'gallery',
+                'instructions' => 'Public, indexable image gallery imported from the Notion <code>gallery</code> Google Drive URL.<br><code>[organization field="gallery"]</code> - Pretty gallery<br><code>[organization field="gallery" format="json"]</code> - Full image data',
+                'required' => 0,
+                'return_format' => 'array',
+                'library' => 'all',
+                'min' => 0,
+                'max' => 60,
+                'mime_types' => 'jpg,jpeg,png,webp',
+                'insert' => 'append',
+                'preview_size' => 'thumbnail',
+            ],
+
             // Close accordions
             [
                 'key' => 'field_sfpf_org_accordion_end',
@@ -603,7 +619,7 @@ add_action('acf/save_post', __NAMESPACE__ . '\\build_organization_schema_on_save
 function build_organization_schema_on_save($post_id) {
     if (get_post_type($post_id) !== 'organization') return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    
+
     $schema = build_organization_schema($post_id);
     if (!empty($schema)) {
         update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);

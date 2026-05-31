@@ -65,6 +65,7 @@ defined('ABSPATH') || exit;
                 ['founder' => '[founder id="awards"]', 'company' => '', 'note' => 'Comma list or format="json"'],
                 ['founder' => '[founder id="knowledge_graph_id"]', 'company' => '[company id="knowledge_graph_id"]', 'note' => 'Raw KGMID (e.g. /g/11gyz2y3lp)'],
                 ['founder' => '[founder action="display_knowledge_panel"]', 'company' => '', 'note' => 'Full Google Knowledge Panel URL as link'],
+                ['founder' => '[founder action="display_gallery"]', 'company' => '[organization field="gallery"]', 'note' => 'Pretty, indexable gallery grid'],
                 ['founder' => '[founder id="url_facebook"]', 'company' => '[company id="url_facebook"]'],
                 ['founder' => '[founder id="url_instagram"]', 'company' => '[company id="url_instagram"]'],
                 ['founder' => '[founder id="url_linkedin"]', 'company' => '[company id="url_linkedin"]'],

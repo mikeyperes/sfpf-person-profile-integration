@@ -3,10 +3,10 @@ namespace sfpf_person_website;
 
 /**
  * User Schema.org Structured Data ACF Fields
- * 
+ *
  * Adds Schema.org structured data fields to WordPress user profiles.
  * Supports both Person and Organization entity types with conditional fields.
- * 
+ *
  * FIELDS:
  *   - entity_type (button_group): Person or Organization
  *   - biography (wysiwyg): Full biography (Person + Organization)
@@ -43,7 +43,7 @@ function register_user_schema_acf_fields() {
         'key'                   => 'group_sfpf_user_schema_structures',
         'title'                 => 'Schema.org Structured Data',
         'fields'                => [
-            
+
             // ═══════════════════════════════════════════════════════════════
             // ENTITY TYPE TOGGLE
             // ═══════════════════════════════════════════════════════════════
@@ -66,7 +66,7 @@ function register_user_schema_acf_fields() {
                 'allow_null'        => 0,
                 'layout'            => 'horizontal',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // GOOGLE KNOWLEDGE GRAPH ID (person OR organization)
             // ═══════════════════════════════════════════════════════════════
@@ -84,7 +84,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person-or-org', 'width' => '100'],
                 'placeholder'       => '/g/11gyz2y3lp',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON-ONLY FIELD: additionalName
             // ═══════════════════════════════════════════════════════════════
@@ -99,7 +99,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '100'],
                 'placeholder'       => 'e.g., Mike, Jr., III',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // SHARED FIELD: alternateNames (person OR organization)
             // ═══════════════════════════════════════════════════════════════
@@ -133,7 +133,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Location Born
             // ═══════════════════════════════════════════════════════════════
@@ -173,7 +173,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Birth Date
             // ═══════════════════════════════════════════════════════════════
@@ -188,7 +188,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '50'],
                 'placeholder'       => '1990-01-13',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Nationality (repeater)
             // ═══════════════════════════════════════════════════════════════
@@ -219,7 +219,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Gender
             // ═══════════════════════════════════════════════════════════════
@@ -237,7 +237,7 @@ function register_user_schema_acf_fields() {
                 'allow_null'        => 1,
                 'return_format'     => 'value',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Telephone
             // ═══════════════════════════════════════════════════════════════
@@ -252,7 +252,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
                 'placeholder'       => '(415) 212-9449',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Honorific Prefix
             // ═══════════════════════════════════════════════════════════════
@@ -267,7 +267,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
                 'placeholder'       => 'Dr.',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Honorific Suffix
             // ═══════════════════════════════════════════════════════════════
@@ -282,7 +282,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '25'],
                 'placeholder'       => 'MBA',
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Knows Language (repeater)
             // ═══════════════════════════════════════════════════════════════
@@ -311,7 +311,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON FIELD: Awards (repeater)
             // ═══════════════════════════════════════════════════════════════
@@ -340,7 +340,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // SHARED FIELD: Knowledge Graph Images (person OR organization)
             // ═══════════════════════════════════════════════════════════════
@@ -369,7 +369,34 @@ function register_user_schema_acf_fields() {
                 'insert'            => 'append',
                 'preview_size'      => 'thumbnail',
             ],
-            
+
+            [
+                'key'               => 'field_sfpf_gallery',
+                'label'             => 'Gallery',
+                'name'              => 'gallery',
+                'type'              => 'gallery',
+                'instructions'      => 'Public, indexable image gallery imported from the Notion <code>gallery</code> Google Drive URL.<br>
+<code>[founder action="display_gallery"]</code> - Pretty gallery<br>
+<code>[founder id="gallery" format="json"]</code> - Full image data<br>
+<code>[founder id="gallery" format="urls"]</code> - Image URLs',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '100'],
+                'return_format'     => 'array',
+                'library'           => 'all',
+                'min'               => 0,
+                'max'               => 60,
+                'min_width'         => '',
+                'min_height'        => '',
+                'min_size'          => '',
+                'max_width'         => '',
+                'max_height'        => '',
+                'max_size'          => '',
+                'mime_types'        => 'jpg,jpeg,png,webp',
+                'insert'            => 'append',
+                'preview_size'      => 'thumbnail',
+            ],
+
             // ═══════════════════════════════════════════════════════════════
             // SHARED CONTENT FIELDS (shown when entity_type = person OR organization)
             // ═══════════════════════════════════════════════════════════════
@@ -429,7 +456,7 @@ function register_user_schema_acf_fields() {
                 'media_upload'      => 1,
                 'delay'             => 1,
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // PERSON-ONLY FIELDS (shown when entity_type = 'person')
             // ═══════════════════════════════════════════════════════════════
@@ -552,7 +579,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // ORGANIZATION FIELDS (shown when entity_type = 'organization')
             // ═══════════════════════════════════════════════════════════════
@@ -567,7 +594,7 @@ function register_user_schema_acf_fields() {
                 'wrapper'           => ['class' => 'sfpf-entity-organization', 'width' => '50'],
                 'placeholder'       => '2015 or January 1, 2015',
             ],
-            
+
             [
                 'key'               => 'field_sfpf_headquarters_group',
                 'label'             => 'Headquarters',
@@ -599,7 +626,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
             // ═══════════════════════════════════════════════════════════════
             // SHARED FIELDS (both Person and Organization)
             // ═══════════════════════════════════════════════════════════════
@@ -697,7 +724,7 @@ function register_user_schema_acf_fields() {
                     ],
                 ],
             ],
-            
+
         ],
 
         'location'              => [
@@ -720,7 +747,7 @@ function register_user_schema_acf_fields() {
         'description'           => 'Configure Schema.org structured data for this user profile.',
         'show_in_rest'          => 0,
     ]);
-    
+
     // Add admin CSS/JS for entity type visibility + styling
     // Use BOTH hooks for maximum reliability
     add_action('admin_head', __NAMESPACE__ . '\\user_schema_admin_styles', 99);
@@ -733,7 +760,7 @@ function register_user_schema_acf_fields() {
 function user_schema_admin_styles() {
     static $already_output = false;
     if ($already_output) return;
-    
+
     $screen = get_current_screen();
     if (!$screen || ($screen->base !== 'user-edit' && $screen->base !== 'profile')) {
         return;
@@ -749,7 +776,7 @@ function user_schema_admin_styles() {
             margin: 20px 0 !important;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         }
-        
+
         /* Header styling */
         #acf-group_sfpf_user_schema_structures > .postbox-header,
         #acf-group_sfpf_user_schema_structures > h2 {
@@ -759,26 +786,26 @@ function user_schema_admin_styles() {
             margin: 0 !important;
             border-radius: 8px 8px 0 0 !important;
         }
-        
+
         #acf-group_sfpf_user_schema_structures > .postbox-header .hndle,
         #acf-group_sfpf_user_schema_structures > h2 {
             color: #fff !important;
             font-weight: 600 !important;
         }
-        
+
         /* Content area - white background */
         #acf-group_sfpf_user_schema_structures > .inside,
         #acf-group_sfpf_user_schema_structures .acf-fields {
             background: #fff !important;
             padding: 15px !important;
         }
-        
+
         /* Field labels */
         #acf-group_sfpf_user_schema_structures .acf-label label {
             font-weight: 600 !important;
             color: #1e1e1e !important;
         }
-        
+
         /* Instructions - clean style */
         #acf-group_sfpf_user_schema_structures .acf-field .description,
         #acf-group_sfpf_user_schema_structures .acf-field .acf-instructions {
@@ -787,7 +814,7 @@ function user_schema_admin_styles() {
             color: #666 !important;
             font-size: 12px !important;
         }
-        
+
         #acf-group_sfpf_user_schema_structures .acf-field .acf-instructions code {
             background: #e8f4fc !important;
             color: #0073aa !important;
@@ -795,7 +822,7 @@ function user_schema_admin_styles() {
             border-radius: 3px !important;
             font-size: 11px !important;
         }
-        
+
         /* Repeater styling */
         #acf-group_sfpf_user_schema_structures .acf-repeater .acf-row {
             background: #fff !important;
@@ -803,23 +830,23 @@ function user_schema_admin_styles() {
             border-radius: 6px !important;
             margin-bottom: 10px !important;
         }
-        
+
         #acf-group_sfpf_user_schema_structures .acf-repeater .acf-row .acf-fields {
             padding: 10px !important;
         }
-        
+
         /* Button group styling */
         #acf-group_sfpf_user_schema_structures .acf-button-group label {
             border-radius: 4px !important;
         }
-        
+
         /* Input fields */
         #acf-group_sfpf_user_schema_structures input[type="text"],
         #acf-group_sfpf_user_schema_structures input[type="url"],
         #acf-group_sfpf_user_schema_structures textarea {
             border-radius: 4px !important;
         }
-        
+
         /* ============================================================
          * ENTITY TYPE VISIBILITY: JS-controlled (replaces conditional_logic)
          * Fields are always in the DOM/form — never removed on save.
@@ -840,7 +867,7 @@ function user_schema_admin_styles() {
         function sfpfUpdateEntityVisibility() {
             // Find entity type value — try multiple selectors for compatibility
             var entityType = 'none';
-            
+
             // ACF button_group on user profile: input radios
             var $checked = $('input[name="acf[field_sfpf_entity_type]"]:checked');
             if ($checked.length) {
@@ -852,26 +879,26 @@ function user_schema_admin_styles() {
                     entityType = $selected.val();
                 }
             }
-            
+
             // Person-only fields
             $('.acf-field.sfpf-entity-person').each(function() {
                 $(this).toggleClass('sfpf-entity-hidden', entityType !== 'person');
             });
-            
+
             // Organization-only fields
             $('.acf-field.sfpf-entity-organization').each(function() {
                 $(this).toggleClass('sfpf-entity-hidden', entityType !== 'organization');
             });
-            
+
             // Person-or-org fields (visible for either, hidden for none)
             $('.acf-field.sfpf-entity-person-or-org').each(function() {
                 $(this).toggleClass('sfpf-entity-hidden', entityType !== 'person' && entityType !== 'organization');
             });
         }
-        
+
         // Run on page load (with small delay for ACF to finish rendering)
         setTimeout(sfpfUpdateEntityVisibility, 100);
-        
+
         // Run when entity type changes — listen broadly for ACF button groups
         $(document).on('change', 'input[name="acf[field_sfpf_entity_type]"]', sfpfUpdateEntityVisibility);
         $(document).on('click', '[data-key="field_sfpf_entity_type"] .acf-button-group label', function() {
@@ -888,7 +915,7 @@ function user_schema_admin_styles() {
 
 /**
  * Render education repeater content
- * 
+ *
  * @param array  $atts     Shortcode attributes
  * @param string $user_key ACF user key (e.g., 'user_123')
  * @return string
@@ -897,20 +924,20 @@ function sfpf_render_education_shortcode($atts, $user_key) {
     $format = isset($atts['format']) ? strtolower(trim($atts['format'])) : 'html';
     $index  = isset($atts['index']) ? (int)$atts['index'] : null;
     $field  = isset($atts['field']) ? sanitize_key($atts['field']) : null;
-    
+
     $education = get_field('education', $user_key);
-    
+
     if (empty($education) || !is_array($education)) {
         return '';
     }
-    
+
     // If specific index requested
     if ($index !== null) {
         if (!isset($education[$index])) {
             return '';
         }
         $entry = $education[$index];
-        
+
         // If specific field from that index
         if ($field && isset($entry[$field])) {
             $val = $entry[$field];
@@ -919,11 +946,11 @@ function sfpf_render_education_shortcode($atts, $user_key) {
             }
             return esc_html($val);
         }
-        
+
         // Return single entry as HTML
         return sfpf_format_education_entry_html($entry);
     }
-    
+
     // If specific field requested from ALL entries (comma-separated)
     if ($field && $index === null) {
         $values = [];
@@ -934,19 +961,19 @@ function sfpf_render_education_shortcode($atts, $user_key) {
         }
         return implode(', ', $values);
     }
-    
+
     // Format: JSON
     if ($format === 'json') {
         return wp_json_encode($education);
     }
-    
+
     // Default: HTML output
     $output = '<div class="founder-education">';
     foreach ($education as $i => $entry) {
         $output .= sfpf_format_education_entry_html($entry, $i);
     }
     $output .= '</div>';
-    
+
     return $output;
 }
 
@@ -963,13 +990,13 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
     $year        = isset($entry['year']) ? esc_html($entry['year']) : '';
     $designation = isset($entry['designation']) ? esc_html($entry['designation']) : '';
     $major       = isset($entry['major']) ? esc_html($entry['major']) : '';
-    
+
     if (empty($college) && empty($designation) && empty($major)) {
         return '';
     }
-    
+
     $html = '<div class="founder-education education-item">';
-    
+
     if ($college) {
         $html .= '<div class="college">';
         if ($wiki_url) {
@@ -979,7 +1006,7 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
         }
         $html .= '</div>';
     }
-    
+
     if ($designation || $major) {
         $html .= '<div class="degree">';
         if ($designation) {
@@ -993,44 +1020,44 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
         }
         $html .= '</div>';
     }
-    
+
     if ($year) {
         $html .= '<div class="year">' . $year . '</div>';
     }
-    
+
     $html .= '</div>';
-    
+
     return $html;
 }
 
 /**
  * Render sameAs content
- * 
+ *
  * @param array  $atts     Shortcode attributes
  * @param string $user_key ACF user key (e.g., 'user_123')
  * @return string
  */
 function sfpf_render_sameas_shortcode($atts, $user_key) {
     $format = isset($atts['format']) ? strtolower(trim($atts['format'])) : 'text';
-    
+
     $sameas = get_field('sameas', $user_key);
-    
+
     if (empty($sameas) || !is_string($sameas)) {
         return '';
     }
-    
+
     // Split by newlines and filter empty
     $urls = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $sameas)));
-    
+
     if (empty($urls)) {
         return '';
     }
-    
+
     // Format: JSON
     if ($format === 'json') {
         return wp_json_encode(array_values($urls));
     }
-    
+
     // Format: UL (unordered list)
     if ($format === 'ul') {
         $output = '<ul class="founder-sameas">';
@@ -1040,7 +1067,7 @@ function sfpf_render_sameas_shortcode($atts, $user_key) {
         $output .= '</ul>';
         return $output;
     }
-    
+
     // Default: text (newline separated)
     return implode("\n", array_map('esc_url', $urls));
 }

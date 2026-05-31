@@ -13,6 +13,12 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 $founder_user_id = get_founder_user_id();
+$sfpf_profile_debug_urls = function_exists(__NAMESPACE__ . '\\sfpf_profile_debug_urls')
+    ? sfpf_profile_debug_urls()
+    : [
+        'html' => home_url('/sfpf-profile-debug/'),
+        'json' => add_query_arg('format', 'json', home_url('/sfpf-profile-debug/')),
+    ];
 ?>
 
 <div class="sfpf-card">
@@ -41,6 +47,29 @@ $founder_user_id = get_founder_user_id();
         <tr><td><strong>Homepage ID</strong></td><td><?php $hp = get_front_page_id(); echo $hp ?: 'Not Set'; ?></td></tr>
         <tr><td><strong>Homepage URL</strong></td><td><a href="<?php echo home_url('/'); ?>" target="_blank"><?php echo home_url('/'); ?></a></td></tr>
         <tr><td><strong>Founder User ID</strong></td><td><?php echo $founder_user_id ?: 'Not Set'; ?></td></tr>
+    </table>
+</div>
+
+<!-- Public Profile Mapping Debug -->
+<div class="sfpf-card">
+    <div class="sfpf-card-header">
+        <span class="dashicons dashicons-visibility" style="color:#0f766e;"></span>
+        <h3>Public Profile Mapping Debug URL</h3>
+    </div>
+    <p style="color:#666;margin-bottom:12px;">These plugin-built URLs are intentionally visible. The public output is no-indexed and lists every dynamic URL it generates.</p>
+    <table class="sfpf-table" style="font-size:13px;">
+        <tr>
+            <td style="width:200px;"><strong>HTML Debug URL</strong></td>
+            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['html']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['html']); ?></a></td>
+        </tr>
+        <tr>
+            <td><strong>JSON Debug URL</strong></td>
+            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['json']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['json']); ?></a></td>
+        </tr>
+        <tr>
+            <td><strong>Robots</strong></td>
+            <td><code>noindex,nofollow</code> via page meta tag and <code>X-Robots-Tag</code> response header.</td>
+        </tr>
     </table>
 </div>
 

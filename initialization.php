@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.4
+ * Version: 1.6.8
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,17 +21,18 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define('SFPF_PLUGIN_VERSION', '1.6.4');
+define('SFPF_PLUGIN_VERSION', '1.6.8');
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SFPF_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
 
 /**
  * Config Class
  */
 class Config {
-    public static $version = '1.6.4';
+    public static $version = '1.6.8';
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -165,6 +166,7 @@ function activate_plugin() {
     // Set default options — add_option only writes if key doesn't exist yet
     add_option('sfpf_homepage_schema_type', 'person');
     add_option('sfpf_biography_schema_type', 'profile_page_only');
+    add_option('sfpf_rankmath_disable_biography', false);
     
     // Migration: fix sites that had the old 'none' default from previous activation bug
     $current_hp = get_option('sfpf_homepage_schema_type');
@@ -1050,6 +1052,11 @@ function disable_rankmath_schema($data) {
     if (is_front_page() && get_option('sfpf_rankmath_disable_homepage', false)) {
         return [];
     }
+
+    $bio_page_id = (int) get_option('sfpf_page_biography', 0);
+    if ($bio_page_id && is_page($bio_page_id) && get_option('sfpf_rankmath_disable_biography', false)) {
+        return [];
+    }
     
     if (is_singular('book') && get_option('sfpf_rankmath_disable_books', false)) {
         return [];
@@ -1488,6 +1495,11 @@ function founder_shortcode($atts) {
             ];
             $size = $atts['size'];
             $px = isset($size_map[$size]) ? $size_map[$size] : 0;
+            // Prefer real uploaded avatar (wp-user-avatars) to bypass Gravatar/LiteSpeed avatar-cache localization (which can serve a stale blank placeholder).
+            $wpua_id = (int) get_user_meta($user_id, 'wp_user_avatar', true);
+            if ($wpua_id) { $real = wp_get_attachment_image_url($wpua_id, 'full'); if ($real) { return esc_url($real); } }
+            $wpua_meta = get_user_meta($user_id, 'wp_user_avatars', true);
+            if (is_array($wpua_meta) && !empty($wpua_meta['full'])) { return esc_url($wpua_meta['full']); }
             if ($px > 0) {
                 return esc_url(get_avatar_url($user_id, ['size' => $px]));
             }
@@ -1983,7 +1995,7 @@ function founder_display_location_born($user_id, $format = 'link') {
     
     switch ($format) {
         case 'text':
-            return '<div class="founder-location-born"><span class="location-born-label">Location Born:</span> <span class="location-born-value">' . $location . '</span></div>';
+            return '<div class="founder-location-born"><span class="location-born-label">Birthplace:</span> <span class="location-born-value">' . $location . '</span></div>';
             
         case 'inline':
             if ($wiki_url) {
@@ -1997,7 +2009,7 @@ function founder_display_location_born($user_id, $format = 'link') {
             if ($wiki_url) {
                 $location_html = '<a href="' . esc_url($wiki_url) . '" target="_blank" rel="noopener">' . $location . '</a>';
             }
-            return '<div class="founder-location-born"><span class="location-born-label">Location Born:</span> <span class="location-born-value">' . $location_html . '</span></div>';
+            return '<div class="founder-location-born"><span class="location-born-label">Birthplace:</span> <span class="location-born-value">' . $location_html . '</span></div>';
     }
 }
 
@@ -2384,3 +2396,785 @@ add_action('admin_footer', function() {
     </script>
     <?php
 });
+
+
+// =============================================================================
+// PUBLIC PROFILE FIELD MAPPING DEBUG
+// =============================================================================
+
+add_filter("pre_handle_404", __NAMESPACE__ . "\sfpf_profile_debug_prevent_404", 0, 2);
+add_filter("rank_math/frontend/robots", __NAMESPACE__ . "\sfpf_profile_debug_rankmath_robots", 99);
+add_filter("wp_robots", __NAMESPACE__ . "\sfpf_profile_debug_wp_robots", 99);
+add_action("template_redirect", __NAMESPACE__ . "\sfpf_profile_debug_template", 0);
+
+function sfpf_profile_debug_urls() {
+    $html_url = home_url("/" . SFPF_PROFILE_DEBUG_ROUTE . "/");
+    return [
+        "html" => $html_url,
+        "json" => add_query_arg("format", "json", $html_url),
+    ];
+}
+
+function sfpf_profile_debug_is_route_request() {
+    $request_path = trim((string) (parse_url($_SERVER["REQUEST_URI"] ?? "", PHP_URL_PATH) ?: ""), "/");
+    return $request_path === SFPF_PROFILE_DEBUG_ROUTE;
+}
+
+function sfpf_profile_debug_prevent_404($preempt, $wp_query) {
+    if (is_admin() || wp_doing_ajax() || !sfpf_profile_debug_is_route_request()) {
+        return $preempt;
+    }
+
+    if ($wp_query instanceof \WP_Query) {
+        $wp_query->is_404 = false;
+    }
+
+    return true;
+}
+
+function sfpf_profile_debug_rankmath_robots($robots) {
+    if (!sfpf_profile_debug_is_route_request()) {
+        return $robots;
+    }
+
+    return [
+        "index" => "noindex",
+        "follow" => "nofollow",
+    ];
+}
+
+function sfpf_profile_debug_wp_robots($robots) {
+    if (!sfpf_profile_debug_is_route_request()) {
+        return $robots;
+    }
+
+    unset($robots["index"], $robots["follow"]);
+    $robots["noindex"] = true;
+    $robots["nofollow"] = true;
+    return $robots;
+}
+
+function sfpf_profile_debug_template() {
+    if (is_admin() || wp_doing_ajax() || is_feed() || !sfpf_profile_debug_is_route_request()) {
+        return;
+    }
+
+    global $wp_query;
+    if ($wp_query instanceof \WP_Query) {
+        $wp_query->is_404 = false;
+    }
+    if (!defined("DONOTCACHEPAGE")) {
+        define("DONOTCACHEPAGE", true);
+    }
+    do_action("litespeed_control_set_nocache", "SFPF profile debug output");
+
+    status_header(200);
+    nocache_headers();
+    header("X-Robots-Tag: noindex, nofollow", true);
+
+    $format = isset($_GET["format"]) ? sanitize_key((string) wp_unslash($_GET["format"])) : "";
+    if ($format === "json") {
+        wp_send_json(sfpf_profile_debug_data(), 200);
+    }
+
+    add_action("wp_head", __NAMESPACE__ . "\sfpf_profile_debug_noindex_meta", 0);
+    get_header();
+    echo sfpf_render_profile_debug_page();
+    get_footer();
+    exit;
+}
+
+function sfpf_profile_debug_noindex_meta() {
+    echo "\n<meta name=\"robots\" content=\"noindex,nofollow\" />\n";
+}
+
+function sfpf_profile_debug_map($scope, $notion_field, $wp_field, $wp_page, $wp_type, $label, $kp_request_type = null, $proof_sources = [], $read_field = "", $read_path = "", $notes = "") {
+    return [
+        "scope" => $scope,
+        "notion_field" => $notion_field,
+        "wp_field" => $wp_field,
+        "wp_page" => $wp_page,
+        "wp_type" => $wp_type,
+        "label" => $label,
+        "kp_request_type" => $kp_request_type,
+        "proof_sources" => $proof_sources,
+        "read_field" => $read_field ?: $wp_field,
+        "read_path" => $read_path,
+        "notes" => $notes,
+    ];
+}
+
+function sfpf_profile_debug_field_maps() {
+    return [
+        "person" => [
+            sfpf_profile_debug_map("person", "Full Name", "first_name", "profile.php", "native", "First Name"),
+            sfpf_profile_debug_map("person", "Full Name", "last_name", "profile.php", "native", "Name", "Name", ["personal_website", "wikidata"]),
+            sfpf_profile_debug_map("person", "Full Name", "display_name", "profile.php", "native", "Display Name"),
+            sfpf_profile_debug_map("person", "Primary Email", "user_email", "profile.php", "native", "Email"),
+            sfpf_profile_debug_map("person", "Description", "description", "profile.php", "native", "Bio (native)"),
+            sfpf_profile_debug_map("person", "GKG URL", "knowledge_graph_id", "profile.php", "acf", "Knowledge Graph ID", null, ["google_kgmid"]),
+            sfpf_profile_debug_map("person", "Title / Job Title", "title", "profile.php", "acf", "Title / Job Title", "Subtitle", ["personal_website", "linkedin"]),
+            sfpf_profile_debug_map("person", "Gender", "gender", "profile.php", "acf", "Gender"),
+            sfpf_profile_debug_map("person", "Date of Birth", "birth_date", "profile.php", "acf", "Date of Birth", "Date of Birth", ["wikidata", "personal_website_bio"]),
+            sfpf_profile_debug_map("person", "Honorific Prefix", "honorific_prefix", "profile.php", "acf", "Honorific Prefix"),
+            sfpf_profile_debug_map("person", "Honorific Suffix", "honorific_suffix", "profile.php", "acf", "Honorific Suffix"),
+            sfpf_profile_debug_map("person", "Telephone", "telephone", "profile.php", "acf", "Telephone"),
+            sfpf_profile_debug_map("person", "Career", "biography", "profile.php", "acf", "Biography (Full)", "Person Bio", ["personal_website_bio"]),
+            sfpf_profile_debug_map("person", "Biography (Short)", "biography_short", "profile.php", "acf", "Biography (Short)"),
+            sfpf_profile_debug_map("person", "Mission Statement", "mission_statement", "profile.php", "acf", "Mission Statement"),
+            sfpf_profile_debug_map("person", "Location of Birth", "location_born_location", "profile.php", "acf", "Location of Birth", "Place of Birth", ["wikipedia_city", "wikidata", "personal_website_bio"], "location_born", "location", "Audit field is flattened; ACF stores the value in location_born.location."),
+            sfpf_profile_debug_map("person", "Location Born - Wikipedia URL", "location_born_wikipedia_url", "profile.php", "acf", "Birth Location Wikipedia URL", null, ["wikipedia_city"], "location_born", "wikipedia_url", "Audit field is flattened; ACF stores the value in location_born.wikipedia_url."),
+            sfpf_profile_debug_map("person", "Nicknames", "alternate_names", "profile.php", "acf_repeater", "Alternate Names"),
+            sfpf_profile_debug_map("person", "Country of Citizenship", "nationality", "profile.php", "acf_repeater", "Nationality"),
+            sfpf_profile_debug_map("person", "Languages", "knows_language", "profile.php", "acf_repeater", "Languages"),
+            sfpf_profile_debug_map("person", "Awards", "awards", "profile.php", "acf_repeater", "Awards"),
+            sfpf_profile_debug_map("person", "Occupations", "professions", "profile.php", "acf_repeater", "Professions"),
+            sfpf_profile_debug_map("person", "Educated At", "education", "profile.php", "acf_repeater", "Education", "Education", ["wikipedia_university", "linkedin", "wikidata", "crunchbase", "f6s"]),
+            sfpf_profile_debug_map("person", "Links to Published Articles", "articles", "profile.php", "acf_repeater", "Articles / Press"),
+            sfpf_profile_debug_map("person", "SameAs URLs", "sameas", "profile.php", "acf", "SameAs URLs"),
+            sfpf_profile_debug_map("person", "Personal Facebook URL", "urls_facebook", "profile.php", "usermeta", "Facebook URL", "Social Media", ["personal_website_bio", "crunchbase"], "urls", "facebook", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Personal Instagram URL", "urls_instagram", "profile.php", "usermeta", "Instagram URL", "Social Media", ["personal_website_bio", "crunchbase"], "urls", "instagram", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Personal LinkedIn URL", "urls_linkedin", "profile.php", "usermeta", "LinkedIn URL", "Social Media", ["personal_website_bio", "crunchbase"], "urls", "linkedin", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Personal Twitter URL", "urls_x", "profile.php", "usermeta", "Twitter/X URL", "Social Media", ["personal_website_bio", "crunchbase"], "urls", "x", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "YouTube URL", "urls_youtube", "profile.php", "usermeta", "YouTube URL", "Social Media", ["personal_website_bio"], "urls", "youtube", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Wikipedia URL", "urls_wikipedia", "profile.php", "usermeta", "Wikipedia URL", null, [], "urls", "wikipedia", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Crunchbase URL", "urls_crunchbase", "profile.php", "usermeta", "Crunchbase URL", null, [], "urls", "crunchbase", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Official Website", "urls_website", "profile.php", "usermeta", "Website URL", "Website URL", ["the_website"], "urls", "website", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "TikTok URL", "urls_tiktok", "profile.php", "usermeta", "TikTok URL", "Social Media", ["personal_website_bio"], "urls", "tiktok", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "iMDB URL", "urls_imdb", "profile.php", "usermeta", "IMDB URL", "TV Show or Podcast (IMDB)", ["imdb"], "urls", "imdb", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "MuckRack URL", "urls_muckrack", "profile.php", "usermeta", "MuckRack URL", null, [], "urls", "muckrack", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "Amazon Author URL", "urls_amazon", "profile.php", "usermeta", "Amazon Author URL", null, [], "urls", "amazon", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+            sfpf_profile_debug_map("person", "GitHub URL", "urls_github", "profile.php", "usermeta", "GitHub URL", null, [], "urls", "github", "Resolved from the HWS urls group, with direct user meta fallbacks."),
+        ],
+        "organization" => [
+            sfpf_profile_debug_map("organization", "Business/Company Name", "post_title", "post.php (organization)", "native", "Organization Name", "Name", ["company_website", "crunchbase"]),
+            sfpf_profile_debug_map("organization", "Short Description", "short_summary", "post.php (organization)", "acf", "Short Summary", "Company Bio", ["company_website_about"]),
+            sfpf_profile_debug_map("organization", "Description", "company_info", "post.php (organization)", "acf", "Company Info", "Company Bio", ["company_website_about"]),
+            sfpf_profile_debug_map("organization", "Slogan", "mission_statement", "post.php (organization)", "acf", "Mission Statement"),
+            sfpf_profile_debug_map("organization", "Website URL", "url", "post.php (organization)", "acf", "Website URL", "Website URL", ["the_website"]),
+            sfpf_profile_debug_map("organization", "Year Founded", "founding_date", "post.php (organization)", "acf", "Founding Date", "Date of Inception", ["crunchbase", "company_website_about"]),
+            sfpf_profile_debug_map("organization", "Headquarters Location", "headquarters", "post.php (organization)", "acf", "Headquarters", "Headquarters", ["wikipedia_city", "crunchbase", "company_website_about"]),
+            sfpf_profile_debug_map("organization", "Logo URL", "image_cropped", "post.php (organization)", "acf", "Logo", "Logo", ["company_website"]),
+            sfpf_profile_debug_map("organization", "LinkedIn", "social_urls_linkedin", "post.php (organization)", "acf", "LinkedIn", "Social Media", ["company_website"], "url_linkedin", "", "Audit field is social_urls_linkedin; this plugin also checks url_linkedin and social_urls.linkedin."),
+            sfpf_profile_debug_map("organization", "Twitter", "social_urls_twitter", "post.php (organization)", "acf", "Twitter", "Social Media", ["company_website"], "url_x", "", "Audit field is social_urls_twitter; this plugin also checks url_x and social_urls.twitter/x."),
+        ],
+        "book" => [
+            sfpf_profile_debug_map("book", "Name", "post_title", "post.php (book)", "native", "Book Title", "Books", ["google_books"]),
+            sfpf_profile_debug_map("book", "Description", "description", "post.php (book)", "acf", "Description"),
+            sfpf_profile_debug_map("book", "ISBN", "isbn", "post.php (book)", "acf", "ISBN"),
+            sfpf_profile_debug_map("book", "Amazon URL", "amazon_url", "post.php (book)", "acf", "Amazon URL", "Books", ["amazon"]),
+            sfpf_profile_debug_map("book", "Google Books URL", "google_books_url", "post.php (book)", "acf", "Google Books URL", "Books", ["google_books"]),
+            sfpf_profile_debug_map("book", "GoodReads URL", "goodreads_url", "post.php (book)", "acf", "GoodReads URL"),
+            sfpf_profile_debug_map("book", "Audible URL", "audible_url", "post.php (book)", "acf", "Audible URL"),
+            sfpf_profile_debug_map("book", "Book Cover URL", "cover", "post.php (book)", "acf", "Cover Image"),
+            sfpf_profile_debug_map("book", "Writer", "author_bio", "post.php (book)", "acf", "Author Bio"),
+            sfpf_profile_debug_map("book", "Publishing Company", "publishing_company", "post.php (book)", "acf", "Publisher"),
+        ],
+    ];
+}
+
+function sfpf_profile_debug_target($scope) {
+    $target = [
+        "scope" => $scope,
+        "id" => 0,
+        "label" => "Not found",
+        "object_type" => "",
+        "acf_ref" => "",
+        "public_url" => "",
+        "edit_url" => "",
+    ];
+
+    if ($scope === "person") {
+        $user_id = function_exists(__NAMESPACE__ . "\get_founder_user_id") ? (int) get_founder_user_id() : 0;
+        $user = $user_id ? get_userdata($user_id) : null;
+        if ($user instanceof \WP_User) {
+            $target["id"] = $user_id;
+            $target["label"] = $user->display_name;
+            $target["object_type"] = "user";
+            $target["acf_ref"] = "user_" . $user_id;
+            $target["public_url"] = get_author_posts_url($user_id);
+            $target["edit_url"] = admin_url("user-edit.php?user_id=" . $user_id);
+        }
+        return $target;
+    }
+
+    if ($scope === "organization") {
+        $post = function_exists(__NAMESPACE__ . "\get_primary_organization") ? get_primary_organization() : null;
+        if ($post instanceof \WP_Post) {
+            $target["id"] = (int) $post->ID;
+            $target["label"] = get_the_title($post);
+            $target["object_type"] = "post";
+            $target["acf_ref"] = (int) $post->ID;
+            $target["public_url"] = get_permalink($post);
+            $target["edit_url"] = get_edit_post_link($post->ID, "");
+        }
+        return $target;
+    }
+
+    if ($scope === "book") {
+        $post = function_exists(__NAMESPACE__ . "\get_primary_book") ? get_primary_book() : null;
+        if ($post instanceof \WP_Post) {
+            $target["id"] = (int) $post->ID;
+            $target["label"] = get_the_title($post);
+            $target["object_type"] = "post";
+            $target["acf_ref"] = (int) $post->ID;
+            $target["public_url"] = get_permalink($post);
+            $target["edit_url"] = get_edit_post_link($post->ID, "");
+        }
+    }
+
+    return $target;
+}
+
+function sfpf_profile_debug_get_nested_value($value, $path) {
+    if ($path === "") {
+        return $value;
+    }
+
+    foreach (explode(".", $path) as $part) {
+        if (is_array($value) && array_key_exists($part, $value)) {
+            $value = $value[$part];
+            continue;
+        }
+        if (is_object($value) && isset($value->{$part})) {
+            $value = $value->{$part};
+            continue;
+        }
+        return null;
+    }
+
+    return $value;
+}
+
+function sfpf_profile_debug_present($value) {
+    if ($value === null || $value === false || $value === "") {
+        return false;
+    }
+
+    if (is_array($value)) {
+        foreach ($value as $item) {
+            if (sfpf_profile_debug_present($item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (is_object($value)) {
+        return true;
+    }
+
+    return trim(wp_strip_all_tags((string) $value)) !== "";
+}
+
+function sfpf_profile_debug_native_value($scope, $target, $field) {
+    if (empty($target["id"])) {
+        return null;
+    }
+
+    if ($scope === "person") {
+        $user = get_userdata((int) $target["id"]);
+        if (!$user instanceof \WP_User) {
+            return null;
+        }
+
+        if ($field === "display_name") return $user->display_name;
+        if ($field === "user_email") return $user->user_email;
+        if ($field === "description") return get_user_meta((int) $target["id"], "description", true);
+        return get_user_meta((int) $target["id"], $field, true);
+    }
+
+    if ($target["object_type"] === "post" && $field === "post_title") {
+        return get_the_title((int) $target["id"]);
+    }
+
+    return null;
+}
+
+function sfpf_profile_debug_person_usermeta_value($target, $map) {
+    if (empty($target["id"])) {
+        return null;
+    }
+
+    $field = (string) $map["wp_field"];
+    if (strpos($field, "urls_") === 0) {
+        $platform = substr($field, 5);
+        if (function_exists("get_field")) {
+            $urls = get_field("urls", $target["acf_ref"]);
+            if (is_array($urls) && !empty($urls[$platform])) {
+                return $urls[$platform];
+            }
+        }
+
+        $direct = get_user_meta((int) $target["id"], $field, true);
+        if ($direct !== "") return $direct;
+
+        return get_user_meta((int) $target["id"], "url_" . $platform, true);
+    }
+
+    return get_user_meta((int) $target["id"], $field, true);
+}
+
+function sfpf_profile_debug_acf_value($scope, $target, $map) {
+    if (empty($target["acf_ref"]) || !function_exists("get_field")) {
+        return null;
+    }
+
+    if ($scope === "organization" && $map["wp_field"] === "social_urls_linkedin") {
+        $value = get_field("url_linkedin", $target["acf_ref"]);
+        if (sfpf_profile_debug_present($value)) return $value;
+        $social_urls = get_field("social_urls", $target["acf_ref"]);
+        $value = sfpf_profile_debug_get_nested_value($social_urls, "linkedin");
+        if (sfpf_profile_debug_present($value)) return $value;
+        return get_field("social_urls_linkedin", $target["acf_ref"]);
+    }
+
+    if ($scope === "organization" && $map["wp_field"] === "social_urls_twitter") {
+        $value = get_field("url_x", $target["acf_ref"]);
+        if (sfpf_profile_debug_present($value)) return $value;
+        $social_urls = get_field("social_urls", $target["acf_ref"]);
+        $value = sfpf_profile_debug_get_nested_value($social_urls, "twitter");
+        if (sfpf_profile_debug_present($value)) return $value;
+        $value = sfpf_profile_debug_get_nested_value($social_urls, "x");
+        if (sfpf_profile_debug_present($value)) return $value;
+        return get_field("social_urls_twitter", $target["acf_ref"]);
+    }
+
+    $value = get_field($map["read_field"], $target["acf_ref"]);
+    if (!empty($map["read_path"])) {
+        $value = sfpf_profile_debug_get_nested_value($value, $map["read_path"]);
+    }
+
+    if (!sfpf_profile_debug_present($value) && $map["read_field"] !== $map["wp_field"]) {
+        $fallback = get_field($map["wp_field"], $target["acf_ref"]);
+        if (sfpf_profile_debug_present($fallback)) {
+            return $fallback;
+        }
+    }
+
+    return $value;
+}
+
+function sfpf_profile_debug_read_value($scope, $target, $map) {
+    if ($map["wp_type"] === "native") {
+        return sfpf_profile_debug_native_value($scope, $target, $map["wp_field"]);
+    }
+
+    if ($scope === "person" && $map["wp_type"] === "usermeta") {
+        return sfpf_profile_debug_person_usermeta_value($target, $map);
+    }
+
+    $value = sfpf_profile_debug_acf_value($scope, $target, $map);
+    if (sfpf_profile_debug_present($value)) {
+        return $value;
+    }
+
+    if ($target["object_type"] === "post" && !empty($target["id"])) {
+        return get_post_meta((int) $target["id"], $map["wp_field"], true);
+    }
+
+    if ($target["object_type"] === "user" && !empty($target["id"])) {
+        return get_user_meta((int) $target["id"], $map["wp_field"], true);
+    }
+
+    return $value;
+}
+
+function sfpf_profile_debug_is_sensitive_field($map) {
+    $haystack = strtolower($map["notion_field"] . " " . $map["wp_field"] . " " . $map["label"]);
+    return strpos($haystack, "email") !== false || strpos($haystack, "telephone") !== false || strpos($haystack, "phone") !== false;
+}
+
+function sfpf_profile_debug_value_preview($value, $map = null, $limit = 180) {
+    if ($map && sfpf_profile_debug_is_sensitive_field($map)) {
+        return sfpf_profile_debug_present($value) ? "[redacted: present]" : "";
+    }
+
+    if ($value instanceof \WP_Post) {
+        $value = get_the_title($value);
+    } elseif (is_object($value)) {
+        $value = get_object_vars($value);
+    }
+
+    if (is_array($value)) {
+        $encoded = wp_json_encode($value, JSON_UNESCAPED_SLASHES);
+        $value = $encoded !== false ? $encoded : "";
+    } elseif (is_bool($value)) {
+        $value = $value ? "true" : "false";
+    } elseif ($value === null) {
+        $value = "";
+    }
+
+    $text = preg_replace("/\s+/", " ", trim(wp_strip_all_tags((string) $value)));
+    if (function_exists("mb_strlen") && mb_strlen($text) > $limit) {
+        return mb_substr($text, 0, $limit - 3) . "...";
+    }
+    if (!function_exists("mb_strlen") && strlen($text) > $limit) {
+        return substr($text, 0, $limit - 3) . "...";
+    }
+
+    return $text;
+}
+
+function sfpf_profile_debug_extract_urls($value, $map = null) {
+    $urls = [];
+
+    if (is_array($value)) {
+        foreach ($value as $item) {
+            $urls = array_merge($urls, sfpf_profile_debug_extract_urls($item, $map));
+        }
+    } elseif (is_object($value)) {
+        $urls = array_merge($urls, sfpf_profile_debug_extract_urls(get_object_vars($value), $map));
+    } else {
+        $text = trim((string) $value);
+        if ($text !== "") {
+            if (preg_match_all("~https?://[^\s\"'<>]+~", $text, $matches)) {
+                foreach ($matches[0] as $url) {
+                    $urls[] = rtrim($url, ".,);]");
+                }
+            } elseif (filter_var($text, FILTER_VALIDATE_URL)) {
+                $urls[] = $text;
+            }
+        }
+    }
+
+    if ($map && in_array($map["wp_field"], ["cover", "image_cropped"], true) && (is_int($value) || is_string($value)) && is_numeric($value)) {
+        $attachment_url = wp_get_attachment_url((int) $value);
+        if ($attachment_url) {
+            $urls[] = $attachment_url;
+        }
+    }
+
+    if ($map && $map["wp_field"] === "knowledge_graph_id") {
+        $kgid = trim((string) $value);
+        if ($kgid !== "" && strpos($kgid, "http") !== 0) {
+            $urls[] = "https://www.google.com/search?kgmid=" . rawurlencode($kgid);
+        }
+    }
+
+    return array_values(array_unique(array_filter($urls)));
+}
+
+function sfpf_profile_debug_mapping_rows($scope, $target, $maps) {
+    $rows = [];
+    foreach ($maps as $map) {
+        $value = sfpf_profile_debug_read_value($scope, $target, $map);
+        $present = sfpf_profile_debug_present($value);
+        $rows[] = array_merge($map, [
+            "target_id" => (int) ($target["id"] ?? 0),
+            "target_label" => (string) ($target["label"] ?? ""),
+            "wp_value_status" => $present ? "present" : "missing",
+            "wp_value_preview" => sfpf_profile_debug_value_preview($value, $map),
+            "visible_urls" => sfpf_profile_debug_extract_urls($value, $map),
+        ]);
+    }
+
+    return $rows;
+}
+
+function sfpf_profile_debug_add_visible_url(&$urls, $label, $url, $built_from) {
+    $url = trim((string) $url);
+    if ($url === "") {
+        return;
+    }
+
+    $urls[$url] = [
+        "label" => $label,
+        "url" => $url,
+        "built_from" => $built_from,
+    ];
+}
+
+function sfpf_profile_debug_dynamic_urls($targets, $mapping_rows) {
+    $urls = [];
+    $debug_urls = sfpf_profile_debug_urls();
+    sfpf_profile_debug_add_visible_url($urls, "Profile debug HTML", $debug_urls["html"], "home_url('/" . SFPF_PROFILE_DEBUG_ROUTE . "/')");
+    sfpf_profile_debug_add_visible_url($urls, "Profile debug JSON", $debug_urls["json"], "add_query_arg('format','json', profile debug HTML URL)");
+    sfpf_profile_debug_add_visible_url($urls, "Site home", home_url("/"), "home_url('/')");
+
+    foreach ($targets as $scope => $target) {
+        if (!empty($target["public_url"])) {
+            sfpf_profile_debug_add_visible_url($urls, ucfirst($scope) . " public URL", $target["public_url"], "Resolved from current SFPF " . $scope . " target");
+        }
+    }
+
+    foreach ($mapping_rows as $scope => $rows) {
+        foreach ($rows as $row) {
+            foreach ((array) ($row["visible_urls"] ?? []) as $url) {
+                sfpf_profile_debug_add_visible_url($urls, ucfirst($scope) . ": " . $row["label"], $url, "Current WordPress value for " . $row["wp_field"]);
+            }
+        }
+    }
+
+    return array_values($urls);
+}
+
+function sfpf_profile_debug_data() {
+    $maps = sfpf_profile_debug_field_maps();
+    $targets = [];
+    $mapping_rows = [];
+
+    foreach ($maps as $scope => $scope_maps) {
+        $targets[$scope] = sfpf_profile_debug_target($scope);
+        $mapping_rows[$scope] = sfpf_profile_debug_mapping_rows($scope, $targets[$scope], $scope_maps);
+    }
+
+    return [
+        "generated_at" => current_time("mysql"),
+        "site_url" => home_url("/"),
+        "plugin_version" => SFPF_PLUGIN_VERSION,
+        "route" => SFPF_PROFILE_DEBUG_ROUTE,
+        "robots" => "noindex,nofollow",
+        "urls" => sfpf_profile_debug_urls(),
+        "dynamic_urls" => sfpf_profile_debug_dynamic_urls($targets, $mapping_rows),
+        "targets" => $targets,
+        "mapping_counts" => [
+            "person" => count($mapping_rows["person"] ?? []),
+            "organization" => count($mapping_rows["organization"] ?? []),
+            "book" => count($mapping_rows["book"] ?? []),
+            "total" => count($mapping_rows["person"] ?? []) + count($mapping_rows["organization"] ?? []) + count($mapping_rows["book"] ?? []),
+        ],
+        "mappings" => $mapping_rows,
+        "source_note" => "This public debug output is generated by the SFPF WordPress plugin. It mirrors the SFPF Notion to WordPress audit field map and reads current WordPress target values where available.",
+    ];
+}
+
+function sfpf_profile_debug_render_url_cells($urls) {
+    if (empty($urls)) {
+        return '<span class="sfpf-debug-muted">None</span>';
+    }
+
+    $html = '<ul class="sfpf-debug-url-list">';
+    foreach ($urls as $url) {
+        $html .= '<li><a href="' . esc_url($url) . '" target="_blank" rel="noopener nofollow">' . esc_html($url) . '</a></li>';
+    }
+    $html .= '</ul>';
+    return $html;
+}
+
+function sfpf_render_profile_debug_page() {
+    $data = sfpf_profile_debug_data();
+    $scope_labels = [
+        "person" => "Person",
+        "organization" => "Organization",
+        "book" => "Book",
+    ];
+
+    ob_start();
+    ?>
+    <main id="content" class="site-main sfpf-profile-debug-page">
+        <style>
+            .sfpf-profile-debug-page{max-width:1180px;margin:0 auto;padding:42px 18px 64px;color:#172033;font-family:inherit}
+            .sfpf-profile-debug-page *{box-sizing:border-box}
+            .sfpf-debug-hero{border:1px solid #c8d7e5;background:#f7fafc;padding:26px;border-radius:8px;margin-bottom:18px}
+            .sfpf-debug-eyebrow{margin:0 0 7px;color:#315f85;text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.08em}
+            .sfpf-profile-debug-page h1{margin:0 0 10px;font-size:34px;line-height:1.15;color:#101828}
+            .sfpf-profile-debug-page h2{font-size:20px;margin:0 0 14px;color:#101828}
+            .sfpf-profile-debug-page p{font-size:15px;line-height:1.55}
+            .sfpf-debug-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+            .sfpf-debug-meta div,.sfpf-debug-section{border:1px solid #d9e2ec;background:#fff;border-radius:8px;padding:14px}
+            .sfpf-debug-label{display:block;font-size:11px;font-weight:800;color:#5a6b7a;text-transform:uppercase;margin-bottom:5px}
+            .sfpf-debug-value{font-size:13px;word-break:break-word;color:#172033}
+            .sfpf-debug-section{margin-top:18px;overflow:hidden}
+            .sfpf-debug-table-wrap{overflow-x:auto}
+            .sfpf-debug-table{width:100%;border-collapse:collapse;font-size:13px}
+            .sfpf-debug-table th,.sfpf-debug-table td{border-bottom:1px solid #e7edf3;padding:10px 9px;text-align:left;vertical-align:top}
+            .sfpf-debug-table th{background:#f1f5f9;color:#334155;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+            .sfpf-debug-code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef4f8;border:1px solid #d8e4ed;border-radius:5px;padding:2px 5px;color:#183247;word-break:break-word}
+            .sfpf-debug-badge{display:inline-block;border:1px solid #b9c9d8;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;color:#31475b;background:#f8fafc}
+            .sfpf-debug-badge.present{border-color:#9ad4b0;color:#14532d;background:#ecfdf3}
+            .sfpf-debug-badge.missing{border-color:#f2c6a8;color:#7c2d12;background:#fff7ed}
+            .sfpf-debug-muted{color:#697b8c}
+            .sfpf-debug-url-list{margin:0;padding:0;list-style:none;display:grid;gap:5px}
+            .sfpf-debug-url-list a,.sfpf-profile-debug-page a{color:#0b63b6;text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+            .sfpf-debug-note{font-size:12px;color:#5c6f80;margin-top:6px}
+            @media(max-width:780px){.sfpf-debug-meta{grid-template-columns:1fr}.sfpf-profile-debug-page h1{font-size:28px}}
+        </style>
+
+        <section class="sfpf-debug-hero">
+            <p class="sfpf-debug-eyebrow">SFPF plugin public debug</p>
+            <h1>SFPF Profile Debug Output</h1>
+            <p>This no-index page shows the public technical breakdown of how the SFPF Notion audit fields map into WordPress profile, organization, and book fields for this site.</p>
+            <div class="sfpf-debug-meta">
+                <div><span class="sfpf-debug-label">HTML URL</span><a class="sfpf-debug-value" href="<?php echo esc_url($data["urls"]["html"]); ?>"><?php echo esc_html($data["urls"]["html"]); ?></a></div>
+                <div><span class="sfpf-debug-label">JSON URL</span><a class="sfpf-debug-value" href="<?php echo esc_url($data["urls"]["json"]); ?>"><?php echo esc_html($data["urls"]["json"]); ?></a></div>
+                <div><span class="sfpf-debug-label">Robots</span><span class="sfpf-debug-value"><?php echo esc_html($data["robots"]); ?> via meta tag and X-Robots-Tag header</span></div>
+                <div><span class="sfpf-debug-label">Plugin Version</span><span class="sfpf-debug-value"><?php echo esc_html($data["plugin_version"]); ?></span></div>
+            </div>
+        </section>
+
+        <section class="sfpf-debug-section">
+            <h2>Resolved Targets</h2>
+            <div class="sfpf-debug-table-wrap">
+                <table class="sfpf-debug-table">
+                    <thead><tr><th>Scope</th><th>Current target</th><th>Object</th><th>Public URL</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($data["targets"] as $scope => $target): ?>
+                        <tr>
+                            <td><?php echo esc_html($scope_labels[$scope] ?? $scope); ?></td>
+                            <td><?php echo esc_html($target["label"]); ?> <span class="sfpf-debug-code">ID <?php echo esc_html((string) $target["id"]); ?></span></td>
+                            <td><span class="sfpf-debug-code"><?php echo esc_html($target["object_type"] ?: "none"); ?></span> <span class="sfpf-debug-code"><?php echo esc_html((string) $target["acf_ref"]); ?></span></td>
+                            <td><?php echo $target["public_url"] ? '<a href="' . esc_url($target["public_url"]) . '" target="_blank" rel="noopener nofollow">' . esc_html($target["public_url"]) . '</a>' : '<span class="sfpf-debug-muted">None</span>'; ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sfpf-debug-section">
+            <h2>Visible Dynamic URLs</h2>
+            <div class="sfpf-debug-table-wrap">
+                <table class="sfpf-debug-table">
+                    <thead><tr><th>Label</th><th>URL</th><th>Built From</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($data["dynamic_urls"] as $url): ?>
+                        <tr>
+                            <td><?php echo esc_html($url["label"]); ?></td>
+                            <td><a href="<?php echo esc_url($url["url"]); ?>" target="_blank" rel="noopener nofollow"><?php echo esc_html($url["url"]); ?></a></td>
+                            <td><span class="sfpf-debug-code"><?php echo esc_html($url["built_from"]); ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sfpf-debug-section">
+            <h2>Mapping Summary</h2>
+            <p class="sfpf-debug-muted"><?php echo esc_html($data["mapping_counts"]["total"]); ?> mapped fields: <?php echo esc_html((string) $data["mapping_counts"]["person"]); ?> person, <?php echo esc_html((string) $data["mapping_counts"]["organization"]); ?> organization, <?php echo esc_html((string) $data["mapping_counts"]["book"]); ?> book.</p>
+        </section>
+
+        <?php foreach ($data["mappings"] as $scope => $rows): ?>
+            <section class="sfpf-debug-section">
+                <h2><?php echo esc_html($scope_labels[$scope] ?? ucfirst($scope)); ?> Mappings</h2>
+                <div class="sfpf-debug-table-wrap">
+                    <table class="sfpf-debug-table">
+                        <thead><tr><th>Notion field</th><th>WordPress target</th><th>Type</th><th>KP request</th><th>Current WP value</th><th>Visible URLs</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($rows as $row): ?>
+                            <tr>
+                                <td><?php echo esc_html($row["notion_field"]); ?><div class="sfpf-debug-note"><?php echo esc_html($row["label"]); ?></div></td>
+                                <td><span class="sfpf-debug-code"><?php echo esc_html($row["wp_field"]); ?></span><div class="sfpf-debug-note"><?php echo esc_html($row["wp_page"]); ?></div><?php if (!empty($row["notes"])): ?><div class="sfpf-debug-note"><?php echo esc_html($row["notes"]); ?></div><?php endif; ?></td>
+                                <td><span class="sfpf-debug-code"><?php echo esc_html($row["wp_type"]); ?></span></td>
+                                <td><?php echo $row["kp_request_type"] ? esc_html($row["kp_request_type"]) : '<span class="sfpf-debug-muted">None</span>'; ?><?php if (!empty($row["proof_sources"])): ?><div class="sfpf-debug-note"><?php echo esc_html(implode(", ", $row["proof_sources"])); ?></div><?php endif; ?></td>
+                                <td><span class="sfpf-debug-badge <?php echo esc_attr($row["wp_value_status"]); ?>"><?php echo esc_html($row["wp_value_status"]); ?></span><div class="sfpf-debug-note"><?php echo $row["wp_value_preview"] !== "" ? esc_html($row["wp_value_preview"]) : '<span class="sfpf-debug-muted">No current value preview</span>'; ?></div></td>
+                                <td><?php echo sfpf_profile_debug_render_url_cells($row["visible_urls"]); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        <?php endforeach; ?>
+    </main>
+    <?php
+    return ob_get_clean();
+}
+
+
+// =============================================================================
+// AUTHOR ARCHIVE PROFILE RENDERER
+// =============================================================================
+
+add_filter("rank_math/json_ld", __NAMESPACE__ . "\sfpf_author_archive_disable_rankmath_schema", 99);
+add_action("template_redirect", __NAMESPACE__ . "\sfpf_author_archive_template", 0);
+
+function sfpf_author_archive_disable_rankmath_schema($data) {
+    return is_author() ? [] : $data;
+}
+
+function sfpf_author_archive_template() {
+    if (is_admin() || wp_doing_ajax() || is_feed() || !is_author()) {
+        return;
+    }
+    $author = get_queried_object();
+    if (!$author instanceof \WP_User) {
+        return;
+    }
+    status_header(200);
+    get_header();
+    echo sfpf_render_author_archive_profile((int) $author->ID);
+    get_footer();
+    exit;
+}
+
+function sfpf_author_archive_field($user_id, $field, $default = "") {
+    if (function_exists("get_field")) {
+        $value = get_field($field, "user_" . $user_id);
+        if ($value !== null && $value !== false && $value !== "") return $value;
+    }
+    $value = get_user_meta($user_id, $field, true);
+    return ($value !== "" && $value !== null && $value !== false) ? $value : $default;
+}
+
+function sfpf_author_archive_plain($value) {
+    if (is_array($value)) {
+        $parts = [];
+        foreach ($value as $item) {
+            if (is_array($item)) {
+                foreach ($item as $part) {
+                    if (is_scalar($part) && trim((string) $part) !== "") $parts[] = trim((string) $part);
+                }
+            } elseif (is_scalar($item) && trim((string) $item) !== "") {
+                $parts[] = trim((string) $item);
+            }
+        }
+        return implode(", ", array_unique($parts));
+    }
+    return trim(wp_strip_all_tags((string) $value));
+}
+
+function sfpf_author_archive_lines($value) {
+    if (empty($value)) return [];
+    if (is_array($value)) {
+        $lines = [];
+        foreach ($value as $item) {
+            $candidate = is_array($item) ? ($item["url"] ?? $item["value"] ?? "") : (is_scalar($item) ? (string) $item : "");
+            if (trim($candidate) !== "") $lines[] = trim($candidate);
+        }
+        return array_values(array_filter(array_unique($lines)));
+    }
+    return array_values(array_filter(array_unique(array_map("trim", preg_split("/\r\n|\r|\n/", (string) $value)))));
+}
+
+function sfpf_author_archive_url_group($user_id) {
+    $urls = sfpf_author_archive_field($user_id, "urls", []);
+    return is_array($urls) ? array_filter($urls, function($url) { return is_string($url) && trim($url) !== ""; }) : [];
+}
+
+function sfpf_render_author_archive_profile($user_id) {
+    $user = get_userdata($user_id);
+    if (!$user) return "";
+
+    $first = trim((string) get_user_meta($user_id, "first_name", true));
+    $last = trim((string) get_user_meta($user_id, "last_name", true));
+    $name = trim($first . " " . $last) ?: $user->display_name;
+    $title = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "title") ?: sfpf_author_archive_field($user_id, "additional_title"));
+    $bio = sfpf_author_archive_field($user_id, "biography") ?: sfpf_author_archive_field($user_id, "biography_short") ?: $user->description;
+    $short_bio = sfpf_author_archive_field($user_id, "biography_short");
+    $public_email = sfpf_author_archive_field($user_id, "additional_public_email") ?: $user->user_email;
+    $birth_date = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "birth_date"));
+    $gender = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "gender"));
+    $nationality = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "nationality"));
+    $kgid = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "knowledge_graph_id"));
+    $avatar = get_avatar_url($user_id, ["size" => 300]);
+    $urls = sfpf_author_archive_url_group($user_id);
+    $sameas = sfpf_author_archive_lines(sfpf_author_archive_field($user_id, "sameas"));
+    $education = sfpf_author_archive_field($user_id, "education", []);
+    $articles = sfpf_author_archive_field($user_id, "articles", []);
+    $labels = ["website" => "Website", "linkedin" => "LinkedIn", "crunchbase" => "Crunchbase", "wikipedia" => "Wikipedia", "facebook" => "Facebook", "instagram" => "Instagram", "x" => "X", "youtube" => "YouTube", "imdb" => "IMDb", "muckrack" => "Muck Rack"];
+
+    ob_start();
+    ?>
+    <main id="content" class="site-main sfpf-author-archive">
+        <style>.sfpf-author-archive{max-width:1120px;margin:0 auto;padding:48px 20px 64px;color:#111827;font-family:inherit}.sfpf-author-hero{display:grid;grid-template-columns:180px 1fr;gap:32px;align-items:start;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);border:1px solid #dbeafe;border-radius:28px;padding:32px;box-shadow:0 20px 50px rgba(15,23,42,.08)}.sfpf-author-avatar{width:180px;height:180px;border-radius:24px;object-fit:cover;border:1px solid #dbeafe;background:#fff}.sfpf-author-kicker{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#2563eb;margin:0 0 10px}.sfpf-author-name{font-size:42px;line-height:1.05;margin:0 0 10px;color:#0f172a}.sfpf-author-title{font-size:18px;line-height:1.5;color:#475569;margin:0 0 18px}.sfpf-author-bio{font-size:16px;line-height:1.75;color:#334155}.sfpf-author-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:22px}.sfpf-author-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px}.sfpf-author-label{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin:0 0 6px}.sfpf-author-value{font-size:15px;color:#111827;word-break:break-word}.sfpf-author-section{margin-top:28px;background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:24px}.sfpf-author-section h2{margin:0 0 16px;font-size:22px}.sfpf-author-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.sfpf-author-list li{border:1px solid #eef2f7;background:#f8fafc;border-radius:14px;padding:13px 14px}.sfpf-author-links{display:flex;flex-wrap:wrap;gap:10px}.sfpf-author-links a{border:1px solid #bfdbfe;border-radius:999px;padding:8px 12px;background:#eff6ff;color:#1d4ed8;text-decoration:none;font-weight:700;font-size:13px}.sfpf-author-links a:hover{background:#dbeafe}.sfpf-author-muted{color:#64748b}.sfpf-author-schema-link{font-size:13px;word-break:break-all;color:#2563eb}@media(max-width:760px){.sfpf-author-hero{grid-template-columns:1fr;padding:22px}.sfpf-author-avatar{width:132px;height:132px}.sfpf-author-name{font-size:32px}.sfpf-author-grid{grid-template-columns:1fr}}</style>
+        <section class="sfpf-author-hero"><img class="sfpf-author-avatar" src="<?php echo esc_url($avatar); ?>" alt="<?php echo esc_attr($name); ?>"><div><p class="sfpf-author-kicker">Author Profile</p><h1 class="sfpf-author-name"><?php echo esc_html($name); ?></h1><?php if ($title): ?><p class="sfpf-author-title"><?php echo esc_html($title); ?></p><?php endif; ?><?php if ($short_bio): ?><div class="sfpf-author-bio"><?php echo wp_kses_post(wpautop($short_bio)); ?></div><?php endif; ?><?php if ($urls || $sameas): ?><div class="sfpf-author-links"><?php foreach ($urls as $key => $url): if (empty($url)) continue; ?><a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo esc_html($labels[$key] ?? ucwords(str_replace("_", " ", $key))); ?></a><?php endforeach; ?><?php foreach ($sameas as $url): ?><a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo esc_html(parse_url($url, PHP_URL_HOST) ?: $url); ?></a><?php endforeach; ?></div><?php endif; ?></div></section>
+        <section class="sfpf-author-grid" aria-label="Author facts"><?php if ($public_email): ?><div class="sfpf-author-card"><p class="sfpf-author-label">Email</p><div class="sfpf-author-value"><a href="mailto:<?php echo esc_attr($public_email); ?>"><?php echo esc_html($public_email); ?></a></div></div><?php endif; ?><?php if ($birth_date): ?><div class="sfpf-author-card"><p class="sfpf-author-label">Birth Date</p><div class="sfpf-author-value"><?php echo esc_html($birth_date); ?></div></div><?php endif; ?><?php if ($nationality): ?><div class="sfpf-author-card"><p class="sfpf-author-label">Nationality</p><div class="sfpf-author-value"><?php echo esc_html($nationality); ?></div></div><?php endif; ?><?php if ($gender): ?><div class="sfpf-author-card"><p class="sfpf-author-label">Gender</p><div class="sfpf-author-value"><?php echo esc_html($gender); ?></div></div><?php endif; ?><?php if ($kgid): ?><div class="sfpf-author-card"><p class="sfpf-author-label">Knowledge Graph</p><div class="sfpf-author-value"><a class="sfpf-author-schema-link" href="<?php echo esc_url("https://www.google.com/search?kgmid=" . rawurlencode($kgid)); ?>" target="_blank" rel="noopener"><?php echo esc_html($kgid); ?></a></div></div><?php endif; ?></section>
+        <?php if ($bio): ?><section class="sfpf-author-section"><h2>Biography</h2><div class="sfpf-author-bio"><?php echo wp_kses_post(wpautop($bio)); ?></div></section><?php endif; ?>
+        <?php if (is_array($education) && !empty($education)): ?><section class="sfpf-author-section"><h2>Education</h2><ul class="sfpf-author-list"><?php foreach ($education as $row): $college = trim((string) ($row["college"] ?? "")); if (!$college) continue; ?><li><strong><?php echo esc_html($college); ?></strong><?php if (!empty($row["designation"]) || !empty($row["major"])): ?> <span class="sfpf-author-muted">— <?php echo esc_html(trim(($row["designation"] ?? "") . " " . ($row["major"] ?? ""))); ?></span><?php endif; ?><?php if (!empty($row["year"])): ?> <span class="sfpf-author-muted">(<?php echo esc_html($row["year"]); ?>)</span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
+        <?php if (is_array($articles) && !empty($articles)): ?><section class="sfpf-author-section"><h2>Articles and Press</h2><ul class="sfpf-author-list"><?php foreach ($articles as $article): $url = $article["url"] ?? ""; $article_title = $article["title"] ?? $url; if (!$url && !$article_title) continue; ?><li><?php if ($url): ?><a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo esc_html($article_title ?: $url); ?></a><?php else: ?><?php echo esc_html($article_title); ?><?php endif; ?><?php if (!empty($article["source"])): ?> <span class="sfpf-author-muted">— <?php echo esc_html($article["source"]); ?></span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
+    </main>
+    <?php
+    return ob_get_clean();
+}

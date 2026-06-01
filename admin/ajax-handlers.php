@@ -29,6 +29,143 @@ function verify_ajax_nonce() {
 }
 
 /**
+ * Mark a page as SFPF-managed so destructive actions only touch plugin-owned pages.
+ *
+ * @param int $page_id Page ID.
+ * @param string $page_key Critical page key.
+ * @return void
+ */
+function mark_sfpf_managed_page($page_id, $page_key) {
+    update_post_meta($page_id, '_sfpf_managed_page', 1);
+    update_post_meta($page_id, '_sfpf_page_key', $page_key);
+}
+
+/**
+ * Check whether a page was created and owned by SFPF.
+ *
+ * @param int $page_id Page ID.
+ * @param string $page_key Optional expected page key.
+ * @return bool
+ */
+function is_sfpf_managed_page($page_id, $page_key = '') {
+    if ((int) $page_id <= 0 || get_post_type($page_id) !== 'page') {
+        return false;
+    }
+
+    if (!get_post_meta($page_id, '_sfpf_managed_page', true)) {
+        return false;
+    }
+
+    if ($page_key === '') {
+        return true;
+    }
+
+    $stored_key = get_post_meta($page_id, '_sfpf_page_key', true);
+    return empty($stored_key) || $stored_key === $page_key;
+}
+
+/**
+ * Build a standard page payload for AJAX responses.
+ *
+ * @param int $page_id Page ID.
+ * @param bool $existing Whether the page already existed.
+ * @param string $message Optional message.
+ * @return array
+ */
+function get_page_ajax_payload($page_id, $existing = false, $message = '') {
+    return [
+        'page_id' => (int) $page_id,
+        'existing' => (bool) $existing,
+        'permalink' => get_permalink($page_id),
+        'edit_url' => get_edit_post_link($page_id, 'raw'),
+        'title' => get_the_title($page_id),
+        'message' => $message,
+    ];
+}
+
+/**
+ * Extract FAQPage nodes from a decoded schema block.
+ *
+ * @param array $schema Schema block.
+ * @return array
+ */
+function sfpf_get_faq_nodes($schema) {
+    if (!is_array($schema)) {
+        return [];
+    }
+
+    $nodes = [];
+    $top_level_type = $schema['@type'] ?? null;
+    $top_level_types = is_array($top_level_type) ? $top_level_type : [$top_level_type];
+    if (in_array('FAQPage', array_filter($top_level_types), true)) {
+        $nodes[] = $schema;
+    }
+
+    if (!empty($schema['@graph']) && is_array($schema['@graph'])) {
+        foreach ($schema['@graph'] as $node) {
+            if (!is_array($node)) {
+                continue;
+            }
+
+            $node_type = $node['@type'] ?? null;
+            $node_types = is_array($node_type) ? $node_type : [$node_type];
+            if (in_array('FAQPage', array_filter($node_types), true)) {
+                $nodes[] = $node;
+            }
+        }
+    }
+
+    return $nodes;
+}
+
+/**
+ * Find invalid FAQ schema details inside decoded schema blocks.
+ *
+ * @param array $blocks Schema blocks.
+ * @return array
+ */
+function sfpf_get_faq_schema_issues($blocks) {
+    $issues = [];
+
+    foreach ($blocks as $block) {
+        foreach (sfpf_get_faq_nodes($block) as $faq_node) {
+            $questions = $faq_node['mainEntity'] ?? [];
+
+            if (empty($questions)) {
+                $issues[] = 'FAQPage is missing mainEntity';
+                continue;
+            }
+
+            if (isset($questions['@type']) || isset($questions['name'])) {
+                $questions = [$questions];
+            }
+
+            foreach ($questions as $index => $question) {
+                if (!is_array($question)) {
+                    $issues[] = 'FAQ question ' . ($index + 1) . ' is malformed';
+                    continue;
+                }
+
+                $question_name = trim(wp_strip_all_tags((string) ($question['name'] ?? '')));
+                if ($question_name === '' || preg_match('/^Item #\d+$/i', $question_name)) {
+                    $issues[] = 'FAQ question ' . ($index + 1) . ' uses a placeholder or empty name';
+                }
+
+                $accepted_answer = $question['acceptedAnswer'] ?? [];
+                $answer_text = is_array($accepted_answer) ? ($accepted_answer['text'] ?? '') : '';
+                $answer_text = trim(wp_strip_all_tags((string) $answer_text));
+
+                if ($answer_text === '') {
+                    $issues[] = 'FAQ question ' . ($index + 1) . ' has an empty acceptedAnswer';
+                }
+            }
+        }
+    }
+
+    return array_values(array_unique($issues));
+}
+
+/**
  * Toggle snippet
  */
 function ajax_toggle_snippet() {
@@ -96,11 +233,13 @@ function ajax_save_rankmath_settings() {
     verify_ajax_nonce();
     
     $disable_homepage = !empty($_POST['disable_homepage']);
+    $disable_biography = !empty($_POST['disable_biography']);
     $disable_books = !empty($_POST['disable_books']);
     $disable_organizations = !empty($_POST['disable_organizations']);
     $disable_testimonials = !empty($_POST['disable_testimonials']);
     
     update_option('sfpf_rankmath_disable_homepage', $disable_homepage);
+    update_option('sfpf_rankmath_disable_biography', $disable_biography);
     update_option('sfpf_rankmath_disable_books', $disable_books);
     update_option('sfpf_rankmath_disable_organizations', $disable_organizations);
     update_option('sfpf_rankmath_disable_testimonials', $disable_testimonials);
@@ -223,6 +362,7 @@ function ajax_detect_schema() {
     if ($rm_active) {
         $rm_disabled = false;
         if ($type === 'homepage') $rm_disabled = get_option('sfpf_rankmath_disable_homepage', false);
+        elseif ($type === 'biography') $rm_disabled = get_option('sfpf_rankmath_disable_biography', false);
         elseif ($type === 'books') $rm_disabled = get_option('sfpf_rankmath_disable_books', false);
         elseif ($type === 'organizations') $rm_disabled = get_option('sfpf_rankmath_disable_organizations', false);
         $expected[] = '<strong>RankMath:</strong> ' . ($rm_disabled ? '<span style="color:#f59e0b;">Disabled for this type</span>' : '<span style="color:#e91e63;">Active — may inject its own schema</span>');
@@ -433,6 +573,13 @@ function ajax_detect_schema() {
                         $output .= '<pre style="background:#161b22;padding:10px;border-radius:4px;margin:5px 0;font-size:10px;max-height:300px;overflow:auto;white-space:pre-wrap;">';
                         $output .= esc_html(json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
                         $output .= '</pre></details>';
+
+                        $faq_issues = sfpf_get_faq_schema_issues([$schema]);
+                        if (!empty($faq_issues)) {
+                            $output .= '<div style="margin-top:8px;padding:8px;background:#451a1a;border:1px solid #dc2626;border-radius:6px;color:#fca5a5;font-size:11px;line-height:1.6;">';
+                            $output .= '⚠️ FAQ schema issues: ' . esc_html(implode('; ', $faq_issues));
+                            $output .= '</div>';
+                        }
                         
                         $output .= '</div>';
                     } else {
@@ -674,9 +821,13 @@ function sfpf_run_full_site_checklist($debug = false) {
     
     // ── CHECK 3: FAQ Schema on Homepage ──
     $faq_found = in_array('FAQPage', $hp_result['types']);
-    if ($faq_found) {
+    $faq_issues = sfpf_get_faq_schema_issues($hp_result['blocks']);
+    if ($faq_found && empty($faq_issues)) {
         $checks[] = ['status' => 'pass', 'label' => 'Homepage FAQ Schema', 'detail' => 'FAQPage schema detected on homepage', 'time' => 0];
         $pass_count++;
+    } elseif ($faq_found) {
+        $checks[] = ['status' => 'fail', 'label' => 'Homepage FAQ Schema', 'detail' => 'FAQPage schema detected but has issues: ' . implode('; ', $faq_issues), 'time' => 0, 'action' => get_edit_post_link((int) get_option('page_on_front'), 'raw')];
+        $fail_count++;
     } else {
         $checks[] = ['status' => 'warn', 'label' => 'Homepage FAQ Schema', 'detail' => 'No FAQPage schema found on homepage. Add one via the FAQ tab if desired.', 'time' => 0];
         $warn_count++;
@@ -717,15 +868,15 @@ function sfpf_run_full_site_checklist($debug = false) {
                         $checks[] = ['status' => 'pass', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. Found BreadcrumbList on "' . $bc_scan_label . '" (' . $bc_result['time_ms'] . 'ms)', 'time' => $bc_result['time_ms']];
                         $pass_count++;
                     } else {
-                        $checks[] = ['status' => 'fail', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. NOT found on "' . $bc_scan_label . '" either. Check RankMath breadcrumb settings.', 'time' => $bc_result['time_ms'], 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
-                        $fail_count++;
+                        $checks[] = ['status' => 'warn', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page and not found on "' . $bc_scan_label . '". RankMath may be enabled via theme support without rendering breadcrumb markup on this site.', 'time' => $bc_result['time_ms'], 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
+                        $warn_count++;
                     }
                 } else {
                     $checks[] = ['status' => 'info', 'label' => 'Breadcrumb Schema', 'detail' => 'Hidden on front page. No biography or contact page assigned to scan instead. Set one in Critical Pages.', 'time' => 0];
                 }
             } else {
-                $checks[] = ['status' => 'fail', 'label' => 'Breadcrumb Schema', 'detail' => 'RankMath breadcrumbs enabled but BreadcrumbList schema not found on homepage.', 'time' => 0, 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
-                $fail_count++;
+                $checks[] = ['status' => 'warn', 'label' => 'Breadcrumb Schema', 'detail' => 'RankMath reports breadcrumbs enabled, but no BreadcrumbList schema was found on the homepage. Verify theme integration if you expect breadcrumb markup.', 'time' => 0, 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
+                $warn_count++;
             }
         }
     } else {
@@ -852,32 +1003,26 @@ function ajax_reprocess_schema() {
     
     switch ($type) {
         case 'homepage':
-            // Rebuild homepage schema using the injection builder (which works)
-            $front_page_id = get_front_page_id();
             $schema_type = get_option('sfpf_homepage_schema_type', 'person');
-            if ($front_page_id && $schema_type !== 'none') {
-                $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-                    ? build_homepage_schema_for_injection($schema_type) 
-                    : null;
-                if ($schema_json) {
-                    update_post_meta($front_page_id, '_sfpf_schema', $schema_json);
+            if ($schema_type !== 'none' && function_exists(__NAMESPACE__ . '\\reprocess_homepage_schema')) {
+                $result = reprocess_homepage_schema();
+                if (!empty($result['success'])) {
                     $count = 1;
+                } else {
+                    wp_send_json_error($result['message'] ?? 'Failed to reprocess homepage schema');
                 }
             }
             write_log("Reprocessed homepage schema");
             break;
             
         case 'biography':
-            // Rebuild biography schema
-            $bio_page_id = get_option('sfpf_page_biography');
             $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
-            if ($bio_page_id && $bio_schema_type !== 'none') {
-                $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-                    ? build_homepage_schema_for_injection($bio_schema_type) 
-                    : null;
-                if ($schema_json) {
-                    update_post_meta($bio_page_id, '_sfpf_schema', $schema_json);
+            if ($bio_schema_type !== 'none' && function_exists(__NAMESPACE__ . '\\reprocess_biography_schema')) {
+                $result = reprocess_biography_schema();
+                if (!empty($result['success'])) {
                     $count = 1;
+                } else {
+                    wp_send_json_error($result['message'] ?? 'Failed to reprocess biography schema');
                 }
             }
             write_log("Reprocessed biography schema");
@@ -891,9 +1036,12 @@ function ajax_reprocess_schema() {
             ]);
             
             foreach ($books as $book) {
-                $schema = function_exists(__NAMESPACE__ . '\\build_book_schema') ? build_book_schema($book->ID) : [];
-                update_post_meta($book->ID, '_sfpf_schema', wp_json_encode($schema));
-                $count++;
+                $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
+                    ? generate_and_save_schema($book->ID)
+                    : ['success' => false];
+                if (!empty($result['success'])) {
+                    $count++;
+                }
             }
             write_log("Reprocessed {$count} book schemas");
             break;
@@ -906,9 +1054,12 @@ function ajax_reprocess_schema() {
             ]);
             
             foreach ($orgs as $org) {
-                $schema = function_exists(__NAMESPACE__ . '\\build_organization_schema') ? build_organization_schema($org->ID) : [];
-                update_post_meta($org->ID, '_sfpf_schema', wp_json_encode($schema));
-                $count++;
+                $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
+                    ? generate_and_save_schema($org->ID)
+                    : ['success' => false];
+                if (!empty($result['success'])) {
+                    $count++;
+                }
             }
             write_log("Reprocessed {$count} organization schemas");
             break;
@@ -930,25 +1081,19 @@ function ajax_rebuild_all_schema() {
     $counts = ['homepage' => 0, 'biography' => 0, 'books' => 0, 'organizations' => 0];
     
     // Homepage
-    $front_page_id = get_front_page_id();
     $hp_schema_type = get_option('sfpf_homepage_schema_type', 'person');
-    if ($front_page_id && $hp_schema_type !== 'none') {
-        $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-            ? build_homepage_schema_for_injection($hp_schema_type) : null;
-        if ($schema_json) {
-            update_post_meta($front_page_id, '_sfpf_schema', $schema_json);
+    if ($hp_schema_type !== 'none' && function_exists(__NAMESPACE__ . '\\reprocess_homepage_schema')) {
+        $result = reprocess_homepage_schema();
+        if (!empty($result['success'])) {
             $counts['homepage'] = 1;
         }
     }
     
     // Biography
-    $bio_page_id = get_option('sfpf_page_biography');
     $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
-    if ($bio_page_id && $bio_schema_type !== 'none') {
-        $schema_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-            ? build_homepage_schema_for_injection($bio_schema_type) : null;
-        if ($schema_json) {
-            update_post_meta($bio_page_id, '_sfpf_schema', $schema_json);
+    if ($bio_schema_type !== 'none' && function_exists(__NAMESPACE__ . '\\reprocess_biography_schema')) {
+        $result = reprocess_biography_schema();
+        if (!empty($result['success'])) {
             $counts['biography'] = 1;
         }
     }
@@ -962,9 +1107,12 @@ function ajax_rebuild_all_schema() {
         ]);
         
         foreach ($books as $book) {
-            $schema = function_exists(__NAMESPACE__ . '\\build_book_schema') ? build_book_schema($book->ID) : [];
-            update_post_meta($book->ID, '_sfpf_schema', wp_json_encode($schema));
-            $counts['books']++;
+            $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
+                ? generate_and_save_schema($book->ID)
+                : ['success' => false];
+            if (!empty($result['success'])) {
+                $counts['books']++;
+            }
         }
     }
     
@@ -977,13 +1125,16 @@ function ajax_rebuild_all_schema() {
         ]);
         
         foreach ($orgs as $org) {
-            $schema = function_exists(__NAMESPACE__ . '\\build_organization_schema') ? build_organization_schema($org->ID) : [];
-            update_post_meta($org->ID, '_sfpf_schema', wp_json_encode($schema));
-            $counts['organizations']++;
+            $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
+                ? generate_and_save_schema($org->ID)
+                : ['success' => false];
+            if (!empty($result['success'])) {
+                $counts['organizations']++;
+            }
         }
     }
     
-    write_log("Rebuilt all schemas: homepage={$counts['homepage']}, books={$counts['books']}, orgs={$counts['organizations']}");
+    write_log("Rebuilt all schemas: homepage={$counts['homepage']}, biography={$counts['biography']}, books={$counts['books']}, orgs={$counts['organizations']}");
     
     wp_send_json_success($counts);
 }
@@ -1044,7 +1195,7 @@ function ajax_create_page() {
     // Check if we already have a page assigned for this key
     $existing_assigned = get_option('sfpf_page_' . $page_key, 0);
     if ($existing_assigned && get_post($existing_assigned)) {
-        wp_send_json_success(['page_id' => $existing_assigned, 'existing' => true, 'message' => 'Page already assigned']);
+        wp_send_json_success(get_page_ajax_payload($existing_assigned, true, 'Page already assigned'));
         return;
     }
     
@@ -1068,8 +1219,14 @@ function ajax_create_page() {
     
     if (!empty($existing_pages)) {
         $existing = $existing_pages[0];
-        update_option('sfpf_page_' . $page_key, $existing->ID);
-        wp_send_json_success(['page_id' => $existing->ID, 'existing' => true]);
+        if (is_sfpf_managed_page($existing->ID, $page_key)) {
+            mark_sfpf_managed_page($existing->ID, $page_key);
+            update_option('sfpf_page_' . $page_key, $existing->ID);
+            wp_send_json_success(get_page_ajax_payload($existing->ID, true, 'Existing SFPF-managed page assigned'));
+            return;
+        }
+
+        wp_send_json_error('A page with this slug already exists. Use the Assign Page dropdown to link that page instead of Create.');
         return;
     }
     
@@ -1089,10 +1246,11 @@ function ajax_create_page() {
         wp_send_json_error($page_id->get_error_message());
     }
     
+    mark_sfpf_managed_page($page_id, $page_key);
     update_option('sfpf_page_' . $page_key, $page_id);
     write_log("Page created: {$title} (ID: {$page_id}, key: {$page_key})");
     
-    wp_send_json_success(['page_id' => $page_id]);
+    wp_send_json_success(get_page_ajax_payload($page_id));
 }
 add_action('wp_ajax_sfpf_create_page', __NAMESPACE__ . '\\ajax_create_page');
 
@@ -1108,10 +1266,26 @@ function ajax_delete_page() {
     if (!$page_key || !$page_id) {
         wp_send_json_error('Invalid page data');
     }
+
+    $assigned_page_id = (int) get_option('sfpf_page_' . $page_key, 0);
+    if ($assigned_page_id > 0) {
+        $page_id = $assigned_page_id;
+    }
     
     // Remove option assignment
     delete_option('sfpf_page_' . $page_key);
-    
+
+    if (!is_sfpf_managed_page($page_id, $page_key)) {
+        write_log("Page unassigned without deletion: {$page_key} (ID: {$page_id})");
+        wp_send_json_success([
+            'page_key' => $page_key,
+            'page_id' => $page_id,
+            'trashed' => false,
+            'message' => 'Page unassigned. Existing content was left intact.',
+        ]);
+        return;
+    }
+
     // Trash the page
     $result = wp_trash_post($page_id);
     if (!$result) {
@@ -1119,7 +1293,7 @@ function ajax_delete_page() {
     }
     
     write_log("Page deleted: {$page_key} (ID: {$page_id})");
-    wp_send_json_success(['page_key' => $page_key]);
+    wp_send_json_success(['page_key' => $page_key, 'page_id' => $page_id, 'trashed' => true]);
 }
 add_action('wp_ajax_sfpf_delete_page', __NAMESPACE__ . '\\ajax_delete_page');
 
@@ -1247,7 +1421,10 @@ function ajax_apply_template() {
         wp_send_json_error('No page assigned for this template. Please assign a page first.');
     }
     
-    $content = get_option('sfpf_template_' . $template_key, '');
+    $content = get_option('sfpf_template_' . $template_key, '__sfpf_template_missing__');
+    if ($content === '__sfpf_template_missing__' && function_exists(__NAMESPACE__ . '\\get_default_page_template')) {
+        $content = get_default_page_template($template_key);
+    }
     
     $result = wp_update_post([
         'ID' => $page_id,
@@ -1865,9 +2042,15 @@ function debug_homepage_schema() {
     }
     
     // Check if schema is stored
-    $schema = get_field('schema_markup', $page_on_front);
+    $schema = function_exists(__NAMESPACE__ . '\\get_post_schema')
+        ? get_post_schema($page_on_front)
+        : get_post_meta($page_on_front, 'schema_markup', true);
+    $schema_source = function_exists(__NAMESPACE__ . '\\get_post_schema_source')
+        ? get_post_schema_source($page_on_front)
+        : null;
+
     if ($schema) {
-        $output .= "✅ Schema is stored in ACF field 'schema_markup'\n";
+        $output .= "✅ Schema is stored in " . ($schema_source ?: 'post meta') . "\n";
         $output .= "Schema length: " . strlen($schema) . " bytes\n\n";
         
         // Validate JSON
@@ -1879,7 +2062,7 @@ function debug_homepage_schema() {
             $output .= "❌ Schema is invalid JSON: " . json_last_error_msg() . "\n";
         }
     } else {
-        $output .= "❌ No schema stored in ACF field\n";
+        $output .= "❌ No schema stored in canonical or legacy schema storage\n";
         $output .= "   Click 'Reprocess Homepage Schema' button to generate\n";
     }
     
@@ -1933,31 +2116,26 @@ function debug_founder_data() {
  */
 function debug_injection_hook() {
     $output = "=== SCHEMA INJECTION HOOK DEBUG ===\n\n";
-    
-    // Check if wp_head has our hook
-    global $wp_filter;
-    
-    $found = false;
-    if (isset($wp_filter['wp_head'])) {
-        foreach ($wp_filter['wp_head']->callbacks as $priority => $callbacks) {
-            foreach ($callbacks as $name => $callback) {
-                if (strpos($name, 'inject_schema_markup') !== false) {
-                    $output .= "✅ Hook found at priority {$priority}\n";
-                    $output .= "   Function: {$name}\n";
-                    $found = true;
-                }
-            }
-        }
-    }
-    
-    if (!$found) {
-        $output .= "❌ inject_schema_markup hook NOT found in wp_head!\n";
+
+    $callback = __NAMESPACE__ . '\\inject_schema_markup';
+    $hook_priority = has_action('wp_head', $callback);
+
+    if (is_admin()) {
+        $output .= "ℹ️ This debug action runs in admin/AJAX context.\n";
+        $output .= "   SFPF only attaches schema injection during frontend requests, so a missing wp_head callback here is expected.\n\n";
+    } elseif ($hook_priority !== false) {
+        $output .= "✅ Hook found at priority {$hook_priority}\n";
+        $output .= "   Function: {$callback}\n";
+    } else {
+        $output .= "❌ inject_schema_markup hook NOT found in wp_head during a frontend request.\n";
         $output .= "   This means schema will not be injected.\n\n";
-        $output .= "   Possible causes:\n";
-        $output .= "   - Schema injection not enabled\n";
-        $output .= "   - Plugin files not loading correctly\n";
     }
-    
+
+    $output .= "Runtime context:\n";
+    $output .= "  - is_admin(): " . (is_admin() ? 'Yes' : 'No') . "\n";
+    $output .= "  - front page configured: " . (get_front_page_id() ? 'Yes' : 'No') . "\n";
+    $output .= "  - biography page configured: " . (get_option('sfpf_page_biography') ? 'Yes' : 'No') . "\n";
+
     // Check if function exists
     $output .= "\nFunction exists:\n";
     $output .= "  - enable_schema_injection: " . (function_exists(__NAMESPACE__ . '\\enable_schema_injection') ? '✅ Yes' : '❌ No') . "\n";

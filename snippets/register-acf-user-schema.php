@@ -375,7 +375,7 @@ function register_user_schema_acf_fields() {
                 'label'             => 'Gallery',
                 'name'              => 'gallery',
                 'type'              => 'gallery',
-                'instructions'      => 'Public, indexable image gallery imported from the Notion <code>gallery</code> Google Drive URL.<br>
+                'instructions'      => 'Public, indexable image gallery imported from the Notion <code>Gallery</code> Google Drive URL.<br>
 <code>[founder action="display_gallery"]</code> - Pretty gallery<br>
 <code>[founder id="gallery" format="json"]</code> - Full image data<br>
 <code>[founder id="gallery" format="urls"]</code> - Image URLs',

@@ -20,7 +20,61 @@ defined('ABSPATH') || exit;
  * @return string|null Schema JSON string or null
  */
 function get_post_schema($post_id) {
-    return get_field('schema_markup', $post_id);
+    $schema = function_exists('get_field') ? get_field('schema_markup', $post_id) : '';
+
+    if (empty($schema)) {
+        $schema = get_post_meta($post_id, 'schema_markup', true);
+    }
+
+    if (empty($schema)) {
+        $schema = get_post_meta($post_id, '_sfpf_schema', true);
+    }
+
+    return !empty($schema) ? $schema : null;
+}
+
+/**
+ * Get the storage source currently holding schema for a post.
+ *
+ * @param int $post_id Post ID
+ * @return string|null
+ */
+function get_post_schema_source($post_id) {
+    $acf_schema = function_exists('get_field') ? get_field('schema_markup', $post_id) : '';
+    if (!empty($acf_schema)) {
+        return 'acf: schema_markup';
+    }
+
+    $meta_schema = get_post_meta($post_id, 'schema_markup', true);
+    if (!empty($meta_schema)) {
+        return 'post_meta: schema_markup';
+    }
+
+    $legacy_schema = get_post_meta($post_id, '_sfpf_schema', true);
+    if (!empty($legacy_schema)) {
+        return 'legacy post_meta: _sfpf_schema';
+    }
+
+    return null;
+}
+
+/**
+ * Log schema processing activity without hard depending on a missing helper.
+ *
+ * @param int $post_id Post ID
+ * @param string $post_type Post type
+ * @param bool $success Whether processing succeeded
+ * @param string $message Log message
+ * @return void
+ */
+function log_schema_processing($post_id, $post_type, $success, $message) {
+    if (!function_exists(__NAMESPACE__ . '\\write_log')) {
+        return;
+    }
+
+    $status = $success ? 'success' : 'error';
+    $label = $post_type ?: 'unknown';
+    write_log("Schema {$label} #{$post_id}: {$message}", $status);
 }
 
 /**
@@ -36,16 +90,31 @@ function save_post_schema($post_id, $schema) {
         $schema = sanitize_schema($schema);
         $schema = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
-    
-    $result = update_field('schema_markup', $schema, $post_id);
-    
-    if ($result !== false) {
+
+    if (!is_string($schema) || trim($schema) === '') {
+        log_schema_processing($post_id, get_post_type($post_id), false, 'Failed to save schema: empty payload');
+        return false;
+    }
+
+    $schema_to_store = wp_slash($schema);
+
+    if (function_exists('update_field')) {
+        update_field('schema_markup', $schema_to_store, $post_id);
+    }
+
+    update_post_meta($post_id, 'schema_markup', $schema_to_store);
+    update_post_meta($post_id, '_sfpf_schema', $schema_to_store);
+
+    $stored_schema = get_post_schema($post_id);
+    $success = ($stored_schema === $schema);
+
+    if ($success) {
         log_schema_processing($post_id, get_post_type($post_id), true, 'Schema saved');
     } else {
         log_schema_processing($post_id, get_post_type($post_id), false, 'Failed to save schema');
     }
-    
-    return $result !== false;
+
+    return $success;
 }
 
 /**
@@ -73,14 +142,22 @@ function generate_and_save_schema($post_id) {
             break;
             
         case 'page':
-            // Check if this is the front page
             if (is_front_page_id($post_id)) {
-                $schema_type = get_field('schema_type', $post_id) ?: 'profile_page';
-                $schema = build_homepage_schema($post_id, $schema_type);
+                $schema_type = get_option('sfpf_homepage_schema_type', 'person');
+                $schema = build_homepage_schema_for_injection($schema_type, $post_id);
+            } elseif (is_biography_page_id($post_id)) {
+                $schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
+                $schema = build_homepage_schema_for_injection($schema_type, $post_id);
             } else {
-                $result['message'] = 'Page is not the front page';
+                $result['message'] = 'Page is not configured for SFPF page schema';
                 return $result;
             }
+
+            if ($schema_type === 'none') {
+                $result['message'] = 'Schema generation disabled for this page';
+                return $result;
+            }
+
             break;
             
         default:
@@ -183,6 +260,24 @@ function reprocess_homepage_schema() {
 }
 
 /**
+ * Reprocess biography page schema.
+ *
+ * @return array Result
+ */
+function reprocess_biography_schema() {
+    $bio_page_id = (int) get_option('sfpf_page_biography', 0);
+
+    if (!$bio_page_id) {
+        return [
+            'success' => false,
+            'message' => 'No biography page is set',
+        ];
+    }
+
+    return generate_and_save_schema($bio_page_id);
+}
+
+/**
  * Get all schema statuses for dashboard
  * 
  * @return array Schema status summary
@@ -212,7 +307,7 @@ function get_schema_status_summary() {
     if ($front_page_id) {
         $status['homepage']['enabled'] = true;
         $status['homepage']['post_id'] = $front_page_id;
-        $status['homepage']['schema_type'] = get_field('schema_type', $front_page_id) ?: 'profile_page';
+        $status['homepage']['schema_type'] = get_option('sfpf_homepage_schema_type', 'person');
         $schema = get_post_schema($front_page_id);
         $status['homepage']['has_schema'] = !empty($schema);
     }

@@ -152,6 +152,10 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.10
+- Gallery Notion mapping label corrected to capital Gallery for Person and Company debug output.
+- Public debug page continues to expose noindex dynamic URLs, gallery shortcode output, and schema snapshots.
+
 ### v1.6.3
 - Dashboard: Reordered schema previews — Book and Organization now appear right after Biography (before RankMath control)
 - Dashboard: All 4 schema preview cards now have Schema.org Validator + Google Rich Results Test buttons with dynamic URLs

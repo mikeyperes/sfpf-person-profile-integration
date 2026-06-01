@@ -39,7 +39,7 @@ function inject_schema_markup() {
         }
         
         // Build the schema
-        $schema = build_homepage_schema_for_injection($schema_type);
+        $schema = build_homepage_schema_for_injection($schema_type, get_front_page_id());
         
     } elseif (is_singular('book')) {
         // Single book page — generate live from unified builder
@@ -56,11 +56,11 @@ function inject_schema_markup() {
     } elseif (is_page()) {
         // Check if this is the biography page
         global $post;
-        $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
+            $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
         if ($bio_schema_type !== 'none') {
             $bio_page_id = get_option('sfpf_page_biography');
             if ($bio_page_id && $post->ID == $bio_page_id) {
-                $schema = build_homepage_schema_for_injection($bio_schema_type);
+                $schema = build_homepage_schema_for_injection($bio_schema_type, $post->ID);
             }
         }
     }
@@ -105,7 +105,9 @@ function output_schema_script($schema) {
  * @return array Schema info
  */
 function get_schema_for_display($post_id) {
-    $schema = function_exists('get_field') ? get_field('schema_markup', $post_id) : get_post_meta($post_id, 'schema_markup', true);
+    $schema = function_exists(__NAMESPACE__ . '\\get_post_schema')
+        ? get_post_schema($post_id)
+        : get_post_meta($post_id, 'schema_markup', true);
     
     return [
         'raw' => $schema,

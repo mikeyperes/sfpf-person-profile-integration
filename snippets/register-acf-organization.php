@@ -573,7 +573,7 @@ function register_organization_acf_fields() {
                 'label' => 'Gallery',
                 'name' => 'gallery',
                 'type' => 'gallery',
-                'instructions' => 'Public, indexable image gallery imported from the Notion <code>gallery</code> Google Drive URL.<br><code>[organization field="gallery"]</code> - Pretty gallery<br><code>[organization field="gallery" format="json"]</code> - Full image data',
+                'instructions' => 'Public, indexable image gallery imported from the Notion <code>Gallery</code> Google Drive URL.<br><code>[organization field="gallery"]</code> - Pretty gallery<br><code>[organization field="gallery" format="json"]</code> - Full image data',
                 'required' => 0,
                 'return_format' => 'array',
                 'library' => 'all',

@@ -112,7 +112,6 @@ function register_homepage_acf_fields() {
         'show_in_rest' => 0,
     ]);
     
-    write_log('Registered Homepage ACF field group', false, 'ACF Registration');
 }
 
 /**

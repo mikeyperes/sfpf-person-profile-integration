@@ -152,6 +152,9 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.11
+- Verified public Gallery ACF images are included in Person schema `image` output ahead of avatar fallback.
+
 ### v1.6.10
 - Gallery Notion mapping label corrected to capital Gallery for Person and Company debug output.
 - Public debug page continues to expose noindex dynamic URLs, gallery shortcode output, and schema snapshots.

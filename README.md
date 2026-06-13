@@ -152,6 +152,9 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.12
+- Added a default-enabled setting that removes empty Elementor Social Icons widget links server-side before the page renders.
+
 ### v1.6.11
 - Verified public Gallery ACF images are included in Person schema `image` output ahead of avatar fallback.
 

@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.11
+ * Version: 1.6.12
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define('SFPF_PLUGIN_VERSION', '1.6.11');
+define('SFPF_PLUGIN_VERSION', '1.6.12');
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = '1.6.11';
+    public static $version = '1.6.12';
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -62,6 +62,7 @@ class Config {
 require_once SFPF_PLUGIN_DIR . 'includes/helper-functions.php';
 require_once SFPF_PLUGIN_DIR . 'includes/logging.php';
 require_once SFPF_PLUGIN_DIR . 'includes/snippets-loader.php';
+require_once SFPF_PLUGIN_DIR . 'includes/elementor-social-icons.php';
 
 // ============================================================================
 // CPT LOADING - Hook to init priority 0
@@ -167,6 +168,7 @@ function activate_plugin() {
     add_option('sfpf_homepage_schema_type', 'person');
     add_option('sfpf_biography_schema_type', 'profile_page_only');
     add_option('sfpf_rankmath_disable_biography', false);
+    add_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, 1);
 
     // Migration: fix sites that had the old 'none' default from previous activation bug
     $current_hp = get_option('sfpf_homepage_schema_type');

@@ -16,9 +16,11 @@ defined('ABSPATH') || exit;
 if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_nonce')) {
     $primary_org = isset($_POST['sfpf_primary_organization']) ? intval($_POST['sfpf_primary_organization']) : 0;
     $primary_book = isset($_POST['sfpf_primary_book']) ? intval($_POST['sfpf_primary_book']) : 0;
+    $hide_empty_social_icons = isset($_POST['sfpf_hide_empty_elementor_social_icons']) ? 1 : 0;
     
     update_option('sfpf_primary_organization', $primary_org);
     update_option('sfpf_primary_book', $primary_book);
+    update_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, $hide_empty_social_icons);
     
     echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully.</p></div>';
 }
@@ -26,6 +28,7 @@ if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_no
 // Get current values
 $current_primary_org = get_option('sfpf_primary_organization', 0);
 $current_primary_book = get_option('sfpf_primary_book', 0);
+$hide_empty_social_icons_enabled = should_hide_empty_elementor_social_icons();
 
 // Get all organizations
 $organizations = get_posts([
@@ -102,6 +105,25 @@ $books = get_posts([
                             <br><strong style="color:#dc2626;">No books found.</strong> 
                             <a href="<?php echo admin_url('post-new.php?post_type=book'); ?>">Create one →</a>
                         <?php endif; ?>
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="sfpf_hide_empty_elementor_social_icons">Elementor Social Icons</label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                               name="sfpf_hide_empty_elementor_social_icons"
+                               id="sfpf_hide_empty_elementor_social_icons"
+                               value="1"
+                            <?php checked($hide_empty_social_icons_enabled); ?>>
+                        Hide empty Elementor social icons before page render
+                    </label>
+                    <p class="description">
+                        Enabled by default. Removes Social Icons widget items with no usable URL, <code>#</code>, unresolved shortcode URLs, empty <code>mailto:</code>, or empty <code>tel:</code> links before visitors see the page.
                     </p>
                 </td>
             </tr>

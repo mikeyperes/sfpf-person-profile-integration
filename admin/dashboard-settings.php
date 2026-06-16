@@ -17,10 +17,12 @@ if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_no
     $primary_org = isset($_POST['sfpf_primary_organization']) ? intval($_POST['sfpf_primary_organization']) : 0;
     $primary_book = isset($_POST['sfpf_primary_book']) ? intval($_POST['sfpf_primary_book']) : 0;
     $hide_empty_social_icons = isset($_POST['sfpf_hide_empty_elementor_social_icons']) ? 1 : 0;
+    $elementor_dynamic_visibility = isset($_POST['sfpf_elementor_dynamic_visibility']) ? 1 : 0;
     
     update_option('sfpf_primary_organization', $primary_org);
     update_option('sfpf_primary_book', $primary_book);
     update_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, $hide_empty_social_icons);
+    update_option(SFPF_ELEMENTOR_DYNAMIC_VISIBILITY_OPTION, $elementor_dynamic_visibility);
     
     echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully.</p></div>';
 }
@@ -29,6 +31,7 @@ if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_no
 $current_primary_org = get_option('sfpf_primary_organization', 0);
 $current_primary_book = get_option('sfpf_primary_book', 0);
 $hide_empty_social_icons_enabled = should_hide_empty_elementor_social_icons();
+$elementor_dynamic_visibility_enabled = should_enable_elementor_dynamic_visibility();
 
 // Get all organizations
 $organizations = get_posts([
@@ -124,6 +127,25 @@ $books = get_posts([
                     </label>
                     <p class="description">
                         Enabled by default. Removes Social Icons widget items with no usable URL, <code>#</code>, unresolved shortcode URLs, empty <code>mailto:</code>, or empty <code>tel:</code> links before visitors see the page.
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">
+                    <label for="sfpf_elementor_dynamic_visibility">Elementor Dynamic Visibility</label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                               name="sfpf_elementor_dynamic_visibility"
+                               id="sfpf_elementor_dynamic_visibility"
+                               value="1"
+                            <?php checked($elementor_dynamic_visibility_enabled); ?>>
+                        Enable SFPF content display conditions
+                    </label>
+                    <p class="description">
+                        Enabled by default. Adds native Elementor Pro display conditions for founder education, published organizations, and published books so empty sections do not render.
                     </p>
                 </td>
             </tr>

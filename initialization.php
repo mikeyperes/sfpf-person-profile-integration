@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.13
+ * Version: 1.6.14
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define('SFPF_PLUGIN_VERSION', '1.6.13');
+define('SFPF_PLUGIN_VERSION', '1.6.14');
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = '1.6.13';
+    public static $version = '1.6.14';
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -870,6 +870,47 @@ function get_faq_set_by_slug($slug) {
     return null;
 }
 
+function sfpf_faq_answer_html($answer) {
+    $html = wp_kses_post($answer);
+
+    return preg_replace_callback('/<a\b([^>]*)>/i', function($matches) {
+        $attrs = rtrim($matches[1] ?? '');
+        if (stripos($attrs, ' target=') === false) {
+            $attrs .= ' target="_blank"';
+        }
+        if (stripos($attrs, ' rel=') === false) {
+            $attrs .= ' rel="noopener noreferrer"';
+        }
+        return '<a' . $attrs . '>';
+    }, $html);
+}
+
+function sfpf_normalize_faq_items($items) {
+    if (!is_array($items)) {
+        return [];
+    }
+
+    $normalized = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $question = trim((string) ($item['question'] ?? $item['title'] ?? ''));
+        $answer = trim((string) ($item['answer'] ?? $item['content'] ?? ''));
+        if ($question === '' || $answer === '') {
+            continue;
+        }
+
+        $normalized[] = [
+            'question' => $question,
+            'answer' => $answer,
+        ];
+    }
+
+    return $normalized;
+}
+
 /**
  * FAQ shortcode
  * [sfpf_faq set="slug"] - All FAQs from a set
@@ -903,7 +944,7 @@ function sfpf_faq_shortcode($atts) {
         $faq = $items[$index];
         return '<div class="sfpf-faq-single" data-set="' . esc_attr($atts['set']) . '" data-index="' . $index . '">
             <div class="sfpf-faq-question" style="font-weight:600;font-size:16px;margin-bottom:8px;">' . esc_html($faq['question']) . '</div>
-            <div class="sfpf-faq-answer">' . wp_kses_post($faq['answer']) . '</div>
+            <div class="sfpf-faq-answer">' . sfpf_faq_answer_html($faq['answer']) . '</div>
         </div>';
     }
 
@@ -921,7 +962,7 @@ function sfpf_faq_shortcode($atts) {
             $html .= '<span style="font-weight:600;font-size:16px;color:#1e1e1e !important;display:block;">' . esc_html($faq['question']) . '</span>';
             $html .= '<span class="sfpf-toggle-icon" style="font-size:20px;color:#6b7280;flex-shrink:0;margin-left:12px;">+</span>';
             $html .= '</div>';
-            $html .= '<div class="sfpf-faq-answer" style="display:none;padding:0 20px 16px;color:#4b5563;line-height:1.6;">' . wp_kses_post($faq['answer']) . '</div>';
+            $html .= '<div class="sfpf-faq-answer" style="display:none;padding:0 20px 16px;color:#4b5563;line-height:1.6;">' . sfpf_faq_answer_html($faq['answer']) . '</div>';
             $html .= '</div>';
         }
     }
@@ -950,7 +991,7 @@ function render_faq_accordion($set, $items) {
             $html .= '<span class="sfpf-accordion-icon" style="font-size:20px;transition:transform 0.2s;flex-shrink:0;margin-left:12px;">+</span>';
             $html .= '</div>';
             $html .= '<div class="sfpf-accordion-content" style="display:none;padding:15px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;">';
-            $html .= wp_kses_post($faq['answer']);
+            $html .= sfpf_faq_answer_html($faq['answer']);
             $html .= '</div>';
             $html .= '</div>';
         }
@@ -970,6 +1011,7 @@ function render_faq_accordion($set, $items) {
  * Render FAQ schema
  */
 function render_faq_schema($items) {
+    $items = sfpf_normalize_faq_items($items);
     $schema = [
         '@context' => 'https://schema.org',
         '@type' => 'FAQPage',
@@ -1015,6 +1057,69 @@ function sfpf_faq_schema_shortcode($atts) {
     return render_faq_schema($set['items']);
 }
 add_shortcode('sfpf_faq_schema', __NAMESPACE__ . '\\sfpf_faq_schema_shortcode');
+
+function founder_display_faq($user_id, $atts = []) {
+    $items = sfpf_normalize_faq_items(function_exists('get_field') ? get_field('faq', 'user_' . $user_id) : []);
+    $format = strtolower((string) ($atts['format'] ?? 'accordion'));
+    $style = strtolower((string) ($atts['style'] ?? $format));
+
+    if ($format === 'json') {
+        return wp_json_encode($items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    if ($format === 'count') {
+        return (string) count($items);
+    }
+
+    if ($items === []) {
+        return '';
+    }
+
+    if ($style === 'list') {
+        $html = '<div class="sfpf-person-faq sfpf-person-faq-list">';
+        foreach ($items as $faq) {
+            $html .= '<div class="sfpf-person-faq-item" style="margin-bottom:18px;">';
+            $html .= '<h3 class="sfpf-person-faq-question" style="margin:0 0 8px;font-size:18px;line-height:1.35;">' . esc_html($faq['question']) . '</h3>';
+            $html .= '<div class="sfpf-person-faq-answer" style="line-height:1.65;">' . sfpf_faq_answer_html($faq['answer']) . '</div>';
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+    } else {
+        $html = '<div class="sfpf-person-faq sfpf-person-faq-accordion">';
+        foreach ($items as $index => $faq) {
+            $itemId = 'sfpf-person-faq-' . $user_id . '-' . $index;
+            $html .= '<div class="sfpf-person-faq-item" style="margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">';
+            $html .= '<button type="button" class="sfpf-person-faq-toggle" aria-expanded="false" aria-controls="' . esc_attr($itemId) . '" style="width:100%;padding:16px 20px;background:transparent;border:0;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;box-sizing:border-box;font-family:inherit;line-height:1.4;" onclick="var c=document.getElementById(\'' . esc_js($itemId) . '\');var icon=this.querySelector(\'.sfpf-person-faq-icon\');var isOpen=this.getAttribute(\'aria-expanded\')===\'true\';this.setAttribute(\'aria-expanded\', isOpen?\'false\':\'true\');if(c){c.style.display=isOpen?\'none\':\'block\';}if(icon){icon.textContent=isOpen?\'+\':\'-\';}">';
+            $html .= '<span class="sfpf-person-faq-question" style="font-weight:600;font-size:16px;color:#1f2937;">' . esc_html($faq['question']) . '</span>';
+            $html .= '<span class="sfpf-person-faq-icon" aria-hidden="true" style="font-size:20px;color:#111827;line-height:1;">+</span>';
+            $html .= '</button>';
+            $html .= '<div id="' . esc_attr($itemId) . '" class="sfpf-person-faq-answer" style="display:none;padding:0 20px 18px;color:#4b5563;line-height:1.65;">' . sfpf_faq_answer_html($faq['answer']) . '</div>';
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+    }
+
+    if (get_option('sfpf_inject_faq_schema', true)) {
+        $html .= render_faq_schema($items);
+    }
+
+    return $html;
+}
+
+function sfpf_person_faq_shortcode($atts) {
+    $atts = shortcode_atts([
+        'format' => 'accordion',
+        'style' => 'accordion',
+    ], $atts);
+
+    $user_id = get_founder_user_id();
+    if (!$user_id) {
+        return '';
+    }
+
+    return founder_display_faq($user_id, $atts);
+}
+add_shortcode('sfpf_person_faq', __NAMESPACE__ . '\\sfpf_person_faq_shortcode');
 
 /**
  * Elementor FAQ integration shortcode
@@ -1559,6 +1664,8 @@ function founder_shortcode($atts) {
                 return founder_display_socials($user_id);
             case 'display_articles':
                 return founder_display_articles($user_id, $atts['format'] ?? 'titled');
+            case 'display_faq':
+                return founder_display_faq($user_id, $atts);
             case 'display_location_born':
                 return founder_display_location_born($user_id, $atts['format'] ?? 'link');
             case 'display_knowledge_panel':
@@ -1712,6 +1819,16 @@ function founder_shortcode($atts) {
             // Plain text list of URLs
             $urls = array_filter(array_map(function($a) { return $a['url'] ?? ''; }, $articles));
             return esc_html(implode("\n", $urls));
+
+        case 'faq':
+            $faq = sfpf_normalize_faq_items(get_field('faq', 'user_' . $user_id));
+            if ($atts['format'] === 'json') {
+                return wp_json_encode($faq, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            }
+            if ($atts['format'] === 'count') {
+                return (string) count($faq);
+            }
+            return founder_display_faq($user_id, $atts);
 
         case 'location_born_location':
             $lb = get_field('location_born', 'user_' . $user_id);

@@ -670,7 +670,7 @@ function get_default_page_template($page_key) {
 
 [founder action="display_socials"]',
 
-        'faqs' => '[sfpf_faq set="primary" style="accordion"]',
+        'faqs' => '[founder action="display_faq" style="accordion"]',
     ];
     
     return $templates[$page_key] ?? '';

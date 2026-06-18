@@ -545,7 +545,12 @@ defined('ABSPATH') || exit;
         <h3>FAQ Shortcodes</h3>
     </div>
     
-    <p style="color:#666;margin-bottom:15px;">FAQ shortcodes pull from FAQ sets created in the <strong>FAQ Structures</strong> tab. They output rich HTML with <a href="https://schema.org/FAQPage" target="_blank">FAQPage schema</a> for Google Rich Results indexing.</p>
+    <div style="background:#fee2e2;border:3px solid #dc2626;color:#7f1d1d;padding:14px 16px;border-radius:8px;margin-bottom:15px;">
+        <strong style="display:block;margin-bottom:6px;">SFPF Person FAQ Source of Truth</strong>
+        Use <code>[founder action="display_faq" style="accordion"]</code> or <code>[sfpf_person_faq]</code> for person websites. These read the ACF user-profile FAQ repeater and preserve the current accordion design plus FAQPage schema. The <code>[sfpf_faq set="primary"]</code> shortcode is legacy/global and can show the wrong person if reused across sites.
+    </div>
+
+    <p style="color:#666;margin-bottom:15px;">FAQ set shortcodes pull from legacy/global FAQ sets created in the <strong>FAQ Structures</strong> tab. Person websites should use the per-person shortcode above.</p>
     
     <?php
     $faq_sets_ref = get_option('sfpf_faq_sets', []);
@@ -610,6 +615,18 @@ defined('ABSPATH') || exit;
             </tr>
         </thead>
         <tbody>
+            <tr>
+                <td><code class="sfpf-copy-code">[founder action="display_faq" style="accordion"]</code></td>
+                <td>
+                    <strong>Recommended for SFPF person websites.</strong> Reads the ACF user-profile <code>faq</code> repeater and outputs the current <code>sfpf-person-faq</code> accordion with FAQPage JSON-LD.
+                </td>
+            </tr>
+            <tr>
+                <td><code class="sfpf-copy-code">[sfpf_person_faq]</code></td>
+                <td>
+                    <strong>Alias for the same per-person FAQ output.</strong> Use this when a shorter shortcode is preferred.
+                </td>
+            </tr>
             <!-- List Style -->
             <tr>
                 <td>
@@ -617,7 +634,7 @@ defined('ABSPATH') || exit;
                     <div style="margin-top:6px;font-size:11px;color:#6b7280;">Also: <code class="sfpf-copy-code">[sfpf_faq set="<?php echo esc_attr($example_slug); ?>"]</code></div>
                 </td>
                 <td>
-                    <strong>Display all FAQs as collapsible cards.</strong> All items start closed. Click to expand. FAQPage JSON-LD schema is automatically injected.<br>
+                    <strong>Legacy/global FAQ set.</strong> Display all FAQs from the selected global set. Do not use for SFPF person profile pages.<br>
                     <div style="background:#f9fafb;padding:10px;border-radius:4px;margin-top:8px;border:1px solid #e5e7eb;">
                         <div style="margin-bottom:8px;padding:12px;background:#fff;border-radius:6px;border:1px solid #e5e7eb;">
                             <div style="font-weight:600;font-size:14px;margin-bottom:6px;">What services do you offer?</div>
@@ -650,7 +667,7 @@ defined('ABSPATH') || exit;
             <tr>
                 <td><code class="sfpf-copy-code">[sfpf_faq set="primary" style="accordion"]</code></td>
                 <td>
-                    <strong>Collapsible accordion.</strong> Click-to-expand Q&A pairs. Includes FAQPage schema. Best for long FAQ lists.<br>
+                    <strong>Legacy/global FAQ set accordion.</strong> Click-to-expand Q&A pairs from the selected global set. Do not use for SFPF person profile pages.<br>
                     <div style="background:#f9fafb;padding:10px;border-radius:4px;margin-top:8px;border:1px solid #e5e7eb;">
                         <div style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
                             <div style="padding:10px 15px;background:#fff;font-weight:600;font-size:13px;display:flex;justify-content:space-between;cursor:pointer;border-bottom:1px solid #e5e7eb;">
@@ -754,11 +771,11 @@ defined('ABSPATH') || exit;
         <table style="width:100%;font-size:12px;border-collapse:collapse;">
             <tr style="border-bottom:1px solid #d1fae5;">
                 <td style="padding:6px 8px;width:30%;"><strong>Full FAQ page</strong></td>
-                <td style="padding:6px 8px;"><code class="sfpf-copy-code">[sfpf_faq set="primary" style="accordion"]</code></td>
+                <td style="padding:6px 8px;"><code class="sfpf-copy-code">[founder action="display_faq" style="accordion"]</code></td>
             </tr>
             <tr style="border-bottom:1px solid #d1fae5;">
                 <td style="padding:6px 8px;"><strong>Show 1st FAQ on homepage</strong></td>
-                <td style="padding:6px 8px;"><code class="sfpf-copy-code">[sfpf_faq set="primary" index="0"]</code></td>
+                <td style="padding:6px 8px;"><code class="sfpf-copy-code">[sfpf_person_faq]</code></td>
             </tr>
             <tr style="border-bottom:1px solid #d1fae5;">
                 <td style="padding:6px 8px;"><strong>Schema only (custom layout)</strong></td>

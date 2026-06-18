@@ -82,6 +82,8 @@ A WordPress plugin for managing structured data (Schema.org), profile pages, FAQ
 
 ### FAQ Shortcodes
 ```
+[founder action="display_faq" style="accordion"] - Recommended person-profile FAQ accordion from ACF user FAQ rows
+[sfpf_person_faq]                              - Alias for the person-profile FAQ accordion
 [sfpf_faq set="slug"]                          - All FAQs from a set
 [sfpf_faq set="slug" index="0"]                - Single FAQ item
 [sfpf_faq set="slug" style="accordion"]        - Collapsible accordion

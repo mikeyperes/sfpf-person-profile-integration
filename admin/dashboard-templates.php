@@ -57,8 +57,8 @@ $templates = [
     ],
     'faqs' => [
         'title' => 'FAQ Page',
-        'description' => 'Template for the FAQs page. Uses the primary FAQ set by default.',
-        'default' => '[sfpf_faq set="primary" style="accordion"]',
+        'description' => 'Template for the FAQs page. Uses the person profile ACF FAQ repeater by default.',
+        'default' => '[founder action="display_faq" style="accordion"]',
     ],
 ];
 

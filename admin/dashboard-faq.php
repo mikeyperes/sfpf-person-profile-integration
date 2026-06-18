@@ -22,13 +22,22 @@ if (!is_array($faq_sets)) $faq_sets = [];
 
 ?>
 
+<div class="sfpf-card" style="background:#fee2e2;border:3px solid #dc2626;color:#7f1d1d;">
+    <div class="sfpf-card-header" style="border-bottom-color:#fecaca;">
+        <span class="dashicons dashicons-warning" style="color:#dc2626;"></span>
+        <h3 style="color:#7f1d1d;">SFPF Person FAQ Source of Truth</h3>
+    </div>
+    <p style="margin:0 0 10px;font-weight:700;">For SFPF person websites, use the ACF user-profile FAQ repeater, not the legacy global FAQ sets below.</p>
+    <p style="margin:0;">Use <code>[founder action="display_faq" style="accordion"]</code> or <code>[sfpf_person_faq]</code>. The <code>[sfpf_faq set="primary"]</code> shortcode reads this legacy global tab and can show the wrong person if reused across sites.</p>
+</div>
+
 <div class="sfpf-card">
     <div class="sfpf-card-header">
         <span class="dashicons dashicons-editor-help" style="color:#8b5cf6;"></span>
         <h3>FAQ Sets Manager</h3>
     </div>
     
-    <p style="color:#666;margin-bottom:20px;">Create named FAQ sets, each containing multiple Q&A items. FAQs automatically generate FAQPage schema when displayed.</p>
+    <p style="color:#666;margin-bottom:20px;">Legacy/global FAQ sets. Use only for non-person pages that intentionally need a site-wide FAQ collection.</p>
     
     <div id="sfpf-faq-sets-container">
         <?php if (empty($faq_sets)): ?>
@@ -78,7 +87,7 @@ if (!is_array($faq_sets)) $faq_sets = [];
                 </option>
             <?php endforeach; ?>
         </select>
-        <span style="color:#6b7280;font-size:12px;">Used when <code>[sfpf_faq set="primary"]</code> is called</span>
+        <span style="color:#b91c1c;font-size:12px;font-weight:600;">Legacy only. Person websites should use <code>[founder action="display_faq" style="accordion"]</code>.</span>
     </div>
 </div>
 
@@ -94,7 +103,7 @@ if (!is_array($faq_sets)) $faq_sets = [];
     $primary_slug_display = $primary_faq ?: $first_slug;
     ?>
     
-    <p style="color:#666;margin-bottom:15px;">Copy these shortcodes into any page or template. Replace the <code>set</code> value with your FAQ set slug shown above each set.</p>
+    <p style="color:#666;margin-bottom:15px;">For person profile FAQs, use <code>[founder action="display_faq" style="accordion"]</code>. The set-based shortcodes below are legacy/global FAQ collections.</p>
     
     <table class="sfpf-table">
         <thead>
@@ -104,6 +113,14 @@ if (!is_array($faq_sets)) $faq_sets = [];
             </tr>
         </thead>
         <tbody>
+            <tr>
+                <td><code>[founder action="display_faq" style="accordion"]</code></td>
+                <td><strong>Recommended for SFPF person websites.</strong> Reads the ACF user-profile <code>faq</code> repeater and outputs the current accordion design with FAQPage schema.</td>
+            </tr>
+            <tr>
+                <td><code>[sfpf_person_faq]</code></td>
+                <td>Alias for the same person-profile FAQ output.</td>
+            </tr>
             <tr>
                 <td><code>[sfpf_faq set="<?php echo esc_attr($first_slug); ?>"]</code></td>
                 <td>Show all FAQs from the "<strong><?php echo esc_html($first_slug); ?></strong>" set. Collapsible — all closed on load.</td>

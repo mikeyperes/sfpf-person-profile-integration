@@ -288,8 +288,10 @@ $books = get_posts([
                 <tr><td><code>[sfpf_loop cpt="organization"]</code></td><td>Display organizations with Elementor loop template</td></tr>
                 <tr><td><code>[sfpf_loop cpt="book"]</code></td><td>Display books with Elementor loop template</td></tr>
                 <tr><td><code>[sfpf_loop cpt="testimonial"]</code></td><td>Display testimonials with Elementor loop template</td></tr>
-                <tr><td><code>[sfpf_faq set="faq-set-slug"]</code></td><td>Display FAQ set as accordion</td></tr>
-                <tr><td><code>[sfpf_faq_schema set="faq-set-slug"]</code></td><td>Output FAQ schema JSON-LD only</td></tr>
+                <tr><td><code>[founder action="display_faq" style="accordion"]</code></td><td>Recommended person-profile FAQ accordion from the ACF user FAQ repeater</td></tr>
+                <tr><td><code>[sfpf_person_faq]</code></td><td>Alias for the person-profile FAQ accordion</td></tr>
+                <tr><td><code>[sfpf_faq set="faq-set-slug"]</code></td><td>Legacy/global FAQ set accordion</td></tr>
+                <tr><td><code>[sfpf_faq_schema set="faq-set-slug"]</code></td><td>Legacy/global FAQ schema JSON-LD only</td></tr>
             </tbody>
         </table>
     </div>

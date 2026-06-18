@@ -798,7 +798,7 @@ function get_acf_field_structure($snippet_id) {
                     ['label' => 'Featured', 'name' => 'featured', 'key' => 'field_sfpf_book_featured', 'type' => 'true_false'],
                 ],
                 'Media' => [
-                    ['label' => 'Cover Image', 'name' => 'cover', 'key' => 'field_sfpf_book_cover', 'type' => 'image'],
+                    ['label' => 'Featured Image', 'name' => '_thumbnail_id', 'key' => 'core_post_thumbnail', 'type' => 'core'],
                     ['label' => 'Featured Content', 'name' => 'featured_content', 'key' => 'field_sfpf_book_featured_content', 'type' => 'wysiwyg'],
                 ],
                 'URLs' => [

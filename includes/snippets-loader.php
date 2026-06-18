@@ -50,10 +50,10 @@ function get_snippets($type = 'all') {
         [
             'id' => 'sfpf_enable_book_acf',
             'name' => 'Book ACF Fields',
-            'description' => 'Adds custom fields to books: URLs, description, cover, author bio, etc.',
+            'description' => 'Adds custom fields to books: URLs, description, author bio, featured content, etc. Book images use the native featured image.',
             'file' => 'register-acf-book.php',
             'type' => 'acf',
-            'info' => 'Fields: audible_url, google_books_url, goodreads_url, amazon_url, cover, description, author_bio, subtitle, featured',
+            'info' => 'Fields: audible_url, google_books_url, goodreads_url, amazon_url, description, author_bio, subtitle, featured, featured_content',
         ],
         [
             'id' => 'sfpf_enable_organization_acf',

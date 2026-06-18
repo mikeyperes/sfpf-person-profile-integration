@@ -834,7 +834,8 @@ defined('ABSPATH') || exit;
             <tr><td><code class="sfpf-copy-code">[book field="subtitle"]</code></td><td>Book subtitle</td></tr>
             <tr><td><code class="sfpf-copy-code">[book field="description"]</code></td><td>Book description</td></tr>
             <tr><td><code class="sfpf-copy-code">[book field="author_bio"]</code></td><td>Author biography</td></tr>
-            <tr><td><code class="sfpf-copy-code">[book field="cover"]</code></td><td>Cover image URL</td></tr>
+            <tr><td><code class="sfpf-copy-code">[book field="featured_image"]</code></td><td>Featured image URL</td></tr>
+            <tr><td><code class="sfpf-copy-code">[book field="cover"]</code></td><td>Legacy alias for featured image URL</td></tr>
             <tr><td><code class="sfpf-copy-code">[book field="amazon_url"]</code></td><td>Amazon URL</td></tr>
             <tr><td><code class="sfpf-copy-code">[book field="amazon_url" link="true" target="_blank"]</code></td><td>Amazon link (new tab)</td></tr>
             <tr><td><code class="sfpf-copy-code">[book field="audible_url"]</code></td><td>Audible URL</td></tr>

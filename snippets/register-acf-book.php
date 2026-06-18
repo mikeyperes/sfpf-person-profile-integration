@@ -126,17 +126,6 @@ function register_book_acf_fields() {
                 'endpoint' => 0,
             ],
             [
-                'key' => 'field_sfpf_book_cover',
-                'label' => 'Cover Image',
-                'name' => 'cover',
-                'type' => 'image',
-                'instructions' => 'Book cover image (will also be used as featured image if not set).<br><code>[book field="cover"]</code>',
-                'required' => 0,
-                'return_format' => 'array',
-                'library' => 'all',
-                'preview_size' => 'medium',
-            ],
-            [
                 'key' => 'field_sfpf_book_featured_content',
                 'label' => 'Featured Content',
                 'name' => 'featured_content',

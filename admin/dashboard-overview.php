@@ -664,13 +664,13 @@ if (!empty($all_books)):
     
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:15px;">
         <?php foreach ($all_books as $book): 
-            $book_cover = get_field('cover', $book->ID);
+            $book_cover_url = get_the_post_thumbnail_url($book->ID, 'thumbnail');
             $book_permalink = get_permalink($book->ID);
         ?>
         <div style="background:#f9fafb;border-radius:8px;padding:15px;border:1px solid #e5e7eb;">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                <?php if ($book_cover && isset($book_cover['url'])): ?>
-                    <img src="<?php echo esc_url($book_cover['url']); ?>" style="width:40px;height:60px;object-fit:cover;border-radius:4px;" alt="">
+                <?php if ($book_cover_url): ?>
+                    <img src="<?php echo esc_url($book_cover_url); ?>" style="width:40px;height:60px;object-fit:cover;border-radius:4px;" alt="">
                 <?php else: ?>
                     <span class="dashicons dashicons-book" style="font-size:32px;color:#9ca3af;"></span>
                 <?php endif; ?>

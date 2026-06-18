@@ -412,14 +412,8 @@ function build_book_schema($post_id) {
         ];
     }
 
-    // Cover image
-    $cover = _sf('cover', $post_id);
-    if (is_array($cover) && !empty($cover['url'])) {
-        $img = ['@type' => 'ImageObject', 'url' => esc_url_raw($cover['url'])];
-        if (!empty($cover['width']))  $img['width']  = (int)$cover['width'];
-        if (!empty($cover['height'])) $img['height'] = (int)$cover['height'];
-        $s['image'] = $img;
-    } elseif ($th = get_the_post_thumbnail_url($post_id, 'full')) {
+    // Book imagery is owned by the native WordPress featured image.
+    if ($th = get_the_post_thumbnail_url($post_id, 'full')) {
         $s['image'] = ['@type' => 'ImageObject', 'url' => esc_url_raw($th)];
     }
 

@@ -11,6 +11,17 @@ namespace sfpf_person_website;
 defined('ABSPATH') || exit;
 
 $pages_structure = get_critical_pages_structure();
+$flat_pages_structure = get_flat_critical_pages_structure($pages_structure);
+$menu_structures = get_navigation_menu_structures();
+$nav_menus = wp_get_nav_menus();
+$menu_inventory = [];
+foreach ($nav_menus as $menu) {
+    $items = wp_get_nav_menu_items($menu->term_id) ?: [];
+    $menu_inventory[] = [
+        "menu" => $menu,
+        "items" => get_menu_item_labels($items),
+    ];
+}
 
 // Get all pages for dropdown
 $all_pages = get_posts([
@@ -107,37 +118,152 @@ $all_pages = get_posts([
     </div>
 </div>
 
-<!-- Add Pages to Menu -->
-<?php
-$nav_menus = wp_get_nav_menus();
-if (!empty($nav_menus)):
-?>
-<div class="sfpf-card">
+<!-- Navigation Menu Manager -->
+<div class="sfpf-card" id="sfpf-navigation-menu-manager">
     <div class="sfpf-card-header">
         <span class="dashicons dashicons-menu" style="color:#059669;"></span>
-        <h3>Add Pages to Navigation Menu</h3>
+        <h3>Navigation Menus</h3>
     </div>
-    
+
     <p style="color:#666;margin-bottom:15px;">
-        Add all assigned critical pages to a WordPress navigation menu. Child pages will be added as sub-menu items under their parent.
+        Create and map the required SFPF menu structures: Header, Footer, and Sub-Footer. Attach assigned pages to menus or to existing WordPress menu items.
     </p>
-    
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <select id="sfpf-target-menu" style="min-width:250px;">
-            <?php foreach ($nav_menus as $menu): ?>
-                <option value="<?php echo esc_attr($menu->term_id); ?>"><?php echo esc_html($menu->name); ?></option>
-            <?php endforeach; ?>
-        </select>
-        <button type="button" class="button button-primary" id="sfpf-add-to-menu">
-            <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;margin-right:4px;"></span> Add Pages to Menu
-        </button>
-        <a id="sfpf-view-menu-link" href="<?php echo admin_url('nav-menus.php?menu=' . esc_attr($nav_menus[0]->term_id)); ?>" target="_blank" class="button button-secondary" style="display:none;">
-            <span class="dashicons dashicons-external" style="vertical-align:middle;margin-right:4px;"></span> View Menu
-        </a>
-        <span id="sfpf-menu-status" style="font-size:13px;color:#666;"></span>
+
+    <div style="display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px;max-width:720px;">
+        <label style="display:block;">
+            <span style="display:block;font-weight:600;margin-bottom:4px;">Create new menu</span>
+            <input type="text" id="sfpf-new-menu-name" class="regular-text" placeholder="Header, Footer, Sub-Footer" style="width:100%;max-width:none;">
+        </label>
+        <button type="button" class="button button-primary" id="sfpf-create-navigation-menu">Create Menu</button>
+        <span id="sfpf-create-menu-status" style="grid-column:1 / -1;font-size:13px;color:#666;"></span>
     </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px;">
+        <?php foreach ($menu_structures as $structure_key => $structure): ?>
+            <?php $guessed_menu_id = guess_menu_id_for_structure($structure_key, $nav_menus); ?>
+            <div class="sfpf-menu-structure-card" data-structure="<?php echo esc_attr($structure_key); ?>" style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;background:#f9fafb;">
+                <h4 style="margin:0 0 4px;font-size:15px;"><?php echo esc_html($structure["title"]); ?></h4>
+                <p style="margin:0 0 10px;color:#666;font-size:13px;"><?php echo esc_html($structure["description"]); ?></p>
+
+                <label style="display:block;margin-bottom:8px;">
+                    <span style="display:block;font-weight:600;margin-bottom:4px;">WordPress menu</span>
+                    <select class="sfpf-structure-menu" style="width:100%;" <?php disabled(empty($nav_menus)); ?>>
+                        <?php if (empty($nav_menus)): ?>
+                            <option value="">No menus found</option>
+                        <?php else: ?>
+                            <?php foreach ($nav_menus as $menu): ?>
+                                <option value="<?php echo esc_attr($menu->term_id); ?>" <?php selected($guessed_menu_id, $menu->term_id); ?>><?php echo esc_html($menu->name); ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </label>
+
+                <label style="display:block;margin-bottom:10px;">
+                    <span style="display:block;font-weight:600;margin-bottom:4px;">Attach under menu item</span>
+                    <select class="sfpf-structure-parent" style="width:100%;" <?php disabled(empty($nav_menus)); ?>>
+                        <option value="0" data-menu-id="0">Top level</option>
+                        <?php foreach ($menu_inventory as $inventory): ?>
+                            <?php foreach ($inventory["items"] as $item): ?>
+                                <option value="<?php echo esc_attr($item["id"]); ?>" data-menu-id="<?php echo esc_attr($inventory["menu"]->term_id); ?>">
+                                    <?php echo esc_html($inventory["menu"]->name . ": " . $item["label"]); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+
+                <div style="font-size:12px;color:#4b5563;margin-bottom:10px;">
+                    <?php foreach ($structure["page_keys"] as $page_key): ?>
+                        <?php $page_data = $flat_pages_structure[$page_key] ?? null; $assigned_id = get_option("sfpf_page_" . $page_key, 0); ?>
+                        <?php if ($page_data): ?>
+                            <span style="display:inline-block;margin:0 4px 4px 0;padding:2px 7px;border-radius:999px;background:<?php echo $assigned_id ? "#dcfce7" : "#f3f4f6"; ?>;color:<?php echo $assigned_id ? "#166534" : "#6b7280"; ?>;">
+                                <?php echo esc_html($page_data["title"]); ?><?php echo $assigned_id ? "" : " (not set)"; ?>
+                            </span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+
+                <button type="button" class="button button-secondary sfpf-attach-menu-structure" <?php disabled(empty($nav_menus)); ?>>Attach <?php echo esc_html($structure["title"]); ?></button>
+                <span class="sfpf-structure-status" style="display:block;margin-top:8px;font-size:13px;color:#666;"></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:18px;background:#fff;">
+        <h4 style="margin:0 0 10px;font-size:15px;">Attach a page to a specific menu item</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;align-items:end;">
+            <label>
+                <span style="display:block;font-weight:600;margin-bottom:4px;">Menu</span>
+                <select id="sfpf-attach-menu" style="width:100%;" <?php disabled(empty($nav_menus)); ?>>
+                    <?php if (empty($nav_menus)): ?>
+                        <option value="">No menus found</option>
+                    <?php else: ?>
+                        <?php foreach ($nav_menus as $menu): ?>
+                            <option value="<?php echo esc_attr($menu->term_id); ?>"><?php echo esc_html($menu->name); ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </label>
+            <label>
+                <span style="display:block;font-weight:600;margin-bottom:4px;">Parent menu item</span>
+                <select id="sfpf-attach-parent-item" style="width:100%;" <?php disabled(empty($nav_menus)); ?>>
+                    <option value="0" data-menu-id="0">Top level</option>
+                    <?php foreach ($menu_inventory as $inventory): ?>
+                        <?php foreach ($inventory["items"] as $item): ?>
+                            <option value="<?php echo esc_attr($item["id"]); ?>" data-menu-id="<?php echo esc_attr($inventory["menu"]->term_id); ?>"><?php echo esc_html($item["label"]); ?></option>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span style="display:block;font-weight:600;margin-bottom:4px;">Assigned SFPF page</span>
+                <select id="sfpf-attach-page-key" style="width:100%;" <?php disabled(empty($nav_menus)); ?>>
+                    <?php foreach ($flat_pages_structure as $page_key => $page_data): ?>
+                        <?php $assigned_id = get_option("sfpf_page_" . $page_key, 0); ?>
+                        <option value="<?php echo esc_attr($page_key); ?>" <?php disabled(!$assigned_id); ?>><?php echo esc_html($page_data["title"] . ($assigned_id ? "" : " (not set)")); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <button type="button" class="button button-primary" id="sfpf-attach-page-to-menu-item" <?php disabled(empty($nav_menus)); ?>>Attach Page</button>
+        </div>
+        <span id="sfpf-attach-page-status" style="display:block;margin-top:8px;font-size:13px;color:#666;"></span>
+    </div>
+
+    <h4 style="margin:0 0 10px;font-size:15px;">WordPress Menu Items</h4>
+    <?php if (empty($nav_menus)): ?>
+        <p style="color:#666;margin:0;">No WordPress menus exist yet. Create Header, Footer, and Sub-Footer menus above.</p>
+    <?php else: ?>
+        <table class="sfpf-table">
+            <thead>
+                <tr>
+                    <th style="width:24%;">Menu</th>
+                    <th>Items</th>
+                    <th style="width:20%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($menu_inventory as $inventory): ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($inventory["menu"]->name); ?></strong><div><code><?php echo esc_html($inventory["menu"]->slug); ?></code></div></td>
+                        <td>
+                            <?php if (empty($inventory["items"])): ?>
+                                <span style="color:#6b7280;">No items</span>
+                            <?php else: ?>
+                                <?php foreach ($inventory["items"] as $item): ?>
+                                    <div style="margin-bottom:3px;"><code>#<?php echo esc_html($item["id"]); ?></code> <?php echo esc_html($item["label"]); ?></div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <a class="button button-small" href="<?php echo esc_url(admin_url("nav-menus.php?menu=" . (int) $inventory["menu"]->term_id)); ?>" target="_blank">Edit</a>
+                            <button type="button" class="button button-small sfpf-delete-navigation-menu" data-menu-id="<?php echo esc_attr($inventory["menu"]->term_id); ?>" data-menu-name="<?php echo esc_attr($inventory["menu"]->name); ?>">Delete</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
 </div>
-<?php endif; ?>
 
 <!-- Founder Professions Section -->
 <?php 
@@ -402,42 +528,147 @@ jQuery(document).ready(function($) {
         });
     });
     
-    // Update View Menu link when select changes
-    $('#sfpf-target-menu').on('change', function() {
-        var menuId = $(this).val();
-        $('#sfpf-view-menu-link').attr('href', '<?php echo admin_url('nav-menus.php?menu='); ?>' + menuId);
+    // Navigation menu manager helpers
+    function sfpfFilterParentItems($select, menuId) {
+        $select.find("option").each(function() {
+            var optionMenuId = String($(this).data("menu-id") || "0");
+            var isTop = optionMenuId === "0";
+            $(this).toggle(isTop || optionMenuId === String(menuId));
+        });
+        if (!$select.find("option:selected").is(":visible")) {
+            $select.val("0");
+        }
+    }
+
+    function sfpfSetMenuStatus($el, message, success) {
+        $el.text(message).css("color", success ? "#059669" : "#dc2626");
+    }
+
+    $(".sfpf-structure-menu").each(function() {
+        var $card = $(this).closest(".sfpf-menu-structure-card");
+        sfpfFilterParentItems($card.find(".sfpf-structure-parent"), $(this).val());
     });
-    
-    // Add pages to navigation menu
-    $('#sfpf-add-to-menu').on('click', function() {
+
+    $("#sfpf-attach-menu").on("change", function() {
+        sfpfFilterParentItems($("#sfpf-attach-parent-item"), $(this).val());
+    }).trigger("change");
+
+    $(document).on("change", ".sfpf-structure-menu", function() {
+        var $card = $(this).closest(".sfpf-menu-structure-card");
+        sfpfFilterParentItems($card.find(".sfpf-structure-parent"), $(this).val());
+    });
+
+    $("#sfpf-create-navigation-menu").on("click", function() {
         var $btn = $(this);
-        var $status = $('#sfpf-menu-status');
-        var menuId = $('#sfpf-target-menu').val();
-        
-        if (!menuId) {
-            $status.text('Please select a menu.').css('color', '#dc2626');
+        var $status = $("#sfpf-create-menu-status");
+        var menuName = $("#sfpf-new-menu-name").val();
+        if (!menuName) {
+            sfpfSetMenuStatus($status, "Enter a menu name.", false);
             return;
         }
-        
-        $btn.prop('disabled', true).text('Adding...');
-        $status.text('').css('color', '#666');
-        
+        $btn.prop("disabled", true).text("Creating...");
         $.post(ajaxurl, {
-            action: 'sfpf_add_pages_to_menu',
-            menu_id: menuId,
-            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
+            action: "sfpf_create_navigation_menu",
+            nonce: "<?php echo wp_create_nonce("sfpf_ajax"); ?>",
+            menu_name: menuName
         }, function(response) {
-            $btn.prop('disabled', false).html('<span class="dashicons dashicons-plus-alt" style="vertical-align:middle;margin-right:4px;"></span> Add Pages to Menu');
             if (response.success) {
-                $status.text('✅ ' + response.data.message).css('color', '#059669');
-                // Show View Menu button
-                $('#sfpf-view-menu-link').attr('href', '<?php echo admin_url('nav-menus.php?menu='); ?>' + menuId).show();
+                sfpfSetMenuStatus($status, "Created menu: " + response.data.name, true);
+                setTimeout(function() { location.reload(); }, 700);
             } else {
-                $status.text('❌ ' + (response.data || 'Failed')).css('color', '#dc2626');
+                sfpfSetMenuStatus($status, response.data || "Menu creation failed.", false);
+                $btn.prop("disabled", false).text("Create Menu");
             }
         }).fail(function() {
-            $btn.prop('disabled', false).html('<span class="dashicons dashicons-plus-alt" style="vertical-align:middle;margin-right:4px;"></span> Add Pages to Menu');
-            $status.text('❌ Request failed').css('color', '#dc2626');
+            sfpfSetMenuStatus($status, "Menu creation request failed.", false);
+            $btn.prop("disabled", false).text("Create Menu");
+        });
+    });
+
+    $(document).on("click", ".sfpf-delete-navigation-menu", function() {
+        var $btn = $(this);
+        var menuId = $btn.data("menu-id");
+        var menuName = $btn.data("menu-name");
+        if (!confirm("Delete the " + menuName + " menu?")) return;
+        $btn.prop("disabled", true).text("Deleting...");
+        $.post(ajaxurl, {
+            action: "sfpf_delete_navigation_menu",
+            nonce: "<?php echo wp_create_nonce("sfpf_ajax"); ?>",
+            menu_id: menuId
+        }, function(response) {
+            if (response.success) {
+                showToast("Menu deleted", "success");
+                setTimeout(function() { location.reload(); }, 700);
+            } else {
+                showToast("Error: " + (response.data || "Menu deletion failed"), "error");
+                $btn.prop("disabled", false).text("Delete");
+            }
+        }).fail(function() {
+            showToast("Menu deletion request failed", "error");
+            $btn.prop("disabled", false).text("Delete");
+        });
+    });
+
+    $(document).on("click", ".sfpf-attach-menu-structure", function() {
+        var $btn = $(this);
+        var $card = $btn.closest(".sfpf-menu-structure-card");
+        var $status = $card.find(".sfpf-structure-status");
+        var menuId = $card.find(".sfpf-structure-menu").val();
+        var parentItemId = $card.find(".sfpf-structure-parent").val() || "0";
+        var structure = $card.data("structure");
+        if (!menuId) {
+            sfpfSetMenuStatus($status, "Select a menu first.", false);
+            return;
+        }
+        $btn.prop("disabled", true).text("Attaching...");
+        $.post(ajaxurl, {
+            action: "sfpf_attach_menu_structure",
+            nonce: "<?php echo wp_create_nonce("sfpf_ajax"); ?>",
+            menu_id: menuId,
+            parent_item_id: parentItemId,
+            structure: structure
+        }, function(response) {
+            if (response.success) {
+                sfpfSetMenuStatus($status, response.data.message, true);
+                setTimeout(function() { location.reload(); }, 900);
+            } else {
+                sfpfSetMenuStatus($status, response.data || "Structure attach failed.", false);
+                $btn.prop("disabled", false).text("Attach " + $card.find("h4").text());
+            }
+        }).fail(function() {
+            sfpfSetMenuStatus($status, "Structure attach request failed.", false);
+            $btn.prop("disabled", false).text("Attach " + $card.find("h4").text());
+        });
+    });
+
+    $("#sfpf-attach-page-to-menu-item").on("click", function() {
+        var $btn = $(this);
+        var $status = $("#sfpf-attach-page-status");
+        var menuId = $("#sfpf-attach-menu").val();
+        var parentItemId = $("#sfpf-attach-parent-item").val() || "0";
+        var pageKey = $("#sfpf-attach-page-key").val();
+        if (!menuId || !pageKey) {
+            sfpfSetMenuStatus($status, "Select a menu and assigned page.", false);
+            return;
+        }
+        $btn.prop("disabled", true).text("Attaching...");
+        $.post(ajaxurl, {
+            action: "sfpf_attach_page_to_menu_item",
+            nonce: "<?php echo wp_create_nonce("sfpf_ajax"); ?>",
+            menu_id: menuId,
+            parent_item_id: parentItemId,
+            page_key: pageKey
+        }, function(response) {
+            if (response.success) {
+                sfpfSetMenuStatus($status, response.data.message, true);
+                setTimeout(function() { location.reload(); }, 900);
+            } else {
+                sfpfSetMenuStatus($status, response.data || "Page attach failed.", false);
+                $btn.prop("disabled", false).text("Attach Page");
+            }
+        }).fail(function() {
+            sfpfSetMenuStatus($status, "Page attach request failed.", false);
+            $btn.prop("disabled", false).text("Attach Page");
         });
     });
     

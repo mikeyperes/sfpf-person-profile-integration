@@ -619,7 +619,142 @@ function get_critical_pages_structure() {
             'parent' => null,
             'children' => [],
         ],
+        'gallery' => [
+            'title' => 'Gallery',
+            'slug' => 'gallery',
+            'parent' => null,
+            'children' => [],
+        ],
     ];
+}
+
+/**
+ * Get critical pages as a flat keyed map while preserving parent references.
+ *
+ * @param array|null $pages_structure Optional nested pages structure.
+ * @return array
+ */
+function get_flat_critical_pages_structure($pages_structure = null) {
+    if ($pages_structure === null) {
+        $pages_structure = get_critical_pages_structure();
+    }
+
+    $flat = [];
+    foreach ($pages_structure as $page_key => $page_data) {
+        $page_data["key"] = $page_key;
+        $page_data["parent"] = $page_data["parent"] ?? null;
+        $flat[$page_key] = $page_data;
+
+        foreach (($page_data["children"] ?? []) as $child_key => $child_data) {
+            $child_data["key"] = $child_key;
+            $child_data["parent"] = $page_key;
+            $child_data["children"] = [];
+            $flat[$child_key] = $child_data;
+        }
+    }
+
+    return $flat;
+}
+
+/**
+ * Get standard navigation structures every SFPF site can map to WordPress menus.
+ *
+ * @return array
+ */
+function get_navigation_menu_structures() {
+    return [
+        "header" => [
+            "title" => "Header",
+            "description" => "Primary navigation shown in the site header.",
+            "page_keys" => ["biography", "professions", "recent_articles", "gallery", "connect"],
+        ],
+        "footer" => [
+            "title" => "Footer",
+            "description" => "Footer navigation for high-value profile pages.",
+            "page_keys" => ["biography", "education", "organizations_founded", "recent_articles", "gallery", "faqs", "connect"],
+        ],
+        "sub_footer" => [
+            "title" => "Sub-Footer",
+            "description" => "Secondary footer links for supporting profile details.",
+            "page_keys" => ["alternate_names", "location_born"],
+        ],
+    ];
+}
+
+/**
+ * Guess which WordPress menu most likely belongs to a standard SFPF structure.
+ *
+ * @param string $structure_key Structure key.
+ * @param array|null $menus Optional menu objects.
+ * @return int
+ */
+function guess_menu_id_for_structure($structure_key, $menus = null) {
+    if ($menus === null) {
+        $menus = wp_get_nav_menus();
+    }
+
+    $needles = [
+        "header" => ["header", "main", "primary", "top"],
+        "footer" => ["footer", "bottom"],
+        "sub_footer" => ["sub-footer", "sub footer", "subfooter", "legal", "secondary"],
+    ];
+
+    $terms = $needles[$structure_key] ?? [$structure_key];
+    foreach ($menus as $menu) {
+        $name = strtolower((string) ($menu->name ?? ""));
+        foreach ($terms as $needle) {
+            if ($needle !== "" && strpos($name, $needle) !== false) {
+                return (int) $menu->term_id;
+            }
+        }
+    }
+
+    return !empty($menus[0]->term_id) ? (int) $menus[0]->term_id : 0;
+}
+
+/**
+ * Build menu-item labels with lightweight depth information for selects and inventory tables.
+ *
+ * @param array $items Menu item objects.
+ * @return array
+ */
+function get_menu_item_labels($items) {
+    $items = is_array($items) ? $items : [];
+    $by_id = [];
+    foreach ($items as $item) {
+        $by_id[(int) $item->ID] = $item;
+    }
+
+    $rows = [];
+    foreach ($items as $item) {
+        $depth = 0;
+        $parent_id = (int) ($item->menu_item_parent ?? 0);
+        $seen = [];
+        while ($parent_id > 0 && isset($by_id[$parent_id]) && !isset($seen[$parent_id])) {
+            $seen[$parent_id] = true;
+            $depth++;
+            $parent_id = (int) ($by_id[$parent_id]->menu_item_parent ?? 0);
+        }
+
+        $title = trim((string) ($item->title ?? ""));
+        if ($title === "") {
+            $title = "(Untitled item #" . (int) $item->ID . ")";
+        }
+
+        $rows[] = [
+            "id" => (int) $item->ID,
+            "title" => $title,
+            "label" => str_repeat("-- ", $depth) . $title,
+            "depth" => $depth,
+            "parent_id" => (int) ($item->menu_item_parent ?? 0),
+            "object_id" => (int) ($item->object_id ?? 0),
+            "object" => (string) ($item->object ?? ""),
+            "type" => (string) ($item->type ?? ""),
+            "url" => (string) ($item->url ?? ""),
+        ];
+    }
+
+    return $rows;
 }
 
 /**

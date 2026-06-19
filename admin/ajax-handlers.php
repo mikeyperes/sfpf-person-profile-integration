@@ -1298,6 +1298,230 @@ function ajax_delete_page() {
 add_action('wp_ajax_sfpf_delete_page', __NAMESPACE__ . '\\ajax_delete_page');
 
 /**
+ * Resolve a menu item and verify it belongs to the selected menu.
+ *
+ * @param int $menu_id Menu term ID.
+ * @param int $menu_item_id Menu item post ID.
+ * @return object|null
+ */
+function get_menu_item_from_menu($menu_id, $menu_item_id) {
+    $menu_id = (int) $menu_id;
+    $menu_item_id = (int) $menu_item_id;
+    if ($menu_id <= 0 || $menu_item_id <= 0) {
+        return null;
+    }
+
+    $items = wp_get_nav_menu_items($menu_id) ?: [];
+    foreach ($items as $item) {
+        if ((int) $item->ID === $menu_item_id) {
+            return $item;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Find an existing menu item for a page.
+ *
+ * @param int $menu_id Menu term ID.
+ * @param int $page_id Page ID.
+ * @return object|null
+ */
+function find_page_menu_item($menu_id, $page_id) {
+    $items = wp_get_nav_menu_items((int) $menu_id) ?: [];
+    foreach ($items as $item) {
+        if ($item->type === "post_type" && $item->object === "page" && (int) $item->object_id === (int) $page_id) {
+            return $item;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Add or update a page menu item.
+ *
+ * @param int $menu_id Menu term ID.
+ * @param int $page_id Page ID.
+ * @param int $parent_menu_item_id Parent menu item ID.
+ * @return array
+ */
+function upsert_page_menu_item($menu_id, $page_id, $parent_menu_item_id = 0) {
+    $menu_id = (int) $menu_id;
+    $page_id = (int) $page_id;
+    $parent_menu_item_id = (int) $parent_menu_item_id;
+    $existing = find_page_menu_item($menu_id, $page_id);
+    $existing_id = $existing ? (int) $existing->ID : 0;
+
+    $result = wp_update_nav_menu_item($menu_id, $existing_id, [
+        "menu-item-object-id" => $page_id,
+        "menu-item-object" => "page",
+        "menu-item-type" => "post_type",
+        "menu-item-parent-id" => $parent_menu_item_id,
+        "menu-item-status" => "publish",
+        "menu-item-title" => get_the_title($page_id),
+    ]);
+
+    if (is_wp_error($result)) {
+        return ["success" => false, "message" => $result->get_error_message(), "menu_item_id" => 0, "created" => false];
+    }
+
+    return ["success" => true, "message" => $existing_id ? "Menu item updated." : "Menu item created.", "menu_item_id" => (int) $result, "created" => !$existing_id];
+}
+
+/**
+ * Create a WordPress navigation menu.
+ */
+function ajax_create_navigation_menu() {
+    verify_ajax_nonce();
+
+    $menu_name = sanitize_text_field(wp_unslash($_POST["menu_name"] ?? ""));
+    if ($menu_name === "") {
+        wp_send_json_error("Menu name is required");
+    }
+
+    $existing = wp_get_nav_menu_object($menu_name);
+    if ($existing) {
+        wp_send_json_success(["menu_id" => (int) $existing->term_id, "name" => $existing->name, "message" => "Menu already exists."]);
+    }
+
+    $menu_id = wp_create_nav_menu($menu_name);
+    if (is_wp_error($menu_id)) {
+        wp_send_json_error($menu_id->get_error_message());
+    }
+
+    write_log("Navigation menu created: " . $menu_name . " (ID: " . (int) $menu_id . ")");
+    wp_send_json_success(["menu_id" => (int) $menu_id, "name" => $menu_name, "message" => "Menu created."]);
+}
+add_action("wp_ajax_sfpf_create_navigation_menu", __NAMESPACE__ . "\\ajax_create_navigation_menu");
+
+/**
+ * Delete a WordPress navigation menu.
+ */
+function ajax_delete_navigation_menu() {
+    verify_ajax_nonce();
+
+    $menu_id = intval($_POST["menu_id"] ?? 0);
+    $menu = $menu_id ? wp_get_nav_menu_object($menu_id) : null;
+    if (!$menu) {
+        wp_send_json_error("Menu not found");
+    }
+
+    $deleted = wp_delete_nav_menu($menu_id);
+    if (!$deleted || is_wp_error($deleted)) {
+        wp_send_json_error(is_wp_error($deleted) ? $deleted->get_error_message() : "Menu deletion failed");
+    }
+
+    write_log("Navigation menu deleted: " . $menu->name . " (ID: " . $menu_id . ")");
+    wp_send_json_success(["menu_id" => $menu_id, "name" => $menu->name, "message" => "Menu deleted."]);
+}
+add_action("wp_ajax_sfpf_delete_navigation_menu", __NAMESPACE__ . "\\ajax_delete_navigation_menu");
+
+/**
+ * Attach one assigned SFPF page to a WordPress menu item.
+ */
+function ajax_attach_page_to_menu_item() {
+    verify_ajax_nonce();
+
+    $menu_id = intval($_POST["menu_id"] ?? 0);
+    $parent_item_id = intval($_POST["parent_item_id"] ?? 0);
+    $page_key = sanitize_key($_POST["page_key"] ?? "");
+    $flat_pages = get_flat_critical_pages_structure();
+
+    if (!$menu_id || !wp_get_nav_menu_object($menu_id)) {
+        wp_send_json_error("Menu not found");
+    }
+    if (!$page_key || empty($flat_pages[$page_key])) {
+        wp_send_json_error("Unknown SFPF page key");
+    }
+    if ($parent_item_id > 0 && !get_menu_item_from_menu($menu_id, $parent_item_id)) {
+        wp_send_json_error("Parent menu item does not belong to the selected menu");
+    }
+
+    $page_id = (int) get_option("sfpf_page_" . $page_key, 0);
+    if (!$page_id || get_post_status($page_id) !== "publish") {
+        wp_send_json_error($flat_pages[$page_key]["title"] . " is not assigned to a published page");
+    }
+
+    $result = upsert_page_menu_item($menu_id, $page_id, $parent_item_id);
+    if (!$result["success"]) {
+        wp_send_json_error($result["message"]);
+    }
+
+    $menu = wp_get_nav_menu_object($menu_id);
+    write_log("Attached SFPF page to menu: " . $page_key . " -> " . $menu->name);
+    wp_send_json_success(["message" => $flat_pages[$page_key]["title"] . " attached to " . $menu->name . ".", "menu_item_id" => $result["menu_item_id"]]);
+}
+add_action("wp_ajax_sfpf_attach_page_to_menu_item", __NAMESPACE__ . "\\ajax_attach_page_to_menu_item");
+
+/**
+ * Attach one of the standard SFPF menu structures to a WordPress menu.
+ */
+function ajax_attach_menu_structure() {
+    verify_ajax_nonce();
+
+    $menu_id = intval($_POST["menu_id"] ?? 0);
+    $parent_item_id = intval($_POST["parent_item_id"] ?? 0);
+    $structure_key = sanitize_key($_POST["structure"] ?? "");
+    $structures = get_navigation_menu_structures();
+    $flat_pages = get_flat_critical_pages_structure();
+
+    if (!$menu_id || !wp_get_nav_menu_object($menu_id)) {
+        wp_send_json_error("Menu not found");
+    }
+    if (!$structure_key || empty($structures[$structure_key])) {
+        wp_send_json_error("Unknown menu structure");
+    }
+    if ($parent_item_id > 0 && !get_menu_item_from_menu($menu_id, $parent_item_id)) {
+        wp_send_json_error("Parent menu item does not belong to the selected menu");
+    }
+
+    $added = 0;
+    $updated = 0;
+    $skipped = 0;
+    $created_by_key = [];
+
+    foreach ($structures[$structure_key]["page_keys"] as $page_key) {
+        if (empty($flat_pages[$page_key])) {
+            $skipped++;
+            continue;
+        }
+
+        $page_id = (int) get_option("sfpf_page_" . $page_key, 0);
+        if (!$page_id || get_post_status($page_id) !== "publish") {
+            $skipped++;
+            continue;
+        }
+
+        $item_parent_id = $parent_item_id;
+        $parent_key = $flat_pages[$page_key]["parent"] ?? null;
+        if ($parent_key && isset($created_by_key[$parent_key])) {
+            $item_parent_id = (int) $created_by_key[$parent_key];
+        }
+
+        $result = upsert_page_menu_item($menu_id, $page_id, $item_parent_id);
+        if (!$result["success"]) {
+            wp_send_json_error($result["message"]);
+        }
+
+        $created_by_key[$page_key] = (int) $result["menu_item_id"];
+        if (!empty($result["created"])) {
+            $added++;
+        } else {
+            $updated++;
+        }
+    }
+
+    $menu = wp_get_nav_menu_object($menu_id);
+    $label = $structures[$structure_key]["title"];
+    $message = $label . " attached to " . $menu->name . ": " . $added . " added, " . $updated . " updated, " . $skipped . " skipped.";
+    write_log("Navigation structure attached: " . $message);
+    wp_send_json_success(["message" => $message, "added" => $added, "updated" => $updated, "skipped" => $skipped]);
+}
+add_action("wp_ajax_sfpf_attach_menu_structure", __NAMESPACE__ . "\\ajax_attach_menu_structure");
+
+/**
  * Add critical pages to navigation menu with parent/child structure
  */
 function ajax_add_pages_to_menu() {

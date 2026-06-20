@@ -1345,50 +1345,29 @@ add_action('wp_ajax_sfpf_clear_log', __NAMESPACE__ . '\\ajax_clear_log');
  */
 function ajax_save_faq_sets() {
     verify_ajax_nonce();
-    
-    $faq_sets_json = stripslashes($_POST['faq_sets'] ?? '[]');
+
+    $faq_sets_json = stripslashes($_POST["faq_sets"] ?? "[]");
     $faq_sets = json_decode($faq_sets_json, true);
-    
+
     if (!is_array($faq_sets)) {
         $faq_sets = [];
     }
-    
-    // Sanitize FAQ sets
-    $sanitized_sets = [];
-    foreach ($faq_sets as $set) {
-        $sanitized_items = [];
-        $items = $set['items'] ?? [];
-        
-        foreach ($items as $item) {
-            if (!empty($item['question']) || !empty($item['answer'])) {
-                $sanitized_items[] = [
-                    'question' => sanitize_text_field($item['question'] ?? ''),
-                    'answer' => wp_kses_post($item['answer'] ?? ''),
-                ];
-            }
-        }
-        
-        if (!empty($set['name']) || !empty($sanitized_items)) {
-            $sanitized_sets[] = [
-                'name' => sanitize_text_field($set['name'] ?? ''),
-                'slug' => sanitize_key($set['slug'] ?? 'faq-set-' . count($sanitized_sets)),
-                'items' => $sanitized_items,
-            ];
-        }
-    }
-    
-    update_option('sfpf_faq_sets', $sanitized_sets);
-    
-    $inject_schema = !empty($_POST['inject_schema']);
-    update_option('sfpf_inject_faq_schema', $inject_schema);
-    
-    $primary_faq = sanitize_key($_POST['primary_faq_set'] ?? '');
-    update_option('sfpf_primary_faq_set', $primary_faq);
-    
-    write_log("FAQ sets saved: " . count($sanitized_sets) . " sets");
-    
-    wp_send_json_success(['count' => count($sanitized_sets)]);
+
+    $sanitized_sets = (new \Hexa\PluginCore\FaqSets\FaqSetManager())->sanitizeSets($faq_sets);
+
+    update_option("sfpf_faq_sets", $sanitized_sets);
+
+    $inject_schema = !empty($_POST["inject_schema"]);
+    update_option("sfpf_inject_faq_schema", $inject_schema);
+
+    $primary_faq = sanitize_key($_POST["primary_faq_set"] ?? "");
+    update_option("sfpf_primary_faq_set", $primary_faq);
+
+    write_log("FAQ sets saved through Hexa Core FaqSets: " . count($sanitized_sets) . " sets");
+
+    wp_send_json_success(["count" => count($sanitized_sets)]);
 }
+
 add_action('wp_ajax_sfpf_save_faq_sets', __NAMESPACE__ . '\\ajax_save_faq_sets');
 
 /**

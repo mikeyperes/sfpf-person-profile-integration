@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.20
+ * Version: 1.6.21
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define("SFPF_PLUGIN_VERSION", "1.6.20");
+define("SFPF_PLUGIN_VERSION", "1.6.21");
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = "1.6.20";
+    public static $version = "1.6.21";
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -876,70 +876,32 @@ add_filter('acf/load_field_groups', function($field_groups) {
 /**
  * Get FAQ set by slug
  */
+function sfpf_faq_manager() {
+    static $manager = null;
+
+    if (null === $manager) {
+        $manager = new \Hexa\PluginCore\FaqSets\FaqSetManager();
+    }
+
+    return $manager;
+}
+
 function get_faq_set_by_slug($slug) {
-    $faq_sets = get_option('sfpf_faq_sets', []);
+    $faq_sets = get_option("sfpf_faq_sets", []);
 
-    // "primary" resolves to the designated primary set, or the first set
-    if ($slug === 'primary') {
-        $primary_slug = get_option('sfpf_primary_faq_set', '');
-        if ($primary_slug) {
-            foreach ($faq_sets as $set) {
-                if (($set['slug'] ?? '') === $primary_slug) {
-                    return $set;
-                }
-            }
-        }
-        // Fallback: return first set
-        return !empty($faq_sets) ? $faq_sets[0] : null;
-    }
-
-    foreach ($faq_sets as $set) {
-        if (($set['slug'] ?? '') === $slug) {
-            return $set;
-        }
-    }
-    return null;
+    return sfpf_faq_manager()->resolveSet(
+        is_array($faq_sets) ? $faq_sets : [],
+        (string) $slug,
+        (string) get_option("sfpf_primary_faq_set", "")
+    );
 }
 
 function sfpf_faq_answer_html($answer) {
-    $html = wp_kses_post($answer);
-
-    return preg_replace_callback('/<a\b([^>]*)>/i', function($matches) {
-        $attrs = rtrim($matches[1] ?? '');
-        if (stripos($attrs, ' target=') === false) {
-            $attrs .= ' target="_blank"';
-        }
-        if (stripos($attrs, ' rel=') === false) {
-            $attrs .= ' rel="noopener noreferrer"';
-        }
-        return '<a' . $attrs . '>';
-    }, $html);
+    return sfpf_faq_manager()->answerHtml((string) $answer);
 }
 
 function sfpf_normalize_faq_items($items) {
-    if (!is_array($items)) {
-        return [];
-    }
-
-    $normalized = [];
-    foreach ($items as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-
-        $question = trim((string) ($item['question'] ?? $item['title'] ?? ''));
-        $answer = trim((string) ($item['answer'] ?? $item['content'] ?? ''));
-        if ($question === '' || $answer === '') {
-            continue;
-        }
-
-        $normalized[] = [
-            'question' => $question,
-            'answer' => $answer,
-        ];
-    }
-
-    return $normalized;
+    return sfpf_faq_manager()->normalizeItems($items);
 }
 
 /**
@@ -1012,62 +974,23 @@ add_shortcode('sfpf_faq', __NAMESPACE__ . '\\sfpf_faq_shortcode');
  * Render FAQ as accordion
  */
 function render_faq_accordion($set, $items) {
-    $html = '<div class="sfpf-faq-accordion" data-set="' . esc_attr($set['slug']) . '" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">';
+    $set = is_array($set) ? $set : [];
+    $set["items"] = $items;
 
-    foreach ($items as $i => $faq) {
-        if (!empty($faq['question'])) {
-            $html .= '<div class="sfpf-accordion-item" style="border-bottom:1px solid #e5e7eb;">';
-            $html .= '<div role="button" tabindex="0" class="sfpf-accordion-trigger" style="width:100%;padding:15px 20px;background:#fff;border:none;text-align:left;cursor:pointer;display:flex !important;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;box-sizing:border-box;font-family:inherit;line-height:1.4;" onclick="var c=this.nextElementSibling;var icon=this.querySelector(\'.sfpf-accordion-icon\');if(c.style.display===\'none\'||c.style.display===\'\'){c.style.display=\'block\';icon.textContent=\'−\';this.parentElement.classList.add(\'open\');}else{c.style.display=\'none\';icon.textContent=\'+\';this.parentElement.classList.remove(\'open\');}">';
-            $html .= '<span style="color:#1e1e1e !important;display:block;">' . esc_html($faq['question']) . '</span>';
-            $html .= '<span class="sfpf-accordion-icon" style="font-size:20px;transition:transform 0.2s;flex-shrink:0;margin-left:12px;">+</span>';
-            $html .= '</div>';
-            $html .= '<div class="sfpf-accordion-content" style="display:none;padding:15px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;">';
-            $html .= sfpf_faq_answer_html($faq['answer']);
-            $html .= '</div>';
-            $html .= '</div>';
-        }
-    }
-
-    $html .= '</div>';
-
-    // Inject schema if enabled
-    if (get_option('sfpf_inject_faq_schema', true)) {
-        $html .= render_faq_schema($items);
-    }
-
-    return $html;
+    return sfpf_faq_manager()->renderFaqs($set, [
+        "style" => "accordion",
+        "inject_schema" => (bool) get_option("sfpf_inject_faq_schema", true),
+    ]);
 }
+
 
 /**
  * Render FAQ schema
  */
 function render_faq_schema($items) {
-    $items = sfpf_normalize_faq_items($items);
-    $schema = [
-        '@context' => 'https://schema.org',
-        '@type' => 'FAQPage',
-        'mainEntity' => [],
-    ];
-
-    foreach ($items as $faq) {
-        if (!empty($faq['question']) && !empty($faq['answer'])) {
-            $schema['mainEntity'][] = [
-                '@type' => 'Question',
-                'name' => $faq['question'],
-                'acceptedAnswer' => [
-                    '@type' => 'Answer',
-                    'text' => wp_strip_all_tags($faq['answer']),
-                ],
-            ];
-        }
-    }
-
-    if (empty($schema['mainEntity'])) {
-        return '';
-    }
-
-    return '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+    return sfpf_faq_manager()->renderSchemaScript($items);
 }
+
 
 /**
  * FAQ Schema only shortcode
@@ -1090,52 +1013,39 @@ function sfpf_faq_schema_shortcode($atts) {
 add_shortcode('sfpf_faq_schema', __NAMESPACE__ . '\\sfpf_faq_schema_shortcode');
 
 function founder_display_faq($user_id, $atts = []) {
-    $items = sfpf_normalize_faq_items(function_exists('get_field') ? get_field('faq', 'user_' . $user_id) : []);
-    $format = strtolower((string) ($atts['format'] ?? 'accordion'));
-    $style = strtolower((string) ($atts['style'] ?? $format));
+    $items = sfpf_normalize_faq_items(function_exists("get_field") ? get_field("faq", "user_" . $user_id) : []);
+    $format = strtolower((string) ($atts["format"] ?? "accordion"));
+    $style = strtolower((string) ($atts["style"] ?? $format));
 
-    if ($format === 'json') {
+    if ($format === "json") {
         return wp_json_encode($items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
-    if ($format === 'count') {
+    if ($format === "count") {
         return (string) count($items);
     }
 
     if ($items === []) {
-        return '';
+        return "";
     }
 
-    if ($style === 'list') {
-        $html = '<div class="sfpf-person-faq sfpf-person-faq-list">';
-        foreach ($items as $faq) {
-            $html .= '<div class="sfpf-person-faq-item" style="margin-bottom:18px;">';
-            $html .= '<h3 class="sfpf-person-faq-question" style="margin:0 0 8px;font-size:18px;line-height:1.35;">' . esc_html($faq['question']) . '</h3>';
-            $html .= '<div class="sfpf-person-faq-answer" style="line-height:1.65;">' . sfpf_faq_answer_html($faq['answer']) . '</div>';
-            $html .= '</div>';
-        }
-        $html .= '</div>';
-    } else {
-        $html = '<div class="sfpf-person-faq sfpf-person-faq-accordion">';
-        foreach ($items as $index => $faq) {
-            $itemId = 'sfpf-person-faq-' . $user_id . '-' . $index;
-            $html .= '<div class="sfpf-person-faq-item" style="margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">';
-            $html .= '<button type="button" class="sfpf-person-faq-toggle" aria-expanded="false" aria-controls="' . esc_attr($itemId) . '" style="width:100%;padding:16px 20px;background:transparent;border:0;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;box-sizing:border-box;font-family:inherit;line-height:1.4;" onclick="var c=document.getElementById(\'' . esc_js($itemId) . '\');var icon=this.querySelector(\'.sfpf-person-faq-icon\');var isOpen=this.getAttribute(\'aria-expanded\')===\'true\';this.setAttribute(\'aria-expanded\', isOpen?\'false\':\'true\');if(c){c.style.display=isOpen?\'none\':\'block\';}if(icon){icon.textContent=isOpen?\'+\':\'-\';}">';
-            $html .= '<span class="sfpf-person-faq-question" style="font-weight:600;font-size:16px;color:#1f2937;">' . esc_html($faq['question']) . '</span>';
-            $html .= '<span class="sfpf-person-faq-icon" aria-hidden="true" style="font-size:20px;color:#111827;line-height:1;">+</span>';
-            $html .= '</button>';
-            $html .= '<div id="' . esc_attr($itemId) . '" class="sfpf-person-faq-answer" style="display:none;padding:0 20px 18px;color:#4b5563;line-height:1.65;">' . sfpf_faq_answer_html($faq['answer']) . '</div>';
-            $html .= '</div>';
-        }
-        $html .= '</div>';
+    if (!in_array($style, ["accordion", "list"], true)) {
+        $style = "accordion";
     }
 
-    if (get_option('sfpf_inject_faq_schema', true)) {
-        $html .= render_faq_schema($items);
-    }
-
-    return $html;
+    return sfpf_faq_manager()->renderFaqs(
+        [
+            "slug" => "person-faq-" . (int) $user_id,
+            "name" => "Person FAQ",
+            "items" => $items,
+        ],
+        [
+            "style" => $style,
+            "inject_schema" => (bool) get_option("sfpf_inject_faq_schema", true),
+        ]
+    );
 }
+
 
 function sfpf_person_faq_shortcode($atts) {
     $atts = shortcode_atts([

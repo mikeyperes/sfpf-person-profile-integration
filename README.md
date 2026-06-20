@@ -154,6 +154,11 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.18
+- Integrated Hexa WordPress Plugin Core 0.12.0.
+- Rebuilt the Pages & Menus tab with core SiteStructure tools for critical pages, navigation menus, and page-to-menu-item attachment.
+- Moved SFPF page/menu AJAX actions to the core AJAX controller while keeping the existing action names.
+
 ### v1.6.12
 - Added a default-enabled setting that removes empty Elementor Social Icons widget links server-side before the page renders.
 

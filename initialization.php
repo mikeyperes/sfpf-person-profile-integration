@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.17
+ * Version: 1.6.18
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define('SFPF_PLUGIN_VERSION', '1.6.17');
+define('SFPF_PLUGIN_VERSION', '1.6.18');
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = '1.6.17';
+    public static $version = '1.6.18';
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -55,6 +55,37 @@ class Config {
         'homepage_acf' => 'sfpf_enable_homepage_acf',
     ];
 }
+
+/**
+ * Register the vendored Hexa WordPress Plugin Core autoloader.
+ */
+function register_hexa_plugin_core_autoloader() {
+    static $registered = false;
+    if ($registered) {
+        return;
+    }
+
+    $registered = true;
+    $prefix = 'Hexa\\PluginCore\\';
+    $base_dir = SFPF_PLUGIN_DIR . 'lib/hexa-wordpress-plugin-core/src/';
+
+    spl_autoload_register(
+        static function ($class) use ($prefix, $base_dir) {
+            if (strpos($class, $prefix) !== 0) {
+                return;
+            }
+
+            $relative_class = substr($class, strlen($prefix));
+            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            if (is_readable($file)) {
+                require_once $file;
+            }
+        },
+        true,
+        true
+    );
+}
+register_hexa_plugin_core_autoloader();
 
 // ============================================================================
 // LOAD HELPER FILES IMMEDIATELY (before any hooks)

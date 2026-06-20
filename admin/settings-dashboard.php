@@ -49,7 +49,7 @@ function render_dashboard() {
             'icon' => 'dashicons-media-code',
         ],
         'pages' => [
-            'label' => 'Pages',
+            'label' => 'Pages & Menus',
             'icon' => 'dashicons-admin-page',
         ],
         'templates' => [

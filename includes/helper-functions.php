@@ -566,11 +566,11 @@ function format_json_display($json, $dark_theme = true) {
  */
 
 /**
- * Get critical pages structure
- * 
+ * Get the host-specific SFPF page blueprint for Hexa core site structure tools.
+ *
  * @return array Pages structure with hierarchy
  */
-function get_critical_pages_structure() {
+function sfpf_site_structure_pages_definition() {
     return [
         'biography' => [
             'title' => 'Biography',
@@ -629,6 +629,67 @@ function get_critical_pages_structure() {
 }
 
 /**
+ * Get the host-specific SFPF navigation blueprints for Hexa core.
+ *
+ * @return array
+ */
+function sfpf_site_structure_menu_definition() {
+    return [
+        'header' => [
+            'title' => 'Header Menu',
+            'description' => 'Primary top navigation for high-intent public pages.',
+            'page_keys' => ['biography', 'professions', 'recent_articles', 'gallery', 'connect'],
+        ],
+        'footer' => [
+            'title' => 'Footer Menu',
+            'description' => 'Comprehensive footer navigation with profile, content, and support pages.',
+            'page_keys' => ['biography', 'education', 'organizations_founded', 'recent_articles', 'gallery', 'faqs', 'connect'],
+        ],
+        'sub_footer' => [
+            'title' => 'Sub-Footer Utility Menu',
+            'description' => 'Small utility navigation below the footer for supporting profile details.',
+            'page_keys' => ['alternate_names', 'location_born'],
+        ],
+    ];
+}
+
+/**
+ * Get the shared Hexa core site structure manager for SFPF.
+ *
+ * @return \Hexa\PluginCore\SiteStructure\PageStructureManager
+ */
+function sfpf_site_structure_manager() {
+    static $manager = null;
+    if ($manager instanceof \Hexa\PluginCore\SiteStructure\PageStructureManager) {
+        return $manager;
+    }
+
+    $manager = new \Hexa\PluginCore\SiteStructure\PageStructureManager([
+        'pages' => sfpf_site_structure_pages_definition(),
+        'menu_structures' => sfpf_site_structure_menu_definition(),
+        'option_prefix' => 'sfpf_page_',
+        'managed_meta_key' => '_sfpf_managed_page',
+        'managed_key_meta_key' => '_sfpf_page_key',
+        'logger' => static function ($message) {
+            if (function_exists(__NAMESPACE__ . '\\write_log')) {
+                write_log((string) $message);
+            }
+        },
+    ]);
+
+    return $manager;
+}
+
+/**
+ * Get critical pages structure
+ * 
+ * @return array Pages structure with hierarchy
+ */
+function get_critical_pages_structure() {
+    return sfpf_site_structure_pages_definition();
+}
+
+/**
  * Get critical pages as a flat keyed map while preserving parent references.
  *
  * @param array|null $pages_structure Optional nested pages structure.
@@ -636,7 +697,7 @@ function get_critical_pages_structure() {
  */
 function get_flat_critical_pages_structure($pages_structure = null) {
     if ($pages_structure === null) {
-        $pages_structure = get_critical_pages_structure();
+        return sfpf_site_structure_manager()->flat_pages();
     }
 
     $flat = [];
@@ -662,23 +723,7 @@ function get_flat_critical_pages_structure($pages_structure = null) {
  * @return array
  */
 function get_navigation_menu_structures() {
-    return [
-        "header" => [
-            "title" => "Header",
-            "description" => "Primary navigation shown in the site header.",
-            "page_keys" => ["biography", "professions", "recent_articles", "gallery", "connect"],
-        ],
-        "footer" => [
-            "title" => "Footer",
-            "description" => "Footer navigation for high-value profile pages.",
-            "page_keys" => ["biography", "education", "organizations_founded", "recent_articles", "gallery", "faqs", "connect"],
-        ],
-        "sub_footer" => [
-            "title" => "Sub-Footer",
-            "description" => "Secondary footer links for supporting profile details.",
-            "page_keys" => ["alternate_names", "location_born"],
-        ],
-    ];
+    return sfpf_site_structure_menu_definition();
 }
 
 /**
@@ -689,27 +734,7 @@ function get_navigation_menu_structures() {
  * @return int
  */
 function guess_menu_id_for_structure($structure_key, $menus = null) {
-    if ($menus === null) {
-        $menus = wp_get_nav_menus();
-    }
-
-    $needles = [
-        "header" => ["header", "main", "primary", "top"],
-        "footer" => ["footer", "bottom"],
-        "sub_footer" => ["sub-footer", "sub footer", "subfooter", "legal", "secondary"],
-    ];
-
-    $terms = $needles[$structure_key] ?? [$structure_key];
-    foreach ($menus as $menu) {
-        $name = strtolower((string) ($menu->name ?? ""));
-        foreach ($terms as $needle) {
-            if ($needle !== "" && strpos($name, $needle) !== false) {
-                return (int) $menu->term_id;
-            }
-        }
-    }
-
-    return !empty($menus[0]->term_id) ? (int) $menus[0]->term_id : 0;
+    return sfpf_site_structure_manager()->guess_menu_id_for_structure((string) $structure_key, $menus);
 }
 
 /**
@@ -719,42 +744,7 @@ function guess_menu_id_for_structure($structure_key, $menus = null) {
  * @return array
  */
 function get_menu_item_labels($items) {
-    $items = is_array($items) ? $items : [];
-    $by_id = [];
-    foreach ($items as $item) {
-        $by_id[(int) $item->ID] = $item;
-    }
-
-    $rows = [];
-    foreach ($items as $item) {
-        $depth = 0;
-        $parent_id = (int) ($item->menu_item_parent ?? 0);
-        $seen = [];
-        while ($parent_id > 0 && isset($by_id[$parent_id]) && !isset($seen[$parent_id])) {
-            $seen[$parent_id] = true;
-            $depth++;
-            $parent_id = (int) ($by_id[$parent_id]->menu_item_parent ?? 0);
-        }
-
-        $title = trim((string) ($item->title ?? ""));
-        if ($title === "") {
-            $title = "(Untitled item #" . (int) $item->ID . ")";
-        }
-
-        $rows[] = [
-            "id" => (int) $item->ID,
-            "title" => $title,
-            "label" => str_repeat("-- ", $depth) . $title,
-            "depth" => $depth,
-            "parent_id" => (int) ($item->menu_item_parent ?? 0),
-            "object_id" => (int) ($item->object_id ?? 0),
-            "object" => (string) ($item->object ?? ""),
-            "type" => (string) ($item->type ?? ""),
-            "url" => (string) ($item->url ?? ""),
-        ];
-    }
-
-    return $rows;
+    return sfpf_site_structure_manager()->menu_item_labels(is_array($items) ? $items : []);
 }
 
 /**

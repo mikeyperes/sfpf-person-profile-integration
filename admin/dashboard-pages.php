@@ -19,6 +19,7 @@ if (class_exists('\\Hexa\\PluginCore\\SiteStructure\\SiteStructureRenderer')) {
         'card_class' => 'sfpf-card',
         'table_class' => 'sfpf-table',
         'enable_templates' => true,
+        'show_menus' => false,
         'apply_template_action' => 'sfpf_apply_default_template',
         'actions' => [
             'assign_page' => 'sfpf_assign_page',

@@ -295,86 +295,26 @@ foreach ($critical_pages as $opt_key => $page_label) {
         admin_url('admin.php?page=sfpf-dashboard&tab=pages'), 'Critical Pages');
 }
 
-// ── Compute totals ──
-$sc_total = $sc_pass + $sc_fail + $sc_warn;
-$sc_pct = $sc_total > 0 ? round(($sc_pass / $sc_total) * 100) : 0;
-$sc_bar_color = $sc_pct === 100 ? '#16a34a' : ($sc_pct >= 70 ? '#f59e0b' : '#dc2626');
-?>
+// ── Render system checks through Hexa Core ──
+$cat_meta = [
+    "Plugins"   => ["icon" => "dashicons-admin-plugins", "color" => "#6366f1"],
+    "WordPress" => ["icon" => "dashicons-wordpress", "color" => "#0073aa"],
+    "Person"    => ["icon" => "dashicons-admin-users", "color" => "#2563eb"],
+    "Company"   => ["icon" => "dashicons-building", "color" => "#059669"],
+    "Schema"    => ["icon" => "dashicons-editor-code", "color" => "#8b5cf6"],
+    "Pages"     => ["icon" => "dashicons-admin-page", "color" => "#d97706"],
+];
 
-<div class="sfpf-card" id="sfpf-system-checks">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-yes-alt" style="color:<?php echo $sc_fail > 0 ? '#dc2626' : '#10b981'; ?>;"></span>
-        <h3>System Checks</h3>
-        <span style="margin-left:auto;font-size:13px;color:#666;">
-            <?php echo $sc_pass; ?>/<?php echo $sc_total; ?> passed
-            <?php if ($sc_fail > 0): ?> <span style="color:#dc2626;font-weight:600;">(<?php echo $sc_fail; ?> issues)</span><?php endif; ?>
-        </span>
-    </div>
-    
-    <!-- Progress bar -->
-    <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:16px;overflow:hidden;">
-        <div style="height:100%;width:<?php echo $sc_pct; ?>%;background:<?php echo $sc_bar_color; ?>;border-radius:3px;transition:width 0.3s;"></div>
-    </div>
-    
-    <?php
-    // Group items by category
-    $sc_grouped = [];
-    foreach ($sc_items as $item) {
-        $sc_grouped[$item['category']][] = $item;
-    }
-    
-    // Category icons + colors
-    $cat_meta = [
-        'Plugins'   => ['icon' => 'dashicons-admin-plugins', 'color' => '#6366f1'],
-        'WordPress' => ['icon' => 'dashicons-wordpress',     'color' => '#0073aa'],
-        'Person'    => ['icon' => 'dashicons-admin-users',   'color' => '#2563eb'],
-        'Company'   => ['icon' => 'dashicons-building',      'color' => '#059669'],
-        'Schema'    => ['icon' => 'dashicons-editor-code',   'color' => '#8b5cf6'],
-        'Pages'     => ['icon' => 'dashicons-admin-page',    'color' => '#d97706'],
-    ];
-    
-    foreach ($sc_grouped as $cat_name => $items):
-        $meta = $cat_meta[$cat_name] ?? ['icon' => 'dashicons-marker', 'color' => '#666'];
-        $cat_fails = count(array_filter($items, function($i) { return $i['status'] === 'fail'; }));
-        $cat_passes = count(array_filter($items, function($i) { return $i['status'] === 'pass'; }));
-    ?>
-    <div style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;">
-            <span class="dashicons <?php echo esc_attr($meta['icon']); ?>" style="font-size:16px;color:<?php echo $meta['color']; ?>;"></span>
-            <strong style="font-size:13px;color:#374151;"><?php echo esc_html($cat_name); ?></strong>
-            <span style="font-size:11px;color:#9ca3af;margin-left:auto;">
-                <?php echo $cat_passes; ?>/<?php echo count($items); ?>
-                <?php if ($cat_fails > 0): ?><span style="color:#dc2626;">  (<?php echo $cat_fails; ?> ✗)</span><?php endif; ?>
-            </span>
-        </div>
-        
-        <?php foreach ($items as $item):
-            if ($item['status'] === 'pass') { $icon = '✓'; $icon_color = '#059669'; $bg = ''; }
-            elseif ($item['status'] === 'fail') { $icon = '✗'; $icon_color = '#dc2626'; $bg = 'background:#fef2f2;'; }
-            else { $icon = '⚠'; $icon_color = '#d97706'; $bg = 'background:#fffbeb;'; }
-        ?>
-        <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;<?php echo $bg; ?>margin-bottom:2px;">
-            <span style="font-size:12px;color:<?php echo $icon_color; ?>;width:14px;text-align:center;flex-shrink:0;"><?php echo $icon; ?></span>
-            <span style="font-size:12px;color:#374151;min-width:160px;"><?php echo esc_html($item['label']); ?></span>
-            <span style="font-size:11px;color:#6b7280;flex:1;"><?php echo esc_html($item['detail']); ?></span>
-            <?php if (!empty($item['action_url']) && $item['status'] !== 'pass'): ?>
-                <a href="<?php echo esc_url($item['action_url']); ?>" target="_blank" style="font-size:10px;color:#2563eb;white-space:nowrap;text-decoration:none;"><?php echo esc_html($item['action_label'] ?: 'Fix →'); ?> →</a>
-            <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endforeach; ?>
-    
-    <?php if ($sc_fail === 0 && $sc_warn === 0): ?>
-        <div style="padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;font-size:13px;margin-top:8px;">
-            🎉 <strong>All checks passed!</strong> Your site is properly configured.
-        </div>
-    <?php elseif ($sc_fail > 0): ?>
-        <div style="padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#991b1b;font-size:13px;margin-top:8px;">
-            ⚠️ <strong><?php echo $sc_fail; ?> issue(s) need attention.</strong> Click the links above to fix them.
-        </div>
-    <?php endif; ?>
-</div>
+echo ( new \Hexa\PluginCore\SystemChecks\SystemChecksRenderer() )->render(
+    $sc_items,
+    [
+        "id"            => "sfpf-system-checks",
+        "title"         => "System Checks",
+        "class"         => "sfpf-system-checks-core",
+        "category_meta" => $cat_meta,
+    ]
+);
+?>
 
 <!-- Profile Cards -->
 <div class="sfpf-grid-2">

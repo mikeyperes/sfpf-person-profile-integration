@@ -58,7 +58,7 @@ Do not create `HWS\BaseTools\PluginCore`, `HexaWordPressPluginCore`, `Hexa\Core`
 - `PluginProvisioning`: shared plugin discovery, status checks, WordPress.org installs, GitHub ZIP installs, folder normalization, and activation.
 - `PluginUpdates`: shared GitHub/update configuration objects and host plugin updater.
 - `ShortcodeRegistry`: shortcode definition registry, dashboard display renderer, examples, live output, and test runner contracts.
-- `SiteStructure`: reusable critical page blueprint management, assigned page storage, WordPress navigation menu creation, menu structure attachment, and page-to-menu-item tools.
+- `SiteStructure`: reusable critical page blueprint management, assigned page storage, WordPress navigation menu creation, custom menu-item creation, add-all-assigned-pages actions, menu structure attachment, and page-to-menu-item tools.
 - `SmartSearch`: smart search/X-Search AJAX endpoint and reusable typeahead renderer.
 - `SystemEnvironment`: safe constants, INI, shell wrappers, size parsing, CPU/memory detection, and byte formatting.
 - `WpAdminComponents`: shared visual primitives such as cards, subcards, buttons, pills, tooltips, and collapsible sections.
@@ -351,3 +351,25 @@ use Hexa\PluginCore\LogFiles\ErrorLogSource;
     ]
 );
 ```
+
+
+## Host Dashboard Tabs
+
+Use `Hexa\PluginCore\WpAdminTabs\HostTabsRenderer` when the host dashboard itself needs the shared Hexa tab bar, AJAX loader, loading status, and browser-history behavior.
+
+```php
+( new \Hexa\PluginCore\WpAdminTabs\HostTabsRenderer() )->render(
+    [
+        "tabs"            => $tabs,
+        "active"          => $active,
+        "page_url"        => admin_url( "options-general.php?page=example-plugin" ),
+        "ajax_action"     => "example_load_tab",
+        "nonce"           => $nonce,
+        "render_callback" => [ $dashboard, "tab" ],
+    ]
+);
+```
+
+## System Checks
+
+`Hexa\PluginCore\SystemChecks\SystemChecksRenderer` renders grouped pass/fail/warn/info checklists from a flat item array. Use it for launch readiness, plugin health, schema audits, and environment checks instead of duplicating checklist HTML in host plugins. See `docs/system-checks.md`.

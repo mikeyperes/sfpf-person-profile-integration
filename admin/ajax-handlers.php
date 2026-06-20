@@ -318,6 +318,55 @@ function ajax_detect_schema() {
         return;
     }
     
+    if (class_exists("Hexa\\PluginCore\\SchemaDetection\\SchemaPageScanner") && class_exists("Hexa\\PluginCore\\SchemaDetection\\SchemaScanRenderer")) {
+        $expected = [];
+        $expected_map = [
+            "person" => "Person",
+            "profile_page_only" => "ProfilePage + Person",
+            "profile_page" => "ProfilePage + Person",
+            "none" => "None (disabled)",
+        ];
+
+        if ($type === "homepage") {
+            $hp_type = get_option("sfpf_homepage_schema_type", "person");
+            $expected[] = "<strong>SFPF Expected:</strong> " . ($expected_map[$hp_type] ?? $hp_type);
+        } elseif ($type === "biography") {
+            $bio_type = get_option("sfpf_biography_schema_type", "profile_page_only");
+            $expected[] = "<strong>SFPF Expected:</strong> " . ($expected_map[$bio_type] ?? $bio_type);
+        } elseif ($type === "books") {
+            $expected[] = "<strong>SFPF Expected:</strong> Book";
+        } elseif ($type === "organizations") {
+            $expected[] = "<strong>SFPF Expected:</strong> Organization";
+        } elseif ($type === "testimonials") {
+            $expected[] = "<strong>SFPF Expected:</strong> Testimonial review schema if enabled";
+        }
+
+        if (defined("RANK_MATH_VERSION")) {
+            $rm_disabled = false;
+            if ($type === "homepage") $rm_disabled = get_option("sfpf_rankmath_disable_homepage", false);
+            elseif ($type === "biography") $rm_disabled = get_option("sfpf_rankmath_disable_biography", false);
+            elseif ($type === "books") $rm_disabled = get_option("sfpf_rankmath_disable_books", false);
+            elseif ($type === "organizations") $rm_disabled = get_option("sfpf_rankmath_disable_organizations", false);
+            $expected[] = "<strong>RankMath:</strong> " . ($rm_disabled ? "Disabled for this type" : "Active - may inject its own schema");
+        }
+
+        $scanner = new \Hexa\PluginCore\SchemaDetection\SchemaPageScanner();
+        $renderer = new \Hexa\PluginCore\SchemaDetection\SchemaScanRenderer();
+        $scans = [];
+
+        foreach ($urls as $item) {
+            $scans[] = $scanner->scanUrl($item["url"], [
+                "title" => $item["title"],
+                "cache_bust" => true,
+                "timeout" => 15,
+                "sslverify" => false,
+            ]);
+        }
+
+        wp_send_json_success(["output" => $renderer->renderReport($scans, ["title" => "Schema Detection Results: " . strtoupper($type), "subtitle" => "Scanned at " . current_time("Y-m-d H:i:s") . " with Hexa Core SchemaDetection.", "expected" => $expected, "debug" => $debug])]);
+        return;
+    }
+
     $scan_time = current_time('Y-m-d H:i:s');
     $output .= '<div style="color:#10b981;margin-bottom:5px;font-size:14px;">📊 Schema Detection Results: ' . strtoupper($type) . '</div>';
     $output .= '<div style="color:#6b7280;font-size:11px;margin-bottom:10px;">🕐 Scanned at: ' . esc_html($scan_time) . ' (cache bypassed)</div>';
@@ -669,6 +718,25 @@ function sfpf_run_full_site_checklist($debug = false) {
     // Helper: fetch page and find schema types
     $fetch_schemas = function($url) {
         $cache_bust = 'sfpf_nocache=' . time() . '_' . wp_rand(1000, 9999);
+        if (class_exists("Hexa\\PluginCore\\SchemaDetection\\SchemaPageScanner")) {
+            $scanner = new \Hexa\PluginCore\SchemaDetection\SchemaPageScanner();
+            $scan = $scanner->scanUrl($url, [
+                "title" => $url,
+                "cache_bust" => true,
+                "timeout" => 15,
+                "sslverify" => false,
+            ]);
+            return [
+                "error" => $scan["error"],
+                "time_ms" => $scan["time_ms"],
+                "types" => $scan["types"],
+                "sources" => array_keys((array) $scan["types_by_source"]),
+                "blocks" => array_column((array) $scan["blocks"], "schema"),
+                "status" => $scan["status"],
+                "block_count" => $scan["block_count"],
+            ];
+        }
+
         $fetch_url = add_query_arg($cache_bust, '', $url);
         $start = microtime(true);
         $response = wp_remote_get($fetch_url, [

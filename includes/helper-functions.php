@@ -643,7 +643,7 @@ function sfpf_site_structure_menu_definition() {
         'footer' => [
             'title' => 'Footer Menu',
             'description' => 'Comprehensive footer navigation with profile, content, and support pages.',
-            'page_keys' => ['biography', 'education', 'organizations_founded', 'recent_articles', 'gallery', 'faqs', 'connect'],
+            'page_keys' => ['biography', 'education', 'organizations_founded', 'professions', 'recent_articles', 'gallery', 'faqs', 'connect'],
         ],
         'sub_footer' => [
             'title' => 'Sub-Footer Utility Menu',
@@ -681,9 +681,9 @@ function sfpf_site_structure_manager() {
 }
 
 /**
- * Get critical pages structure
- * 
- * @return array Pages structure with hierarchy
+ * Get critical pages structure.
+ *
+ * @return array Pages structure with hierarchy.
  */
 function get_critical_pages_structure() {
     return sfpf_site_structure_pages_definition();
@@ -702,14 +702,16 @@ function get_flat_critical_pages_structure($pages_structure = null) {
 
     $flat = [];
     foreach ($pages_structure as $page_key => $page_data) {
-        $page_data["key"] = $page_key;
-        $page_data["parent"] = $page_data["parent"] ?? null;
+        $page_data['key'] = $page_key;
+        $page_data['parent'] = $page_data['parent'] ?? null;
+        $page_data['parent_key'] = $page_data['parent'];
         $flat[$page_key] = $page_data;
 
-        foreach (($page_data["children"] ?? []) as $child_key => $child_data) {
-            $child_data["key"] = $child_key;
-            $child_data["parent"] = $page_key;
-            $child_data["children"] = [];
+        foreach (($page_data['children'] ?? []) as $child_key => $child_data) {
+            $child_data['key'] = $child_key;
+            $child_data['parent'] = $page_key;
+            $child_data['parent_key'] = $page_key;
+            $child_data['children'] = [];
             $flat[$child_key] = $child_data;
         }
     }

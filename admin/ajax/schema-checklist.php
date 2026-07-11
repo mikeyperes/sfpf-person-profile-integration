@@ -22,7 +22,7 @@ function sfpf_run_full_site_checklist($debug = false) {
     $pass_count = 0;
     $fail_count = 0;
     $warn_count = 0;
-    
+
     // Helper: fetch page and find schema types
     $fetch_schemas = function($url) {
         $cache_bust = 'sfpf_nocache=' . time() . '_' . wp_rand(1000, 9999);
@@ -53,15 +53,15 @@ function sfpf_run_full_site_checklist($debug = false) {
             'headers' => ['Cache-Control' => 'no-cache, no-store, must-revalidate'],
         ]);
         $time_ms = round((microtime(true) - $start) * 1000);
-        
+
         if (is_wp_error($response)) {
             return ['error' => $response->get_error_message(), 'time_ms' => $time_ms, 'types' => [], 'sources' => [], 'blocks' => []];
         }
-        
+
         $body = wp_remote_retrieve_body($response);
         $status = wp_remote_retrieve_response_code($response);
         preg_match_all('/<script[^>]*type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/si', $body, $matches);
-        
+
         $types = [];
         $sources = [];
         $blocks = [];
@@ -69,14 +69,14 @@ function sfpf_run_full_site_checklist($debug = false) {
             foreach ($matches[1] as $json_str) {
                 $schema = json_decode(trim($json_str), true);
                 if (!$schema) continue;
-                
+
                 // Detect source
                 $source = 'Unknown';
                 if (strpos($json_str, 'rank-math') !== false || strpos($json_str, 'rankmath') !== false) $source = 'RankMath';
                 elseif (strpos($json_str, 'sfpf') !== false || strpos($json_str, 'SFPF') !== false) $source = 'SFPF';
                 elseif (strpos($json_str, 'yoast') !== false) $source = 'Yoast';
                 elseif (strpos($json_str, 'WebSite') !== false && strpos($json_str, 'SearchAction') !== false) $source = 'RankMath';
-                
+
                 // Extract types
                 if (isset($schema['@type'])) {
                     $t = is_array($schema['@type']) ? $schema['@type'] : [$schema['@type']];
@@ -95,7 +95,7 @@ function sfpf_run_full_site_checklist($debug = false) {
                 $blocks[] = $schema;
             }
         }
-        
+
         return [
             'types' => array_unique($types),
             'sources' => array_keys($sources),
@@ -105,18 +105,18 @@ function sfpf_run_full_site_checklist($debug = false) {
             'block_count' => count($matches[1]),
         ];
     };
-    
+
     // ── CHECK 1: Homepage Schema ──
     $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $hp_result = $fetch_schemas(home_url('/'));
-    
+
     if ($homepage_schema_type === 'none') {
         $checks[] = ['status' => 'info', 'label' => 'Homepage Schema', 'detail' => 'Schema injection disabled (set to "None")', 'types' => $hp_result['types'], 'time' => $hp_result['time_ms']];
     } else {
         $expected_types = [];
         if (in_array($homepage_schema_type, ['person', 'profile_page'])) $expected_types[] = 'Person';
         if (in_array($homepage_schema_type, ['profile_page', 'profile_page_only'])) $expected_types[] = 'ProfilePage';
-        
+
         $found_expected = !empty(array_intersect($expected_types, $hp_result['types']));
         if ($found_expected) {
             $checks[] = ['status' => 'pass', 'label' => 'Homepage Schema', 'detail' => 'Found: ' . implode(', ', $hp_result['types']) . ' (expected: ' . implode(', ', $expected_types) . ')', 'time' => $hp_result['time_ms']];
@@ -126,7 +126,7 @@ function sfpf_run_full_site_checklist($debug = false) {
             $fail_count++;
         }
     }
-    
+
     // ── CHECK 2: Schema Conflicts on Homepage ──
     if (!empty($hp_result['blocks'])) {
         $hp_all_types = [];
@@ -136,7 +136,7 @@ function sfpf_run_full_site_checklist($debug = false) {
             $src = 'Unknown';
             if (strpos($block_json, 'rank-math') !== false || strpos($block_json, 'rankmath') !== false) $src = 'RankMath';
             elseif (strpos($block_json, 'sfpf') !== false || strpos($block_json, 'SFPF') !== false) $src = 'SFPF';
-            
+
             $block_types = [];
             if (isset($block['@type'])) $block_types[] = is_array($block['@type']) ? implode(',', $block['@type']) : $block['@type'];
             if (isset($block['@graph'])) {
@@ -149,7 +149,7 @@ function sfpf_run_full_site_checklist($debug = false) {
                 $hp_types_by_source[$src][] = $bt;
             }
         }
-        
+
         $hp_type_counts = array_count_values($hp_all_types);
         $hp_conflicts = [];
         foreach (['Person', 'ProfilePage', 'Organization'] as $cht) {
@@ -157,7 +157,7 @@ function sfpf_run_full_site_checklist($debug = false) {
                 $hp_conflicts[] = $cht . ' ×' . $hp_type_counts[$cht];
             }
         }
-        
+
         if (!empty($hp_conflicts)) {
             $conflict_detail = 'Duplicate schema types on homepage: ' . implode(', ', $hp_conflicts) . '. Sources: ' . implode(' + ', array_keys($hp_types_by_source));
             $rm_in_conflict = false;
@@ -173,7 +173,7 @@ function sfpf_run_full_site_checklist($debug = false) {
             $pass_count++;
         }
     }
-    
+
     // ── CHECK 3: FAQ Schema on Homepage ──
     $faq_found = in_array('FAQPage', $hp_result['types']);
     $faq_issues = sfpf_get_faq_schema_issues($hp_result['blocks']);
@@ -187,7 +187,7 @@ function sfpf_run_full_site_checklist($debug = false) {
         $checks[] = ['status' => 'warn', 'label' => 'Homepage FAQ Schema', 'detail' => 'No FAQPage schema found on homepage. Add one via the FAQ tab if desired.', 'time' => 0];
         $warn_count++;
     }
-    
+
     // ── CHECK 3: Breadcrumb Schema (via RankMath) ──
     $breadcrumb_found = in_array('BreadcrumbList', $hp_result['types']);
     $rm_active = is_plugin_active('seo-by-rank-math/rank-math.php');
@@ -207,7 +207,7 @@ function sfpf_run_full_site_checklist($debug = false) {
                 $bc_scan_label = '';
                 $bc_bio_page_id = get_option('sfpf_page_biography');
                 $bc_contact_page_id = get_option('sfpf_page_connect');
-                
+
                 if ($bc_bio_page_id && get_post_status($bc_bio_page_id) === 'publish') {
                     $bc_scan_url = get_permalink($bc_bio_page_id);
                     $bc_scan_label = get_the_title($bc_bio_page_id);
@@ -215,7 +215,7 @@ function sfpf_run_full_site_checklist($debug = false) {
                     $bc_scan_url = get_permalink($bc_contact_page_id);
                     $bc_scan_label = get_the_title($bc_contact_page_id);
                 }
-                
+
                 if ($bc_scan_url) {
                     $bc_result = $fetch_schemas($bc_scan_url);
                     $bc_found_subpage = in_array('BreadcrumbList', $bc_result['types']);
@@ -237,7 +237,7 @@ function sfpf_run_full_site_checklist($debug = false) {
     } else {
         $checks[] = ['status' => 'info', 'label' => 'Breadcrumb Schema', 'detail' => 'RankMath breadcrumbs not enabled.', 'time' => 0, 'action' => admin_url('admin.php?page=rank-math-options-general&view=breadcrumbs')];
     }
-    
+
     // ── CHECK 4: Biography Page Schema ──
     $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
     $bio_page_id = get_option('sfpf_page_biography');
@@ -247,7 +247,7 @@ function sfpf_run_full_site_checklist($debug = false) {
             $bio_expected = [];
             if (in_array($bio_schema_type, ['person', 'profile_page'])) $bio_expected[] = 'Person';
             if (in_array($bio_schema_type, ['profile_page', 'profile_page_only'])) $bio_expected[] = 'ProfilePage';
-            
+
             $bio_ok = !empty(array_intersect($bio_expected, $bio_result['types']));
             if ($bio_ok) {
                 $checks[] = ['status' => 'pass', 'label' => 'Biography Page Schema', 'detail' => 'Found: ' . implode(', ', $bio_result['types']), 'time' => $bio_result['time_ms']];
@@ -263,7 +263,7 @@ function sfpf_run_full_site_checklist($debug = false) {
         $checks[] = ['status' => 'warn', 'label' => 'Biography Page', 'detail' => 'No biography page assigned. Set one in the Critical Pages tab.', 'time' => 0];
         $warn_count++;
     }
-    
+
     // ── CHECK 5: Organization CPTs ──
     $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => 5, 'post_status' => 'publish']);
     if (!empty($orgs)) {
@@ -281,7 +281,7 @@ function sfpf_run_full_site_checklist($debug = false) {
     } else {
         $checks[] = ['status' => 'info', 'label' => 'Organizations', 'detail' => 'No published organizations found.', 'time' => 0];
     }
-    
+
     // ── CHECK 6: Book CPTs ──
     $books = get_posts(['post_type' => 'book', 'posts_per_page' => 5, 'post_status' => 'publish']);
     if (!empty($books)) {
@@ -299,20 +299,20 @@ function sfpf_run_full_site_checklist($debug = false) {
     } else {
         $checks[] = ['status' => 'info', 'label' => 'Books', 'detail' => 'No published books found.', 'time' => 0];
     }
-    
+
     // ── Build output ──
     $total = $pass_count + $fail_count + $warn_count;
     $out = '<div style="margin-bottom:10px;">';
     $out .= '<div style="color:#10b981;font-size:16px;font-weight:700;margin-bottom:4px;">🔍 Full Site Schema Checklist</div>';
     $out .= '<div style="color:#6b7280;font-size:11px;margin-bottom:12px;">Scanned at ' . esc_html($scan_time) . '</div>';
-    
+
     // Summary bar
     $out .= '<div style="display:flex;gap:16px;margin-bottom:14px;padding:10px 14px;background:#0f172a;border-radius:6px;">';
     $out .= '<span style="color:#4ade80;font-weight:600;">✅ ' . $pass_count . ' passed</span>';
     if ($fail_count > 0) $out .= '<span style="color:#f87171;font-weight:600;">❌ ' . $fail_count . ' failed</span>';
     if ($warn_count > 0) $out .= '<span style="color:#fbbf24;font-weight:600;">⚠️ ' . $warn_count . ' warnings</span>';
     $out .= '</div>';
-    
+
     // Checklist items
     foreach ($checks as $check) {
         $icon = '✅';
@@ -320,7 +320,7 @@ function sfpf_run_full_site_checklist($debug = false) {
         if ($check['status'] === 'fail') { $icon = '❌'; $color = '#f87171'; }
         elseif ($check['status'] === 'warn') { $icon = '⚠️'; $color = '#fbbf24'; }
         elseif ($check['status'] === 'info') { $icon = 'ℹ️'; $color = '#60a5fa'; }
-        
+
         $out .= '<div style="padding:8px 0;border-bottom:1px solid #1e293b;display:flex;align-items:flex-start;gap:8px;">';
         $out .= '<span style="flex-shrink:0;width:20px;text-align:center;">' . $icon . '</span>';
         $out .= '<div style="flex:1;">';
@@ -334,15 +334,15 @@ function sfpf_run_full_site_checklist($debug = false) {
         }
         $out .= '</div></div>';
     }
-    
+
     $out .= '</div>';
-    
+
     // Overall verdict
     if ($fail_count === 0) {
         $out .= '<div style="margin-top:12px;padding:10px 14px;background:#052e16;border:1px solid #16a34a;border-radius:6px;color:#86efac;font-size:13px;">🎉 <strong>All checks passed!</strong> Your schema setup looks good.</div>';
     } else {
         $out .= '<div style="margin-top:12px;padding:10px 14px;background:#450a0a;border:1px solid #dc2626;border-radius:6px;color:#fca5a5;font-size:13px;">⚠️ <strong>' . $fail_count . ' issue(s) found.</strong> Review failed checks above and reprocess schema from the Schema tab.</div>';
     }
-    
+
     return $out;
 }

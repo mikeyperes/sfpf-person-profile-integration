@@ -17,20 +17,20 @@ defined( 'ABSPATH' ) || exit;
  */
 function ajax_create_profession_page() {
     verify_ajax_nonce();
-    
+
     $profession = sanitize_text_field($_POST['profession'] ?? '');
     $index = intval($_POST['index'] ?? 0);
-    
+
     if (empty($profession)) {
         wp_send_json_error('Profession name is required');
     }
-    
+
     // Get professions page as parent
     $professions_page_id = get_option('sfpf_page_professions', 0);
-    
+
     // Create slug from profession name
     $slug = sanitize_title($profession);
-    
+
     // Check if page already exists
     $existing = get_posts([
         'name' => $slug,
@@ -38,7 +38,7 @@ function ajax_create_profession_page() {
         'post_status' => 'publish',
         'posts_per_page' => 1,
     ]);
-    
+
     if (!empty($existing)) {
         $page_id = $existing[0]->ID;
     } else {
@@ -51,12 +51,12 @@ function ajax_create_profession_page() {
             'post_type' => 'page',
             'post_parent' => $professions_page_id > 0 ? $professions_page_id : 0,
         ]);
-        
+
         if (is_wp_error($page_id)) {
             wp_send_json_error($page_id->get_error_message());
         }
     }
-    
+
     // Update the founder's professions ACF field to link to this page
     $founder_user_id = get_founder_user_id();
     if ($founder_user_id) {
@@ -66,9 +66,9 @@ function ajax_create_profession_page() {
             update_field('professions', $professions, 'user_' . $founder_user_id);
         }
     }
-    
+
     write_log("Profession page created: {$profession} (ID: {$page_id})");
-    
+
     wp_send_json_success([
         'page_id' => $page_id,
         'title' => $profession,
@@ -83,14 +83,14 @@ add_action('wp_ajax_sfpf_create_profession_page', __NAMESPACE__ . '\\ajax_create
  */
 function ajax_delete_profession_page() {
     verify_ajax_nonce();
-    
+
     $page_id = intval($_POST['page_id'] ?? 0);
     $index = intval($_POST['index'] ?? 0);
-    
+
     if (!$page_id) {
         wp_send_json_error('Invalid page ID');
     }
-    
+
     // Unlink from ACF professions field
     $founder_user_id = get_founder_user_id();
     if ($founder_user_id) {
@@ -100,13 +100,13 @@ function ajax_delete_profession_page() {
             update_field('professions', $professions, 'user_' . $founder_user_id);
         }
     }
-    
+
     // Trash the page
     $result = wp_trash_post($page_id);
     if (!$result) {
         wp_send_json_error('Failed to delete page');
     }
-    
+
     write_log("Profession page deleted (ID: {$page_id})");
     wp_send_json_success(['page_id' => $page_id]);
 }

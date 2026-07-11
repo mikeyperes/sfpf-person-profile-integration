@@ -22,23 +22,23 @@ defined( 'ABSPATH' ) || exit;
  */
 function ajax_process_articles() {
     verify_ajax_nonce();
-    
+
     $raw_input = $_POST['urls'] ?? '';
     $user_id = intval($_POST['user_id'] ?? get_current_user_id());
-    
+
     if (empty(trim($raw_input))) {
         wp_send_json_error('No URLs provided');
     }
-    
+
     $report = [];
     $report[] = "═══ SFPF Article Import ═══";
     $report[] = "Started: " . current_time('Y-m-d H:i:s');
     $report[] = "";
-    
+
     // ── Step 1: Extract every URL from the input ──
     // One pass: pull URLs from href="...", from bare https://..., from bare domains
     $found_urls = [];
-    
+
     // Pass A: Pull URLs out of href="..." or href='...'
     if (preg_match_all('/href=["\']([^"\']+)["\']/i', $raw_input, $href_matches)) {
         foreach ($href_matches[1] as $url) {
@@ -47,7 +47,7 @@ function ajax_process_articles() {
             $found_urls[] = $url;
         }
     }
-    
+
     // Pass B: Pull bare https:// or http:// URLs that aren't already inside href=""
     // Strip all href="..." first so we don't double-count
     $without_hrefs = preg_replace('/href=["\'][^"\']+["\']/i', '', $raw_input);
@@ -57,7 +57,7 @@ function ajax_process_articles() {
             $found_urls[] = $url;
         }
     }
-    
+
     // Pass C: If nothing found yet, try bare domains (no protocol)
     if (empty($found_urls)) {
         $stripped = strip_tags($raw_input);
@@ -70,7 +70,7 @@ function ajax_process_articles() {
             }
         }
     }
-    
+
     // ── Step 2: Normalize all URLs ──
     $clean_urls = [];
     foreach ($found_urls as $url) {
@@ -87,9 +87,9 @@ function ajax_process_articles() {
         if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
         $clean_urls[] = $url;
     }
-    
+
     $report[] = "▸ URLs extracted: " . count($clean_urls);
-    
+
     // ── Step 3: Deduplicate within input ──
     $seen = [];
     $unique_urls = [];
@@ -106,7 +106,7 @@ function ajax_process_articles() {
     if ($input_dupes > 0) {
         $report[] = "▸ Input duplicates removed: {$input_dupes}";
     }
-    
+
     // ── Step 4: Check against existing repeater ──
     $existing = get_field('articles', 'user_' . $user_id);
     $existing_urls = [];
@@ -118,7 +118,7 @@ function ajax_process_articles() {
             }
         }
     }
-    
+
     $new_urls = [];
     $skipped_dupes = 0;
     foreach ($unique_urls as $url) {
@@ -130,14 +130,14 @@ function ajax_process_articles() {
             $new_urls[] = $url;
         }
     }
-    
+
     if ($skipped_dupes > 0) {
         $report[] = "▸ Already in repeater (skipped): {$skipped_dupes}";
     }
-    
+
     $report[] = "▸ New URLs to process: " . count($new_urls);
     $report[] = "";
-    
+
     if (empty($new_urls)) {
         $report[] = "✓ Nothing to import — all URLs already exist.";
         wp_send_json_success([
@@ -147,36 +147,36 @@ function ajax_process_articles() {
             'total' => count($existing ?? []),
         ]);
     }
-    
+
     // ── Step 5: For each URL — extract source, HTTP fetch title ──
     $processed = [];
     foreach ($new_urls as $i => $url) {
         $n = $i + 1;
         $report[] = "── Article {$n}/" . count($new_urls) . " ──";
         $report[] = "  URL:    {$url}";
-        
+
         // Source = domain minus www
         $parsed = wp_parse_url($url);
         $source = preg_replace('/^www\./', '', $parsed['host'] ?? '');
         $report[] = "  Source: {$source}";
-        
+
         // Always fetch the page for the title
         $title = '';
         $fetch_status = '';
-        
+
         $response = wp_remote_get($url, [
             'timeout' => 10,
             'redirection' => 3,
             'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'sslverify' => false,
         ]);
-        
+
         if (is_wp_error($response)) {
             $fetch_status = 'FAILED (' . $response->get_error_message() . ')';
         } else {
             $code = wp_remote_retrieve_response_code($response);
             $body = wp_remote_retrieve_body($response);
-            
+
             if ($code >= 200 && $code < 400 && !empty($body)) {
                 // Try <title>
                 if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $body, $m)) {
@@ -216,29 +216,29 @@ function ajax_process_articles() {
                 }
             }
         }
-        
+
         $report[] = "  Title:  " . ($title ?: '(none)');
         $report[] = "  Fetch:  {$fetch_status}";
         $report[] = "";
-        
+
         $processed[] = [
             'title' => $title,
             'source' => $source,
             'url' => $url,
         ];
     }
-    
+
     // ── Step 6: Return articles to jQuery — it will inject rows into ACF repeater ──
     // No update_field() here — user saves via the normal WP save button after reviewing
     $total_after = count(is_array($existing) ? $existing : []) + count($processed);
-    
+
     $report[] = "═══ Summary ═══";
     $report[] = "Imported:   " . count($processed) . " new articles";
     $report[] = "Duplicates: " . ($input_dupes + $skipped_dupes) . " skipped";
     $report[] = "Total:      " . $total_after . " articles in repeater";
     $report[] = "";
     $report[] = "✓ Done! Articles added to repeater — save the profile to persist.";
-    
+
     wp_send_json_success([
         'report' => implode("\n", $report),
         'original_input' => $raw_input,

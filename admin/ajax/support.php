@@ -20,7 +20,7 @@ function verify_ajax_nonce() {
         wp_send_json_error('Invalid security token');
         exit;
     }
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Permission denied');
         exit;

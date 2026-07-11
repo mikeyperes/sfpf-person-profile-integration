@@ -70,6 +70,7 @@ $initialization = $read( $root . '/initialization.php' );
 $coreIntegration = $read( $root . '/src/Core/CoreIntegration.php' );
 $dashboard = $read( $root . '/src/Admin/Dashboard.php' );
 $socialIcons = $read( $root . '/includes/elementor-social-icons.php' );
+$profileDebug = $read( $root . '/includes/runtime/profile-debug.php' );
 $userFields = $read( $root . '/snippets/register-acf-user-schema.php' );
 $schemaBuilder = $read( $root . '/schema/schema-builder.php' );
 $ajaxHandlers = $read( $root . '/admin/ajax-handlers.php' );
@@ -145,8 +146,8 @@ foreach ( $boundedModules as $relativePath ) {
 
 
 $assert(
-    false !== strpos( $initialization, "!is_user_logged_in() || !current_user_can('manage_options')" )
-    && false !== strpos( $initialization, 'status_header(404)' ),
+    false !== strpos( $profileDebug, "!is_user_logged_in() || !current_user_can('manage_options')" )
+    && false !== strpos( $profileDebug, 'status_header(404)' ),
     'Profile debug route is not restricted to authenticated administrators.'
 );
 $assert(

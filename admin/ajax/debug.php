@@ -17,10 +17,10 @@ defined( 'ABSPATH' ) || exit;
  */
 function ajax_run_debug() {
     verify_ajax_nonce();
-    
+
     $action = sanitize_key($_POST['debug_action'] ?? '');
     $output = '';
-    
+
     switch ($action) {
         case 'check_homepage_schema':
             $output = debug_homepage_schema();
@@ -58,7 +58,7 @@ function ajax_run_debug() {
         default:
             $output = "Unknown debug action: {$action}";
     }
-    
+
     wp_send_json_success(['output' => $output]);
 }
 add_action('wp_ajax_sfpf_run_debug', __NAMESPACE__ . '\\ajax_run_debug');
@@ -68,7 +68,7 @@ add_action('wp_ajax_sfpf_run_debug', __NAMESPACE__ . '\\ajax_run_debug');
  */
 function debug_repair_elementor_templates() {
     $output = "=== REPAIR ELEMENTOR TEMPLATES ===\n\n";
-    
+
     // Template definitions
     $templates_to_repair = [
         'hexa-book-default-loop' => [
@@ -84,7 +84,7 @@ function debug_repair_elementor_templates() {
             'post_type' => 'testimonial',
         ],
     ];
-    
+
     // Find existing templates that need repair
     $templates = get_posts([
         'post_type' => 'elementor_library',
@@ -93,16 +93,16 @@ function debug_repair_elementor_templates() {
         'meta_key' => '_elementor_template_type',
         'meta_value' => 'loop-item',
     ]);
-    
+
     $output .= "Found " . count($templates) . " loop-item templates\n\n";
-    
+
     $repaired = 0;
     foreach ($templates as $t) {
         $output .= "Processing: {$t->post_title} (ID: {$t->ID})\n";
-        
+
         // Check if _elementor_data is empty
         $current_data = get_post_meta($t->ID, '_elementor_data', true);
-        
+
         if (!empty($current_data)) {
             $decoded = json_decode($current_data, true);
             if (!empty($decoded)) {
@@ -110,13 +110,13 @@ function debug_repair_elementor_templates() {
                 continue;
             }
         }
-        
+
         $output .= "  ⚠️ Empty or invalid _elementor_data, attempting repair...\n";
-        
+
         // Try to find matching JSON file
         $json_dir = SFPF_PLUGIN_DIR . 'assets/elementor-templates/';
         $matched_file = null;
-        
+
         foreach ($templates_to_repair as $key => $info) {
             if (stripos($t->post_title, 'book') !== false && stripos($info['file'], 'book') !== false) {
                 $matched_file = $json_dir . $info['file'];
@@ -129,23 +129,23 @@ function debug_repair_elementor_templates() {
                 break;
             }
         }
-        
+
         if ($matched_file && file_exists($matched_file)) {
             $json_content = file_get_contents($matched_file);
             $template_data = json_decode($json_content, true);
-            
+
             if ($template_data && isset($template_data['content'])) {
                 // Update the _elementor_data
                 update_post_meta($t->ID, '_elementor_data', wp_json_encode($template_data['content']));
-                
+
                 // Also ensure other meta is set
                 update_post_meta($t->ID, '_elementor_template_type', 'loop-item');
                 update_post_meta($t->ID, '_elementor_edit_mode', 'builder');
                 update_post_meta($t->ID, '_elementor_version', defined('ELEMENTOR_VERSION') ? ELEMENTOR_VERSION : '3.25.0');
-                
+
                 // Set taxonomy
                 wp_set_object_terms($t->ID, 'loop-item', 'elementor_library_type');
-                
+
                 $output .= "  ✅ Repaired! Imported " . count($template_data['content']) . " elements from " . basename($matched_file) . "\n";
                 $repaired++;
             } else {
@@ -154,16 +154,16 @@ function debug_repair_elementor_templates() {
         } else {
             $output .= "  ❌ No matching JSON file found\n";
         }
-        
+
         $output .= "\n";
     }
-    
+
     $output .= "=== SUMMARY ===\n";
     $output .= "Repaired: {$repaired} templates\n";
     $output .= "\nNote: After repair, you may need to:\n";
     $output .= "1. Edit the template in Elementor\n";
     $output .= "2. Save/Update it once to regenerate CSS\n";
-    
+
     return $output;
 }
 
@@ -172,28 +172,28 @@ function debug_repair_elementor_templates() {
  */
 function debug_homepage_schema() {
     $output = "=== HOMEPAGE SCHEMA DEBUG ===\n\n";
-    
+
     // Check front page settings
     $show_on_front = get_option('show_on_front');
     $page_on_front = get_option('page_on_front');
     $output .= "show_on_front: {$show_on_front}\n";
     $output .= "page_on_front: {$page_on_front}\n\n";
-    
+
     // Check schema type option
     $schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $output .= "sfpf_homepage_schema_type: {$schema_type}\n\n";
-    
+
     if ($show_on_front !== 'page') {
         $output .= "❌ PROBLEM: WordPress is not set to use a static homepage.\n";
         $output .= "   Go to Settings > Reading and set 'Your homepage displays' to 'A static page'\n";
         return $output;
     }
-    
+
     if (!$page_on_front) {
         $output .= "❌ PROBLEM: No homepage is set.\n";
         return $output;
     }
-    
+
     // Check if schema is stored
     $schema = function_exists(__NAMESPACE__ . '\\get_post_schema')
         ? get_post_schema($page_on_front)
@@ -205,7 +205,7 @@ function debug_homepage_schema() {
     if ($schema) {
         $output .= "✅ Schema is stored in " . ($schema_source ?: 'post meta') . "\n";
         $output .= "Schema length: " . strlen($schema) . " bytes\n\n";
-        
+
         // Validate JSON
         $decoded = json_decode($schema);
         if (json_last_error() === JSON_ERROR_NONE) {
@@ -218,7 +218,7 @@ function debug_homepage_schema() {
         $output .= "❌ No schema stored in canonical or legacy schema storage\n";
         $output .= "   Click 'Reprocess Homepage Schema' button to generate\n";
     }
-    
+
     return $output;
 }
 
@@ -227,40 +227,40 @@ function debug_homepage_schema() {
  */
 function debug_founder_data() {
     $output = "=== FOUNDER DATA DEBUG ===\n\n";
-    
+
     $founder_id = get_founder_user_id();
     $output .= "Founder User ID: " . ($founder_id ?: 'NOT SET') . "\n\n";
-    
+
     if (!$founder_id) {
         $output .= "❌ No founder configured.\n";
         $output .= "   Go to Website Settings and set the Founder user.\n";
         return $output;
     }
-    
+
     $user = get_userdata($founder_id);
     if (!$user) {
         $output .= "❌ User ID {$founder_id} not found!\n";
         return $output;
     }
-    
+
     $output .= "User Data:\n";
     $output .= "  - display_name: {$user->display_name}\n";
     $output .= "  - user_email: {$user->user_email}\n";
     $output .= "  - first_name: " . get_user_meta($founder_id, 'first_name', true) . "\n";
     $output .= "  - last_name: " . get_user_meta($founder_id, 'last_name', true) . "\n\n";
-    
+
     // Check entity type
     $entity_type = get_field('entity_type', 'user_' . $founder_id);
     $output .= "Entity Type: " . ($entity_type ?: 'NOT SET') . "\n";
-    
+
     // Check title
     $title = get_field('title', 'user_' . $founder_id);
     $output .= "Title: " . ($title ?: 'NOT SET') . "\n";
-    
+
     // Check biography
     $bio = get_field('biography', 'user_' . $founder_id);
     $output .= "Biography: " . ($bio ? strlen($bio) . ' chars' : 'NOT SET') . "\n";
-    
+
     return $output;
 }
 
@@ -294,7 +294,7 @@ function debug_injection_hook() {
     $output .= "  - enable_schema_injection: " . (function_exists(__NAMESPACE__ . '\\enable_schema_injection') ? '✅ Yes' : '❌ No') . "\n";
     $output .= "  - inject_schema_markup: " . (function_exists(__NAMESPACE__ . '\\inject_schema_markup') ? '✅ Yes' : '❌ No') . "\n";
     $output .= "  - get_post_schema: " . (function_exists(__NAMESPACE__ . '\\get_post_schema') ? '✅ Yes' : '❌ No') . "\n";
-    
+
     return $output;
 }
 
@@ -303,21 +303,21 @@ function debug_injection_hook() {
  */
 function debug_test_schema_build() {
     $output = "=== TEST SCHEMA BUILD ===\n\n";
-    
+
     $front_page_id = get_front_page_id();
     if (!$front_page_id) {
         $output .= "❌ No front page set\n";
         return $output;
     }
-    
+
     $schema_type = get_option('sfpf_homepage_schema_type', 'person');
     $output .= "Schema type setting: {$schema_type}\n\n";
-    
+
     if ($schema_type === 'none') {
         $output .= "Schema injection is disabled.\n";
         return $output;
     }
-    
+
     // Try to build schema
     if (function_exists(__NAMESPACE__ . '\\build_homepage_schema')) {
         $schema = build_homepage_schema($front_page_id, $schema_type);
@@ -331,7 +331,7 @@ function debug_test_schema_build() {
     } else {
         $output .= "❌ build_homepage_schema function not found\n";
     }
-    
+
     return $output;
 }
 
@@ -340,20 +340,20 @@ function debug_test_schema_build() {
  */
 function debug_elementor_templates() {
     $output = "=== ELEMENTOR TEMPLATES DEBUG ===\n\n";
-    
+
     $templates = get_posts([
         'post_type' => 'elementor_library',
         'posts_per_page' => -1,
         'post_status' => 'any',
     ]);
-    
+
     $output .= "Total Elementor templates: " . count($templates) . "\n\n";
-    
+
     foreach ($templates as $t) {
         $type = get_post_meta($t->ID, '_elementor_template_type', true);
         $output .= "ID: {$t->ID} | Type: {$type} | Title: {$t->post_title}\n";
     }
-    
+
     return $output;
 }
 
@@ -362,7 +362,7 @@ function debug_elementor_templates() {
  */
 function debug_loop_items() {
     $output = "=== ELEMENTOR LOOP ITEMS DEBUG ===\n\n";
-    
+
     $loop_items = get_posts([
         'post_type' => 'elementor_library',
         'posts_per_page' => -1,
@@ -375,9 +375,9 @@ function debug_loop_items() {
             ],
         ],
     ]);
-    
+
     $output .= "Loop items found: " . count($loop_items) . "\n\n";
-    
+
     if (empty($loop_items)) {
         // Try alternative query
         $output .= "Trying alternative query (by meta)...\n";
@@ -394,13 +394,13 @@ function debug_loop_items() {
         ]);
         $output .= "Found by meta: " . count($loop_items) . "\n\n";
     }
-    
+
     foreach ($loop_items as $item) {
         $output .= "ID: {$item->ID} | {$item->post_title}\n";
         $data = get_post_meta($item->ID, '_elementor_data', true);
         $output .= "  - Has _elementor_data: " . ($data ? 'Yes (' . strlen($data) . ' bytes)' : 'NO') . "\n";
     }
-    
+
     return $output;
 }
 
@@ -409,7 +409,7 @@ function debug_loop_items() {
  */
 function debug_template_meta() {
     $output = "=== ELEMENTOR TEMPLATE METADATA DEBUG ===\n\n";
-    
+
     // Get templates imported by our plugin
     $templates = get_posts([
         'post_type' => 'elementor_library',
@@ -418,17 +418,17 @@ function debug_template_meta() {
         'meta_key' => '_elementor_template_type',
         'meta_value' => 'loop-item',
     ]);
-    
+
     if (empty($templates)) {
         $output .= "No loop-item templates found.\n";
         return $output;
     }
-    
+
     foreach ($templates as $t) {
         $output .= "=== Template ID: {$t->ID} ===\n";
         $output .= "Title: {$t->post_title}\n";
         $output .= "Status: {$t->post_status}\n\n";
-        
+
         // Get all meta
         $meta = get_post_meta($t->ID);
         foreach ($meta as $key => $values) {
@@ -440,7 +440,7 @@ function debug_template_meta() {
                 $output .= "  {$key}: {$value}\n";
             }
         }
-        
+
         // Check _elementor_data specifically
         $data = get_post_meta($t->ID, '_elementor_data', true);
         $output .= "\n_elementor_data analysis:\n";
@@ -460,32 +460,32 @@ function debug_template_meta() {
                 }
             }
         }
-        
+
         // Check taxonomy
         $terms = wp_get_object_terms($t->ID, 'elementor_library_type', ['fields' => 'names']);
         $output .= "\nTaxonomy terms: " . (is_array($terms) ? implode(', ', $terms) : 'none') . "\n";
-        
+
         $output .= "\n";
     }
-    
+
     // Add JSON file analysis
     $output .= "\n=== SOURCE JSON FILES ANALYSIS ===\n\n";
     $json_dir = SFPF_PLUGIN_DIR . 'assets/elementor-templates/';
-    
+
     if (is_dir($json_dir)) {
         $files = glob($json_dir . '*.json');
         foreach ($files as $file) {
             $filename = basename($file);
             $content = file_get_contents($file);
             $data = json_decode($content, true);
-            
+
             $output .= "{$filename}:\n";
             $output .= "  Size: " . strlen($content) . " bytes\n";
             $output .= "  Has 'content': " . (isset($data['content']) ? 'Yes (' . count($data['content']) . ' elements)' : 'No') . "\n";
             $output .= "\n";
         }
     }
-    
+
     return $output;
 }
 
@@ -494,21 +494,21 @@ function debug_template_meta() {
  */
 function debug_professions() {
     $output = "=== PROFESSIONS FIELD DEBUG ===\n\n";
-    
+
     $founder_id = get_founder_user_id();
     if (!$founder_id) {
         $output .= "❌ No founder user ID\n";
         return $output;
     }
-    
+
     $output .= "Founder User ID: {$founder_id}\n\n";
-    
+
     // Get professions using get_field
     $profs = get_field('professions', 'user_' . $founder_id);
-    
+
     $output .= "get_field('professions', 'user_{$founder_id}'):\n";
     $output .= "Type: " . gettype($profs) . "\n";
-    
+
     if ($profs === null || $profs === false) {
         $output .= "Value: " . var_export($profs, true) . "\n\n";
         $output .= "❌ Field returned null/false - field may not exist\n";
@@ -519,7 +519,7 @@ function debug_professions() {
         $output .= "Count: " . (is_array($profs) ? count($profs) : 'N/A') . "\n\n";
         $output .= "Raw data:\n" . print_r($profs, true) . "\n";
     }
-    
+
     // Also check direct user meta
     $output .= "\n=== Direct User Meta Check ===\n";
     $meta_value = get_user_meta($founder_id, 'professions', true);
@@ -530,7 +530,7 @@ function debug_professions() {
     } else {
         $output .= "Value: empty\n";
     }
-    
+
     return $output;
 }
 
@@ -539,22 +539,22 @@ function debug_professions() {
  */
 function debug_user_meta() {
     $output = "=== USER META DEBUG ===\n\n";
-    
+
     $founder_id = get_founder_user_id();
     if (!$founder_id) {
         $output .= "❌ No founder user ID\n";
         return $output;
     }
-    
+
     $output .= "All user meta for user {$founder_id}:\n\n";
-    
+
     $all_meta = get_user_meta($founder_id);
     foreach ($all_meta as $key => $values) {
         // Skip internal WP fields
         if (in_array($key, ['session_tokens', 'wp_capabilities', 'wp_user_level', 'rich_editing', 'syntax_highlighting'])) {
             continue;
         }
-        
+
         $value = $values[0];
         if (is_serialized($value)) {
             $value = '[serialized] ' . substr($value, 0, 100);
@@ -563,7 +563,7 @@ function debug_user_meta() {
         }
         $output .= "{$key}: {$value}\n";
     }
-    
+
     return $output;
 }
 
@@ -572,25 +572,25 @@ function debug_user_meta() {
  */
 function debug_acf_fields() {
     $output = "=== ACF FIELDS FOR USER ===\n\n";
-    
+
     $founder_id = get_founder_user_id();
     if (!$founder_id) {
         $output .= "❌ No founder user ID\n";
         return $output;
     }
-    
+
     $output .= "Checking ACF fields for user_{$founder_id}:\n\n";
-    
+
     // List of expected fields
     $fields = [
         'entity_type', 'title', 'biography', 'biography_short',
         'professions', 'education', 'job_title', 'sameas'
     ];
-    
+
     foreach ($fields as $field) {
         $value = get_field($field, 'user_' . $founder_id);
         $type = gettype($value);
-        
+
         if ($value === null || $value === false) {
             $output .= "❌ {$field}: NOT SET\n";
         } elseif (is_array($value)) {
@@ -601,7 +601,7 @@ function debug_acf_fields() {
             $output .= "✅ {$field}: {$type}\n";
         }
     }
-    
+
     return $output;
 }
 
@@ -610,16 +610,16 @@ function debug_acf_fields() {
  */
 function ajax_export_debug_report() {
     verify_ajax_nonce();
-    
+
     $report = "=== SFPF Person Profile Debug Report ===\n";
     $report .= "Generated: " . current_time('Y-m-d H:i:s') . "\n\n";
-    
+
     $report .= debug_homepage_schema() . "\n\n";
     $report .= debug_founder_data() . "\n\n";
     $report .= debug_injection_hook() . "\n\n";
     $report .= debug_professions() . "\n\n";
     $report .= debug_acf_fields() . "\n\n";
-    
+
     wp_send_json_success(['report' => $report]);
 }
 add_action('wp_ajax_sfpf_export_debug_report', __NAMESPACE__ . '\\ajax_export_debug_report');

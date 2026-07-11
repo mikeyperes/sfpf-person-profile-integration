@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '1.7.1' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '1.7.2' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( '0.19.40' === (string) ( $report['selected']['version'] ?? '' ), 'Unexpected selected Core version.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -129,4 +129,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 1.7.1 with healthy Core, complete module callbacks, and guarded runtime hooks.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 1.7.2 with healthy Core, complete module callbacks, and guarded runtime hooks.' . PHP_EOL;

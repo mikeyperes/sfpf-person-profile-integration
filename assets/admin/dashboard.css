@@ -22,20 +22,37 @@
 .sfpf-dashboard-header > div {
     align-items: baseline;
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     min-width: 0;
+    width: 100%;
 }
 
 .sfpf-dashboard-header h1 {
+    flex: 1 1 auto;
     font-size: 23px;
     line-height: 1.3;
     margin: 0;
+    min-width: 0;
+    order: 1;
+    overflow-wrap: anywhere;
 }
 
 .sfpf-dashboard-version {
     color: #646970;
+    flex: 0 0 auto;
     font-size: 12px;
     font-weight: 600;
+    margin-left: auto;
+    order: 2;
+}
+
+.sfpf-dashboard-header > div > .notice {
+    flex: 0 0 100%;
+    margin: 8px 0 0;
+    max-width: 100%;
+    min-width: 0;
+    order: 3;
 }
 
 .sfpf-primary-nav {
@@ -241,6 +258,24 @@
     .sfpf-dashboard-shell .hpc-host-tabs {
         overflow-x: auto;
         white-space: nowrap;
+    }
+
+    .sfpf-dashboard-shell .hpc-system-checks-head,
+    .sfpf-dashboard-shell .hpc-system-check-row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .sfpf-dashboard-shell .hpc-system-check-label,
+    .sfpf-dashboard-shell .hpc-system-check-detail {
+        min-width: 0;
+    }
+
+    .sfpf-dashboard-shell .hpc-system-check-row a {
+        flex: 0 1 auto;
+        margin-left: 22px;
+        overflow-wrap: anywhere;
+        white-space: normal;
     }
 
     .sfpf-dashboard-shell .sfpf-card {

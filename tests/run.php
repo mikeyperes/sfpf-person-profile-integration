@@ -27,6 +27,7 @@ $requiredFiles = [
     'src/Plugin.php',
     'src/Core/CoreIntegration.php',
     'src/Admin/Dashboard.php',
+    'assets/admin/dashboard.css',
     'includes/elementor-social-icons.php',
     'snippets/register-acf-user-schema.php',
     'schema/schema-builder.php',
@@ -69,6 +70,7 @@ foreach ( $requiredFiles as $relativePath ) {
 $initialization = $read( $root . '/initialization.php' );
 $coreIntegration = $read( $root . '/src/Core/CoreIntegration.php' );
 $dashboard = $read( $root . '/src/Admin/Dashboard.php' );
+$dashboardCss = $read( $root . '/assets/admin/dashboard.css' );
 $socialIcons = $read( $root . '/includes/elementor-social-icons.php' );
 $profileDebug = $read( $root . '/includes/runtime/profile-debug.php' );
 $userFields = $read( $root . '/snippets/register-acf-user-schema.php' );
@@ -88,7 +90,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( version_compare( $headerVersion, '1.7.1', '>=' ), 'Plugin version is older than the audited 1.7.1 baseline.' );
+$assert( version_compare( $headerVersion, '1.7.2', '>=' ), 'Plugin version is older than the audited 1.7.2 baseline.' );
 $assert( '0.19.40' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.40.' );
 
 $sourceFiles = [];
@@ -131,6 +133,17 @@ $assert( false !== strpos( $dashboard, 'AjaxActionRegistry' ), 'Dashboard lazy-t
 foreach ( [ 'Overview', 'Profile', 'Site', 'Integrations', 'System' ] as $area ) {
     $assert( false !== strpos( $dashboard, "'label' => '" . $area . "'" ), 'Dashboard area missing: ' . $area );
 }
+
+$assert(
+    false !== strpos( $dashboardCss, '.sfpf-dashboard-header > div > .notice' )
+    && false !== strpos( $dashboardCss, 'flex-wrap: wrap;' ),
+    'Dashboard header does not isolate third-party admin notices.'
+);
+$assert(
+    false !== strpos( $dashboardCss, '.sfpf-dashboard-shell .hpc-system-check-row' )
+    && false !== strpos( $dashboardCss, 'overflow-wrap: anywhere;' ),
+    'Dashboard system-check rows are not protected against mobile overflow.'
+);
 
 $assert( substr_count( $read( $root . '/admin/settings-dashboard.php' ), PHP_EOL ) < 80, 'Legacy settings dashboard shim is no longer thin.' );
 $assert( substr_count( $read( $root . '/admin/dashboard-plugin-info.php' ), PHP_EOL ) < 80, 'Legacy updater panel shim is no longer thin.' );

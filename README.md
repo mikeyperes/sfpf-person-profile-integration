@@ -153,6 +153,10 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.7.2
+- Prevented third-party WordPress admin notices from stretching the responsive SFPF dashboard header.
+- Added narrow-screen wrapping for shared system-check rows and action links.
+
 ### v1.7.1
 - Reduced the plugin bootstrap from 2,554 lines to a versioned loader under 100 lines.
 - Split frontend, shortcode, ACF, lifecycle, and admin-profile callbacks into focused compatibility modules.

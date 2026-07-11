@@ -45,11 +45,9 @@ A WordPress plugin for managing structured data (Schema.org), profile pages, FAQ
 - Support for Books, Organizations, Testimonials
 
 ### 🔄 GitHub Integration
-- Authenticated GitHub update checks
-- Direct filesystem replacement disabled; use the WordPress update flow
-- Version history with rollback support
-- Download specific commits as ZIP
-- No folder name suffix issues
+- Core-backed update checks with capability and nonce enforcement
+- Normalized plugin updates and version ZIP downloads
+- Update progress and rollback-oriented version history
 
 ## Installation
 
@@ -154,6 +152,14 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 ```
 
 ## Changelog
+
+### v1.7.0
+- Updated the vendored Hexa WordPress Plugin Core to 0.19.40 and passed its complete test suite.
+- Added an isolated host adapter that creates PluginContext and boots updater and Core tab modules through CoreBootstrap.
+- Replaced the legacy updater implementation with the shared Core updater renderer and guarded controllers.
+- Reorganized the dashboard into Overview, Profile, Site, Integrations, and System areas.
+- Added server-routed primary areas and nonce-protected lazy secondary panels instead of eagerly rendering every tab.
+- Added a responsive dashboard stylesheet that removes the mobile overflow found during the audit.
 
 ### v1.6.27
 - Removed the arbitrary PHP debug runner and its AJAX endpoint.

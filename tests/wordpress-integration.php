@@ -108,8 +108,8 @@ $requiredAjaxActions = [
     'sfpf_export_debug_report',
     'sfpf_process_articles',
 ];
-foreach ( $requiredAjaxActions as $action ) {
-    $assert( false !== has_action( 'wp_ajax_' . $action ), 'AJAX action is missing: ' . $action );
+foreach ( $requiredAjaxActions as $ajaxAction ) {
+    $assert( false !== has_action( 'wp_ajax_' . $ajaxAction ), 'AJAX action is missing: ' . $ajaxAction );
 }
 
 $assert(

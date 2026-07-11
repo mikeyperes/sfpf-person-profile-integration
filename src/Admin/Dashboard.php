@@ -68,8 +68,8 @@ final class Dashboard {
             return;
         }
 
-        add_action( 'admin_menu', [ self::class, 'register_menu' ] );
-        add_action( 'admin_enqueue_scripts', [ self::class, 'enqueue_assets' ] );
+        add_action( 'admin_menu', [ self::class, 'registerMenu' ] );
+        add_action( 'admin_enqueue_scripts', [ self::class, 'enqueueAssets' ] );
 
         if ( class_exists( AjaxActionRegistry::class ) ) {
             ( new AjaxActionRegistry(
@@ -81,7 +81,7 @@ final class Dashboard {
             ) )->register(
                 [
                     self::AJAX_ACTION => [
-                        'callback' => [ self::class, 'load_tab' ],
+                        'callback' => [ self::class, 'loadTab' ],
                     ],
                 ]
             );
@@ -90,7 +90,7 @@ final class Dashboard {
         self::$registered = true;
     }
 
-    public static function register_menu(): void {
+    public static function registerMenu(): void {
         add_options_page(
             'HWS Person Profile Setup',
             'HWS Person Profile',
@@ -100,8 +100,8 @@ final class Dashboard {
         );
     }
 
-    public static function enqueue_assets( string $hook_suffix ): void {
-        if ( 'settings_page_' . self::PAGE_SLUG !== $hook_suffix ) {
+    public static function enqueueAssets( string $hookSuffix ): void {
+        if ( 'settings_page_' . self::PAGE_SLUG !== $hookSuffix ) {
             return;
         }
 
@@ -118,9 +118,9 @@ final class Dashboard {
             wp_die( esc_html__( 'You do not have permission to view this page.', 'sfpf-person-profile-integration' ) );
         }
 
-        $section = self::current_section();
-        $tab     = self::current_tab( $section );
-        $tabs    = self::tabs_for_section( $section );
+        $section = self::currentSection();
+        $tab     = self::currentTab( $section );
+        $tabs    = self::tabsForSection( $section );
         ?>
         <div class="wrap sfpf-dashboard sfpf-dashboard-shell">
             <header class="sfpf-dashboard-header">
@@ -131,10 +131,10 @@ final class Dashboard {
             </header>
 
             <nav class="sfpf-primary-nav" aria-label="SFPF areas">
-                <?php foreach ( self::SECTIONS as $section_id => $definition ) :
-                    $first_tab = self::first_tab( $section_id );
-                    $url       = self::dashboard_url( $section_id, $first_tab );
-                    $active    = $section_id === $section;
+                <?php foreach ( self::SECTIONS as $sectionId => $definition ) :
+                    $firstTab = self::firstTab( $sectionId );
+                    $url       = self::dashboardUrl( $sectionId, $firstTab );
+                    $active    = $sectionId === $section;
                     ?>
                     <a class="sfpf-primary-tab<?php echo $active ? ' is-active' : ''; ?>"
                        href="<?php echo esc_url( $url ); ?>"
@@ -154,51 +154,51 @@ final class Dashboard {
                     [
                         'tabs'            => $tabs,
                         'active'          => $tab,
-                        'page_url'        => self::section_url( $section ),
+                        'page_url'        => self::sectionUrl( $section ),
                         'ajax_action'     => self::AJAX_ACTION,
                         'nonce'           => wp_create_nonce( self::NONCE_ACTION ),
                         'nonce_field'     => 'nonce',
                         'root_id'         => 'sfpf-secondary-tabs',
                         'panel_id'        => 'sfpf-dashboard-panel',
                         'label'           => self::SECTIONS[ $section ]['label'] . ' views',
-                        'render_callback' => [ self::class, 'render_panel' ],
+                        'render_callback' => [ self::class, 'renderPanel' ],
                     ]
                 );
                 ?>
             </main>
-            <?php self::render_legacy_hash_redirect(); ?>
+            <?php self::renderLegacyHashRedirect(); ?>
         </div>
         <?php
     }
 
-    public static function load_tab( AjaxRequest $request ): array {
+    public static function loadTab( AjaxRequest $request ): array {
         $tab     = $request->key( 'tab', '', 'post' );
-        $section = self::section_for_tab( $tab );
+        $section = self::sectionForTab( $tab );
 
         if ( null === $section ) {
             throw AjaxFailure::not_found( 'Unknown dashboard tab.', 'unknown_tab' );
         }
 
-        $tabs = self::tabs_for_section( $section );
+        $tabs = self::tabsForSection( $section );
 
         ob_start();
-        self::render_panel( $tab );
+        self::renderPanel( $tab );
         $html = (string) ob_get_clean();
 
         return [
             'html'    => $html,
             'tab'     => $tab,
             'section' => $section,
-            'label'   => self::tab_label( $tabs[ $tab ] ?? $tab ),
+            'label'   => self::tabLabel( $tabs[ $tab ] ?? $tab ),
         ];
     }
 
-    public static function render_panel( string $tab ): void {
+    public static function renderPanel( string $tab ): void {
         if ( apply_filters( 'sfpf_dashboard_render_tab', false, $tab ) ) {
             return;
         }
 
-        $section = self::section_for_tab( $tab );
+        $section = self::sectionForTab( $tab );
         if ( null === $section ) {
             echo '<div class="notice notice-warning"><p>Dashboard panel not found.</p></div>';
             return;
@@ -213,24 +213,24 @@ final class Dashboard {
         include $file;
     }
 
-    private static function current_section(): string {
+    private static function currentSection(): string {
         $requested = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
         if ( isset( self::SECTIONS[ $requested ] ) ) {
             return $requested;
         }
 
         $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
-        return self::section_for_tab( $tab ) ?? 'overview';
+        return self::sectionForTab( $tab ) ?? 'overview';
     }
 
-    private static function current_tab( string $section ): string {
-        $tabs      = self::tabs_for_section( $section );
+    private static function currentTab( string $section ): string {
+        $tabs      = self::tabsForSection( $section );
         $requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
 
-        return isset( $tabs[ $requested ] ) ? $requested : self::first_tab( $section );
+        return isset( $tabs[ $requested ] ) ? $requested : self::firstTab( $section );
     }
 
-    private static function tabs_for_section( string $section ): array {
+    private static function tabsForSection( string $section ): array {
         $tabs = self::TABS[ $section ] ?? [];
 
         if ( 'system' === $section ) {
@@ -240,20 +240,20 @@ final class Dashboard {
         return is_array( $tabs ) ? $tabs : [];
     }
 
-    private static function first_tab( string $section ): string {
-        $tabs = self::tabs_for_section( $section );
+    private static function firstTab( string $section ): string {
+        $tabs = self::tabsForSection( $section );
         $keys = array_keys( $tabs );
 
         return isset( $keys[0] ) ? (string) $keys[0] : 'overview';
     }
 
-    private static function section_for_tab( string $tab ): ?string {
+    private static function sectionForTab( string $tab ): ?string {
         if ( '' === $tab ) {
             return null;
         }
 
         foreach ( array_keys( self::SECTIONS ) as $section ) {
-            if ( isset( self::tabs_for_section( $section )[ $tab ] ) ) {
+            if ( isset( self::tabsForSection( $section )[ $tab ] ) ) {
                 return $section;
             }
         }
@@ -261,7 +261,7 @@ final class Dashboard {
         return null;
     }
 
-    private static function tab_label( mixed $tab ): string {
+    private static function tabLabel( mixed $tab ): string {
         if ( is_array( $tab ) && isset( $tab['label'] ) ) {
             return (string) $tab['label'];
         }
@@ -269,7 +269,7 @@ final class Dashboard {
         return (string) $tab;
     }
 
-    private static function section_url( string $section ): string {
+    private static function sectionUrl( string $section ): string {
         return add_query_arg(
             [
                 'page'    => self::PAGE_SLUG,
@@ -279,15 +279,15 @@ final class Dashboard {
         );
     }
 
-    private static function dashboard_url( string $section, string $tab ): string {
-        return add_query_arg( 'tab', $tab, self::section_url( $section ) );
+    private static function dashboardUrl( string $section, string $tab ): string {
+        return add_query_arg( 'tab', $tab, self::sectionUrl( $section ) );
     }
 
-    private static function render_legacy_hash_redirect(): void {
+    private static function renderLegacyHashRedirect(): void {
         $urls = [];
         foreach ( array_keys( self::SECTIONS ) as $section ) {
-            foreach ( array_keys( self::tabs_for_section( $section ) ) as $tab ) {
-                $urls[ $tab ] = self::dashboard_url( $section, $tab );
+            foreach ( array_keys( self::tabsForSection( $section ) ) as $tab ) {
+                $urls[ $tab ] = self::dashboardUrl( $section, $tab );
             }
         }
         ?>

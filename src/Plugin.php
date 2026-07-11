@@ -20,9 +20,11 @@ final class Plugin {
 
         if ( did_action( 'plugins_loaded' ) ) {
             CoreIntegration::boot();
-        } else {
-            add_action( 'plugins_loaded', [ CoreIntegration::class, 'boot' ], 20 );
+            self::$registered = true;
+            return;
         }
+
+        add_action( 'plugins_loaded', [ CoreIntegration::class, 'boot' ], 20 );
 
         self::$registered = true;
     }

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ruleset name="SFPF Person Profile">
+    <description>WordPress security and output rules aligned with Hexa Plugin Core source conventions.</description>
+
+    <arg name="extensions" value="php"/>
+    <arg value="sp"/>
+
+    <file>src</file>
+    <file>admin/settings-dashboard.php</file>
+    <file>admin/dashboard-plugin-info.php</file>
+    <file>tests</file>
+
+    <config name="minimum_supported_wp_version" value="5.8"/>
+
+    <rule ref="WordPress">
+        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="Squiz.Commenting"/>
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+        <exclude name="Generic.Formatting.MultipleStatementAlignment"/>
+        <exclude name="Universal.WhiteSpace.PrecisionAlignment"/>
+        <exclude name="Squiz.PHP.EmbeddedPhp.ContentAfterOpen"/>
+        <exclude name="WordPress.Security.NonceVerification.Recommended"/>
+    </rule>
+</ruleset>

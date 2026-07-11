@@ -16,5 +16,5 @@ function sfpf_display_plugin_info(): void {
         return;
     }
 
-    ( new UpdaterPanelRenderer( CoreIntegration::updater_config() ) )->render();
+    ( new UpdaterPanelRenderer( CoreIntegration::updaterConfig() ) )->render();
 }

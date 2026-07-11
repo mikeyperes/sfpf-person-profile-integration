@@ -17,10 +17,10 @@ defined( 'ABSPATH' ) || exit;
 final class CoreIntegration {
     private static ?CoreBootstrap $bootstrap = null;
     private static ?PluginContext $context = null;
-    private static ?UpdaterConfig $updater_config = null;
+    private static ?UpdaterConfig $updaterConfig = null;
 
     public static function boot(): void {
-        if ( self::$bootstrap instanceof CoreBootstrap || ! self::classes_available() ) {
+        if ( self::$bootstrap instanceof CoreBootstrap || ! self::classesAvailable() ) {
             return;
         }
 
@@ -38,7 +38,7 @@ final class CoreIntegration {
         );
 
         $bootstrap = new CoreBootstrap( $context );
-        $updater   = self::updater_config();
+        $updater   = self::updaterConfig();
 
         $bootstrap
             ->add_module( new GitHubPluginUpdater( $updater ) )
@@ -81,12 +81,12 @@ final class CoreIntegration {
         return self::$bootstrap;
     }
 
-    public static function updater_config(): UpdaterConfig {
-        if ( self::$updater_config instanceof UpdaterConfig ) {
-            return self::$updater_config;
+    public static function updaterConfig(): UpdaterConfig {
+        if ( self::$updaterConfig instanceof UpdaterConfig ) {
+            return self::$updaterConfig;
         }
 
-        self::$updater_config = UpdaterConfig::from_plugin_file(
+        self::$updaterConfig = UpdaterConfig::from_plugin_file(
             SFPF_PLUGIN_FILE,
             'mikeyperes/sfpf-person-profile-integration',
             [
@@ -107,10 +107,10 @@ final class CoreIntegration {
             ]
         );
 
-        return self::$updater_config;
+        return self::$updaterConfig;
     }
 
-    private static function classes_available(): bool {
+    private static function classesAvailable(): bool {
         return class_exists( PluginContext::class )
             && class_exists( CoreBootstrap::class )
             && class_exists( UpdaterConfig::class );

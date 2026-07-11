@@ -2267,42 +2267,6 @@ function debug_acf_fields() {
 }
 
 /**
- * Run custom debug script
- */
-function ajax_run_custom_debug() {
-    verify_ajax_nonce();
-    
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Unauthorized');
-    }
-    
-    $script = wp_unslash($_POST['script'] ?? '');
-    
-    if (empty($script)) {
-        wp_send_json_error('No script provided');
-    }
-    
-    // Capture output
-    ob_start();
-    
-    try {
-        // Execute in a function scope to avoid variable conflicts
-        $execute = function() use ($script) {
-            eval($script);
-        };
-        $execute();
-    } catch (\Throwable $e) {
-        echo "Error: " . $e->getMessage() . "\n";
-        echo "Line: " . $e->getLine() . "\n";
-    }
-    
-    $output = ob_get_clean();
-    
-    wp_send_json_success(['output' => $output ?: 'Script executed with no output']);
-}
-add_action('wp_ajax_sfpf_run_custom_debug', __NAMESPACE__ . '\\ajax_run_custom_debug');
-
-/**
  * Export debug report
  */
 function ajax_export_debug_report() {

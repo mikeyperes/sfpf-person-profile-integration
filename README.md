@@ -5,7 +5,7 @@ A WordPress plugin for managing structured data (Schema.org), profile pages, FAQ
 ## Requirements
 
 - WordPress 5.8+
-- PHP 7.4+
+- PHP 8.0+
 - Advanced Custom Fields (ACF) Pro
 - HWS Base Tools Plugin (for website settings)
 - Optional: Elementor (for loop templates and FAQ integration)
@@ -45,7 +45,8 @@ A WordPress plugin for managing structured data (Schema.org), profile pages, FAQ
 - Support for Books, Organizations, Testimonials
 
 ### 🔄 GitHub Integration
-- Direct update from GitHub
+- Authenticated GitHub update checks
+- Direct filesystem replacement disabled; use the WordPress update flow
 - Version history with rollback support
 - Download specific commits as ZIP
 - No folder name suffix issues
@@ -154,6 +155,13 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.6.27
+- Removed the arbitrary PHP debug runner and its AJAX endpoint.
+- Stopped automatic deletion and global hiding of cross-plugin ACF fields.
+- Restricted profile diagnostics to authenticated administrators and fixed debug URL warnings.
+- Added CSRF protection to plugin-info AJAX actions and disabled unsafe direct filesystem replacement.
+- Activated schema regeneration on managed content saves and fixed the SameAs ACF wrapper definition.
+
 ### v1.6.18
 - Integrated Hexa WordPress Plugin Core 0.12.0.
 - Rebuilt the Pages & Menus tab with core SiteStructure tools for critical pages, navigation menus, and page-to-menu-item attachment.
@@ -167,7 +175,7 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ### v1.6.10
 - Gallery Notion mapping label corrected to capital Gallery for Person and Company debug output.
-- Public debug page continues to expose noindex dynamic URLs, gallery shortcode output, and schema snapshots.
+- Profile debug output includes dynamic URLs, gallery shortcode output, and schema snapshots for authenticated administrators only.
 
 ### v1.6.3
 - Dashboard: Reordered schema previews — Book and Organization now appear right after Biography (before RankMath control)

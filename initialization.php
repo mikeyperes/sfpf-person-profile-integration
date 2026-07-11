@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 1.6.26
+ * Version: 1.6.27
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define("SFPF_PLUGIN_VERSION", "1.6.26");
+define("SFPF_PLUGIN_VERSION", "1.6.27");
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = "1.6.26";
+    public static $version = "1.6.27";
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -102,6 +102,10 @@ function init_plugin() {
     foreach ($schema_files as $file) {
         $path = SFPF_PLUGIN_DIR . 'schema/' . $file;
         if (file_exists($path)) require_once $path;
+    }
+
+    if (function_exists(__NAMESPACE__ . '\\enable_schema_on_save')) {
+        enable_schema_on_save();
     }
 
     // Enable schema injection on frontend
@@ -294,6 +298,12 @@ function sfpf_profile_debug_data() {
 
 function render_public_profile_debug_page() {
     if (!get_query_var('sfpf_profile_debug')) return;
+    if (!is_user_logged_in() || !current_user_can('manage_options')) {
+        status_header(404);
+        nocache_headers();
+        header('X-Robots-Tag: noindex, nofollow', true);
+        exit;
+    }
     $data = sfpf_profile_debug_data();
     status_header(200);
     nocache_headers();
@@ -305,7 +315,7 @@ function render_public_profile_debug_page() {
     }
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>SFPF Profile Debug</title><style>body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#f8fafc;color:#0f172a}.wrap{max-width:1120px;margin:0 auto;padding:32px 18px}.panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin:0 0 18px;box-shadow:0 12px 32px rgba(15,23,42,.06)}h1{font-size:28px;margin:0 0 6px}h2{font-size:16px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;color:#334155}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e2e8f0;padding:8px;text-align:left;vertical-align:top}.ok{color:#047857;font-weight:700}.miss{color:#be123c;font-weight:700}.url{word-break:break-all;color:#2563eb}.rendered{border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:#f8fafc;overflow:auto}pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px;max-height:520px;overflow:auto}</style></head><body><main class="wrap">';
-    echo '<div class="panel"><h1>SFPF Profile Debug</h1><div>Noindex public diagnostic output for the SFPF plugin.</div><div style="margin-top:8px"><strong>Plugin:</strong> ' . esc_html($data['plugin_version']) . ' | <strong>Generated:</strong> ' . esc_html($data['generated_at']) . '</div></div>';
+    echo '<div class="panel"><h1>SFPF Profile Debug</h1><div>Authenticated administrator diagnostic output for the SFPF plugin.</div><div style="margin-top:8px"><strong>Plugin:</strong> ' . esc_html($data['plugin_version']) . ' | <strong>Generated:</strong> ' . esc_html($data['generated_at']) . '</div></div>';
     echo '<section class="panel"><h2>Dynamic URLs</h2><table><tbody>';
     foreach ($data['urls'] as $label => $url) echo '<tr><th>' . esc_html($label) . '</th><td><a class="url" href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html($url) . '</a></td></tr>';
     echo '</tbody></table></section>';
@@ -350,156 +360,6 @@ function check_requirements() {
     }
 }
 add_action('admin_init', __NAMESPACE__ . '\\check_requirements');
-
-/**
- * Clean up duplicate database-stored ACF field groups on user profiles
- *
- * The duplicate Entity Type (field_hws_entity_type) and Education fields are stored
- * in the WordPress database as ACF field groups. This migration finds and removes them.
- * Our code-registered groups (via acf_add_local_field_group) are NOT in wp_posts.
- */
-function cleanup_duplicate_acf_groups() {
-    $cleanup_version = '1.6.1';
-
-    // Force re-run: delete old versions to ensure this always executes after update
-    $current = get_option('sfpf_acf_cleanup_version', '');
-    if ($current === $cleanup_version) {
-        return;
-    }
-    // Delete any old version markers to force fresh run
-    delete_option('sfpf_acf_cleanup_version');
-
-    global $wpdb;
-    $removed = [];
-
-    // ── STRATEGY 1: Find specific known dud field keys and trace to parent groups ──
-    $dud_field_keys = [
-        'field_hws_entity_type',
-        'field_hws_education',
-        'field_hws_biography',
-        'field_hws_biography_short',
-        'field_hws_title',
-        'field_hws_professions',
-        'field_hws_sameas',
-        'field_hws_additional_name',
-        'field_hws_alternate_names',
-        'field_hws_knowledge_graph_images',
-        'field_hws_inception_date',
-        'field_hws_headquarters',
-    ];
-
-    foreach ($dud_field_keys as $field_key) {
-        $field_post = $wpdb->get_row($wpdb->prepare(
-            "SELECT ID, post_parent FROM {$wpdb->posts} WHERE post_type = 'acf-field' AND post_name = %s LIMIT 1",
-            $field_key
-        ));
-
-        if ($field_post && $field_post->post_parent > 0) {
-            $group_id = $field_post->post_parent;
-            if (!in_array($group_id, $removed)) {
-                sfpf_delete_acf_group_recursively($wpdb, $group_id);
-                $removed[] = $group_id;
-            }
-        }
-    }
-
-    // ── STRATEGY 2: Find any DB groups with conflicting field names targeting users ──
-    $all_groups = $wpdb->get_results(
-        "SELECT ID, post_title, post_excerpt, post_content FROM {$wpdb->posts}
-         WHERE post_type = 'acf-field-group'
-         AND post_status IN ('publish', 'acf-disabled', 'draft', 'trash', 'private')"
-    );
-
-    if (!empty($all_groups)) {
-        foreach ($all_groups as $group) {
-            if (in_array($group->ID, $removed)) continue;
-
-            $dominated = false;
-
-            // Check if this group targets user profiles
-            $targets_users = (strpos($group->post_content, 'user_form') !== false
-                           || strpos($group->post_content, 'user_role') !== false);
-
-            if ($targets_users) {
-                // Check child fields for our field names
-                $child_names = $wpdb->get_col($wpdb->prepare(
-                    "SELECT post_excerpt FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'acf-field'",
-                    $group->ID
-                ));
-
-                $our_names = ['entity_type', 'education', 'biography', 'biography_short',
-                              'title', 'professions', 'additional_name', 'alternate_names',
-                              'knowledge_graph_images', 'sameas', 'inception_date', 'headquarters'];
-
-                foreach ($child_names as $cn) {
-                    if (in_array($cn, $our_names, true)) {
-                        $dominated = true;
-                        break;
-                    }
-                }
-            }
-
-            // Match by known group keys or titles
-            if (in_array($group->post_excerpt, ['group_sfpf_user_schema_structures', 'group_sfpf_organization', 'group_hws_user_schema'], true)) {
-                $dominated = true;
-            }
-            if (in_array($group->post_title, ['Schema.org Structured Data', 'Organization Details'], true)) {
-                $dominated = true;
-            }
-
-            if ($dominated) {
-                sfpf_delete_acf_group_recursively($wpdb, $group->ID);
-                $removed[] = $group->ID;
-            }
-        }
-    }
-
-    // ── STRATEGY 3: Orphan field cleanup - find any stray acf-field posts with hws keys ──
-    $wpdb->query(
-        "DELETE FROM {$wpdb->posts} WHERE post_type = 'acf-field' AND post_name LIKE 'field_hws_%'"
-    );
-
-    if (!empty($removed) && function_exists(__NAMESPACE__ . '\\write_log')) {
-        write_log("ACF Cleanup: Removed " . count($removed) . " duplicate DB group(s): IDs " . implode(', ', $removed));
-    }
-
-    update_option('sfpf_acf_cleanup_version', $cleanup_version);
-}
-
-/**
- * Recursively delete an ACF field group and all its children from the database
- */
-function sfpf_delete_acf_group_recursively($wpdb, $group_id) {
-    // Get all child fields
-    $children = $wpdb->get_col($wpdb->prepare(
-        "SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'acf-field'",
-        $group_id
-    ));
-
-    foreach ($children as $child_id) {
-        // Delete grandchildren (sub-fields of repeaters/groups)
-        $grandchildren = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'acf-field'",
-            $child_id
-        ));
-        foreach ($grandchildren as $gc_id) {
-            // Great-grandchildren
-            $wpdb->query($wpdb->prepare(
-                "DELETE FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'acf-field'", $gc_id
-            ));
-            $wpdb->delete($wpdb->posts, ['ID' => $gc_id]);
-            $wpdb->delete($wpdb->postmeta, ['post_id' => $gc_id]);
-        }
-        $wpdb->delete($wpdb->posts, ['ID' => $child_id]);
-        $wpdb->delete($wpdb->postmeta, ['post_id' => $child_id]);
-    }
-
-    // Delete the group itself
-    $wpdb->delete($wpdb->postmeta, ['post_id' => $group_id]);
-    $wpdb->delete($wpdb->posts, ['ID' => $group_id]);
-}
-
-add_action('admin_init', __NAMESPACE__ . '\\cleanup_duplicate_acf_groups', 1);
 
 /**
  * Migrate articles field from textarea (string) to repeater (array)
@@ -551,17 +411,10 @@ function migrate_articles_textarea_to_repeater() {
 add_action('admin_init', __NAMESPACE__ . '\\migrate_articles_textarea_to_repeater', 20);
 
 /**
- * Runtime ACF field filter:
- * 1. Block duplicate hws-prefixed entity_type/education fields
- * 2. Enrich Education History with LinkedIn/Crunchbase links
+ * Runtime ACF field filter: enrich Education History with LinkedIn/Crunchbase links
  */
 add_filter('acf/prepare_field', function($field) {
     if (!$field || !is_array($field)) return $field;
-
-    // Block duplicate entity_type / education fields with old hws prefix
-    if (isset($field['key']) && strpos($field['key'], 'field_hws_') === 0) {
-        return false;
-    }
 
     // Enrich Education History with LinkedIn/Crunchbase links
     if (isset($field['key']) && $field['key'] === 'field_sfpf_education_repeater') {

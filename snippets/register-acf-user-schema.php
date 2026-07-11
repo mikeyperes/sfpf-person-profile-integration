@@ -641,7 +641,6 @@ function register_user_schema_acf_fields() {
 <code>[founder id="sameas" format="json"]</code> — JSON &nbsp;|&nbsp; <code>[founder id="sameas" format="ul"]</code> — HTML list',
                 'required'          => 0,
                 'conditional_logic' => 0,
-                'wrapper'           => [],
                 'default_value'     => '',
                 'rows'              => 4,
                 'placeholder'       => "https://linkedin.com/in/name\nhttps://twitter.com/handle",

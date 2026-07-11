@@ -21,6 +21,7 @@ add_action('wp_ajax_sfpf_download_specific_version', __NAMESPACE__ . '\\ajax_dow
  * AJAX: Load available versions (commits) from GitHub
  */
 function ajax_load_github_versions() {
+    check_ajax_referer('sfpf_plugin_info', 'nonce');
     if (!current_user_can('update_plugins')) {
         wp_send_json_error('Unauthorized');
         return;
@@ -142,6 +143,7 @@ function sfpf_get_version_from_commit($repo, $sha) {
  * AJAX: Download a specific version from GitHub
  */
 function ajax_download_specific_version() {
+    check_ajax_referer('sfpf_plugin_info', 'nonce');
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Unauthorized');
         return;
@@ -256,6 +258,7 @@ function ajax_download_specific_version() {
  * AJAX: Force update check
  */
 function ajax_force_update_check() {
+    check_ajax_referer('sfpf_plugin_info', 'nonce');
     if (!current_user_can('update_plugins')) {
         wp_send_json_error('Unauthorized');
         return;
@@ -280,100 +283,20 @@ function ajax_force_update_check() {
  * AJAX: Direct update from GitHub
  */
 function ajax_direct_update_plugin() {
+    check_ajax_referer('sfpf_plugin_info', 'nonce');
+
     if (!current_user_can('update_plugins')) {
-        wp_send_json_error('Unauthorized');
-        return;
+        wp_send_json_error('Unauthorized', 403);
     }
-    
-    $github_repo = Config::$github_repo;
-    $github_branch = Config::$github_branch;
-    $correct_folder_name = Config::$plugin_folder_name;
-    
-    $download_url = 'https://github.com/' . $github_repo . '/archive/refs/heads/' . $github_branch . '.zip';
-    
-    $upload_dir = wp_upload_dir();
-    $temp_dir = $upload_dir['basedir'] . '/sfpf-update-' . time();
-    $temp_zip = $temp_dir . '/github-download.zip';
-    
-    if (!wp_mkdir_p($temp_dir)) {
-        wp_send_json_error('Could not create temp directory');
-        return;
-    }
-    
-    // Download
-    $response = wp_remote_get($download_url, [
-        'timeout'  => 60,
-        'stream'   => true,
-        'filename' => $temp_zip,
-    ]);
-    
-    if (is_wp_error($response) || !file_exists($temp_zip)) {
-        sfpf_delete_directory($temp_dir);
-        wp_send_json_error('Failed to download from GitHub');
-        return;
-    }
-    
-    // Extract
-    $extract_dir = $temp_dir . '/extracted';
-    wp_mkdir_p($extract_dir);
-    
-    $zip = new \ZipArchive();
-    if ($zip->open($temp_zip) !== true) {
-        sfpf_delete_directory($temp_dir);
-        wp_send_json_error('Failed to open zip');
-        return;
-    }
-    
-    $zip->extractTo($extract_dir);
-    $zip->close();
-    
-    // Find extracted folder
-    $extracted_folders = glob($extract_dir . '/*', GLOB_ONLYDIR);
-    if (empty($extracted_folders)) {
-        sfpf_delete_directory($temp_dir);
-        wp_send_json_error('No folder found');
-        return;
-    }
-    
-    $source_folder = $extracted_folders[0];
-    $plugin_dir = WP_PLUGIN_DIR . '/' . $correct_folder_name;
-    
-    // Backup and replace
-    if (is_dir($plugin_dir)) {
-        $backup_dir = $plugin_dir . '-backup-' . time();
-        rename($plugin_dir, $backup_dir);
-    }
-    
-    // Move new version into place
-    if (!rename($source_folder, $plugin_dir)) {
-        // Restore backup
-        if (isset($backup_dir) && is_dir($backup_dir)) {
-            rename($backup_dir, $plugin_dir);
-        }
-        sfpf_delete_directory($temp_dir);
-        wp_send_json_error('Failed to install update');
-        return;
-    }
-    
-    // Cleanup
-    if (isset($backup_dir) && is_dir($backup_dir)) {
-        sfpf_delete_directory($backup_dir);
-    }
-    sfpf_delete_directory($temp_dir);
-    
-    // Clear caches
-    delete_site_transient('update_plugins');
-    
-    wp_send_json_success([
-        'message' => 'Plugin updated successfully!',
-        'reload' => true,
-    ]);
+
+    wp_send_json_error('Direct file replacement is disabled. Use the authenticated WordPress update flow.', 410);
 }
 
 /**
  * AJAX: Download plugin as ZIP
  */
 function ajax_download_plugin_zip() {
+    check_ajax_referer('sfpf_plugin_info', 'nonce');
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Unauthorized');
         return;
@@ -586,8 +509,8 @@ function sfpf_display_plugin_info() {
                 <button type="button" id="sfpf-force-update-check" class="button button-secondary">
                     🔍 Force Update Check
                 </button>
-                <button type="button" id="sfpf-direct-update" class="button button-primary" <?php echo $update_available ? '' : 'disabled'; ?>>
-                    ⬆️ Update Now from GitHub
+                <button type="button" id="sfpf-direct-update" class="button button-primary" disabled>
+                    Direct Update Disabled
                 </button>
                 <a href="<?php echo admin_url('update-core.php?force-check=1'); ?>" class="button button-secondary" target="_blank">
                     📋 WP Update Page
@@ -596,7 +519,7 @@ function sfpf_display_plugin_info() {
             <div id="sfpf-update-status" style="margin-top:10px;"></div>
             <p style="font-size:11px;color:#666;margin:10px 0 0;">
                 <strong>Force Update Check:</strong> Clears all caches and checks GitHub for new version.<br>
-                <strong>Update Now:</strong> Directly downloads from GitHub and installs (folder name handled correctly).
+                Install updates through the authenticated WordPress update flow.
             </p>
         </div>
         
@@ -659,6 +582,7 @@ function sfpf_display_plugin_info() {
     <script>
     jQuery(document).ready(function($) {
         var versionData = {};
+        var sfpfPluginInfoNonce = <?php echo wp_json_encode(wp_create_nonce('sfpf_plugin_info')); ?>;
         
         // Force Update Check
         $('#sfpf-force-update-check').on('click', function() {
@@ -671,7 +595,7 @@ function sfpf_display_plugin_info() {
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
-                data: { action: 'sfpf_force_update_check' },
+                data: { action: 'sfpf_force_update_check', nonce: sfpfPluginInfoNonce },
                 success: function(response) {
                     if (response.success) {
                         $('#sfpf-latest-version').text(response.data.new_version);
@@ -679,7 +603,6 @@ function sfpf_display_plugin_info() {
                         
                         var currentVer = '<?php echo esc_js($plugin_data['Version']); ?>';
                         if (response.data.new_version && response.data.new_version !== currentVer) {
-                            $('#sfpf-direct-update').prop('disabled', false);
                             $status.append(' <strong style="color:#d63638;">- Update available!</strong>');
                         }
                     } else {
@@ -690,42 +613,6 @@ function sfpf_display_plugin_info() {
                 error: function() {
                     $status.html('<span style="color:red;">❌ AJAX Error</span>');
                     $btn.prop('disabled', false).text('🔍 Force Update Check');
-                }
-            });
-        });
-        
-        // Direct Update
-        $('#sfpf-direct-update').on('click', function() {
-            if (!confirm('This will download the latest version from GitHub and update the plugin. Continue?')) {
-                return;
-            }
-            
-            var $btn = $(this);
-            var $status = $('#sfpf-update-status');
-            
-            $btn.prop('disabled', true).text('⏳ Downloading & Installing...');
-            $status.html('<span style="color:#666;">Downloading from GitHub...</span>');
-            
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                timeout: 120000,
-                data: { action: 'sfpf_direct_update_plugin' },
-                success: function(response) {
-                    if (response.success) {
-                        $status.html('<span style="color:green;">✅ ' + response.data.message + '</span>');
-                        if (response.data.reload) {
-                            $status.append('<br><span style="color:#666;">Reloading page in 2 seconds...</span>');
-                            setTimeout(function() { location.reload(); }, 2000);
-                        }
-                    } else {
-                        $status.html('<span style="color:red;">❌ ' + response.data + '</span>');
-                        $btn.prop('disabled', false).text('⬆️ Update Now from GitHub');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $status.html('<span style="color:red;">❌ Error: ' + error + '</span>');
-                    $btn.prop('disabled', false).text('⬆️ Update Now from GitHub');
                 }
             });
         });
@@ -742,7 +629,7 @@ function sfpf_display_plugin_info() {
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
-                data: { action: 'sfpf_download_plugin_zip' },
+                data: { action: 'sfpf_download_plugin_zip', nonce: sfpfPluginInfoNonce },
                 success: function(response) {
                     if (response.success) {
                         $status.html('<a href="' + response.data.url + '" target="_blank" style="color:green;">✅ Download Ready</a>');
@@ -771,7 +658,7 @@ function sfpf_display_plugin_info() {
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
-                data: { action: 'sfpf_load_github_versions' },
+                data: { action: 'sfpf_load_github_versions', nonce: sfpfPluginInfoNonce },
                 success: function(response) {
                     if (response.success) {
                         $select.empty();
@@ -817,6 +704,7 @@ function sfpf_display_plugin_info() {
                 timeout: 60000,
                 data: { 
                     action: 'sfpf_download_specific_version',
+                    nonce: sfpfPluginInfoNonce,
                     version: version,
                     sha: sha
                 },

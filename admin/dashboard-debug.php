@@ -16,8 +16,8 @@ $founder_user_id = get_founder_user_id();
 $sfpf_profile_debug_urls = function_exists(__NAMESPACE__ . '\\sfpf_profile_debug_urls')
     ? sfpf_profile_debug_urls()
     : [
-        'html' => home_url('/sfpf-profile-debug/'),
-        'json' => add_query_arg('format', 'json', home_url('/sfpf-profile-debug/')),
+        'public_debug_html' => home_url('/sfpf-profile-debug/'),
+        'public_debug_json' => add_query_arg('format', 'json', home_url('/sfpf-profile-debug/')),
     ];
 ?>
 
@@ -27,9 +27,9 @@ $sfpf_profile_debug_urls = function_exists(__NAMESPACE__ . '\\sfpf_profile_debug
         <h3>Debug Tools</h3>
     </div>
     <p style="color:#666;">Run diagnostic scripts to troubleshoot issues. Share the output with support.</p>
-    <?php $sfpf_public_debug = home_url('/sfpf-profile-debug/'); ?>
+    <?php $sfpf_public_debug = $sfpf_profile_debug_urls['public_debug_html']; ?>
     <div style="margin-top:12px;padding:12px;border:1px solid #fde68a;background:#fffbeb;border-radius:8px;">
-        <strong>Public noindex debug URL:</strong>
+        <strong>Authenticated debug URL:</strong>
         <a href="<?php echo esc_url($sfpf_public_debug); ?>" target="_blank" rel="noopener"><?php echo esc_html($sfpf_public_debug); ?></a><br>
         <strong>JSON URL:</strong>
         <a href="<?php echo esc_url(add_query_arg('format', 'json', $sfpf_public_debug)); ?>" target="_blank" rel="noopener"><?php echo esc_html(add_query_arg('format', 'json', $sfpf_public_debug)); ?></a>
@@ -63,15 +63,15 @@ $sfpf_profile_debug_urls = function_exists(__NAMESPACE__ . '\\sfpf_profile_debug
         <span class="dashicons dashicons-visibility" style="color:#0f766e;"></span>
         <h3>Public Profile Mapping Debug URL</h3>
     </div>
-    <p style="color:#666;margin-bottom:12px;">These plugin-built URLs are intentionally visible. The public output is no-indexed and lists every dynamic URL it generates.</p>
+    <p style="color:#666;margin-bottom:12px;">These diagnostic URLs require an authenticated administrator session and are no-indexed.</p>
     <table class="sfpf-table" style="font-size:13px;">
         <tr>
             <td style="width:200px;"><strong>HTML Debug URL</strong></td>
-            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['html']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['html']); ?></a></td>
+            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['public_debug_html']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['public_debug_html']); ?></a></td>
         </tr>
         <tr>
             <td><strong>JSON Debug URL</strong></td>
-            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['json']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['json']); ?></a></td>
+            <td><a href="<?php echo esc_url($sfpf_profile_debug_urls['public_debug_json']); ?>" target="_blank"><?php echo esc_html($sfpf_profile_debug_urls['public_debug_json']); ?></a></td>
         </tr>
         <tr>
             <td><strong>Robots</strong></td>
@@ -136,30 +136,6 @@ Click a button above to run debug...
     </div>
 </div>
 
-<!-- Custom Debug Script -->
-<div class="sfpf-card">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-editor-paste-text" style="color:#ec4899;"></span>
-        <h3>Custom Debug Script</h3>
-    </div>
-    
-    <p style="color:#666;margin-bottom:10px;">Enter a custom PHP debug script to execute:</p>
-    
-    <textarea id="sfpf-custom-debug-script" style="width:100%;height:150px;font-family:monospace;font-size:12px;background:#f9fafb;border:1px solid #d1d5db;border-radius:4px;padding:10px;" placeholder="// Example:
-$founder_id = \sfpf_person_website\get_founder_user_id();
-echo 'Founder ID: ' . $founder_id . PHP_EOL;
-$profs = get_field('professions', 'user_' . $founder_id);
-print_r($profs);"></textarea>
-    
-    <div style="margin-top:10px;display:flex;gap:10px;">
-        <button type="button" class="button button-primary" id="sfpf-run-custom-debug">▶ Run Debug Script</button>
-        <span style="color:#666;font-size:12px;line-height:28px;">⚠️ Only run scripts you understand</span>
-    </div>
-    
-    <div id="sfpf-debug-custom-output" style="margin-top:15px;background:#1e1e2e;border-radius:6px;padding:15px;font-family:monospace;font-size:12px;color:#cdd6f4;min-height:100px;max-height:500px;overflow-y:auto;white-space:pre-wrap;display:none;">
-    </div>
-</div>
-
 <!-- Export Debug Log -->
 <div class="sfpf-card">
     <div class="sfpf-card-header">
@@ -203,37 +179,6 @@ jQuery(document).ready(function($) {
             }
         }).fail(function() {
             $btn.prop('disabled', false);
-            $output.html('<span style="color:#f87171;">AJAX request failed</span>');
-        });
-    });
-    
-    // Custom debug script
-    $('#sfpf-run-custom-debug').on('click', function() {
-        var script = $('#sfpf-custom-debug-script').val();
-        var $btn = $(this);
-        var $output = $('#sfpf-debug-custom-output');
-        
-        if (!script.trim()) {
-            alert('Please enter a debug script');
-            return;
-        }
-        
-        $btn.prop('disabled', true).text('Running...');
-        $output.show().html('<span style="color:#fbbf24;">Executing script...</span>');
-        
-        $.post(ajaxurl, {
-            action: 'sfpf_run_custom_debug',
-            script: script,
-            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
-        }, function(response) {
-            $btn.prop('disabled', false).text('▶ Run Debug Script');
-            if (response.success) {
-                $output.html(response.data.output);
-            } else {
-                $output.html('<span style="color:#f87171;">Error: ' + (response.data || 'Unknown error') + '</span>');
-            }
-        }).fail(function() {
-            $btn.prop('disabled', false).text('▶ Run Debug Script');
             $output.html('<span style="color:#f87171;">AJAX request failed</span>');
         });
     });

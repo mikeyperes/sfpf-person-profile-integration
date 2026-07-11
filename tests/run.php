@@ -31,6 +31,35 @@ $requiredFiles = [
     'snippets/register-acf-user-schema.php',
     'schema/schema-builder.php',
     'lib/hexa-wordpress-plugin-core/VERSION',
+    'includes/runtime/lifecycle.php',
+    'includes/runtime/profile-debug.php',
+    'includes/runtime/plugin-admin.php',
+    'includes/runtime/acf-user-profile.php',
+    'includes/shortcodes/faq.php',
+    'includes/runtime/schema-seo.php',
+    'includes/shortcodes/loop.php',
+    'includes/shortcodes/organization.php',
+    'includes/shortcodes/book.php',
+    'includes/shortcodes/founder.php',
+    'includes/shortcodes/founder-articles.php',
+    'includes/shortcodes/founder-sections.php',
+    'includes/runtime/profile-admin-script.php',
+    'includes/frontend/author-archive.php',
+    'admin/ajax/support.php',
+    'admin/ajax/settings.php',
+    'admin/ajax/schema-detection.php',
+    'admin/ajax/schema-checklist.php',
+    'admin/ajax/schema-reprocess.php',
+    'admin/ajax/site-structure.php',
+    'admin/ajax/templates.php',
+    'admin/ajax/maintenance.php',
+    'admin/ajax/faq.php',
+    'admin/ajax/elementor.php',
+    'admin/ajax/professions.php',
+    'admin/ajax/debug.php',
+    'admin/ajax/articles.php',
+    'src/Runtime/LegacyModuleLoader.php',
+    'src/Admin/Ajax/ModuleLoader.php',
 ];
 
 foreach ( $requiredFiles as $relativePath ) {
@@ -44,6 +73,9 @@ $socialIcons = $read( $root . '/includes/elementor-social-icons.php' );
 $userFields = $read( $root . '/snippets/register-acf-user-schema.php' );
 $schemaBuilder = $read( $root . '/schema/schema-builder.php' );
 $ajaxHandlers = $read( $root . '/admin/ajax-handlers.php' );
+$ajaxSupport = $read( $root . '/admin/ajax/support.php' );
+$runtimeLoader = $read( $root . '/src/Runtime/LegacyModuleLoader.php' );
+$ajaxModuleLoader = $read( $root . '/src/Admin/Ajax/ModuleLoader.php' );
 
 preg_match( '/Version:\s*([0-9.]+)/', $initialization, $headerMatch );
 preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)['\"]/", $initialization, $constantMatch );
@@ -55,7 +87,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( version_compare( $headerVersion, '1.7.0', '>=' ), 'Plugin version is older than the audited 1.7.0 baseline.' );
+$assert( version_compare( $headerVersion, '1.7.1', '>=' ), 'Plugin version is older than the audited 1.7.1 baseline.' );
 $assert( '0.19.40' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.40.' );
 
 $sourceFiles = [];
@@ -101,6 +133,16 @@ foreach ( [ 'Overview', 'Profile', 'Site', 'Integrations', 'System' ] as $area )
 
 $assert( substr_count( $read( $root . '/admin/settings-dashboard.php' ), PHP_EOL ) < 80, 'Legacy settings dashboard shim is no longer thin.' );
 $assert( substr_count( $read( $root . '/admin/dashboard-plugin-info.php' ), PHP_EOL ) < 80, 'Legacy updater panel shim is no longer thin.' );
+$assert( substr_count( $initialization, PHP_EOL ) < 100, 'Plugin bootstrap is no longer thin.' );
+$assert( substr_count( $ajaxHandlers, PHP_EOL ) < 30, 'Legacy AJAX loader is no longer thin.' );
+$assert( false !== strpos( $runtimeLoader, 'final class LegacyModuleLoader' ), 'Runtime module loader is missing.' );
+$assert( false !== strpos( $ajaxModuleLoader, 'final class ModuleLoader' ), 'AJAX module loader is missing.' );
+
+$boundedModules = ["includes/runtime/lifecycle.php","includes/runtime/profile-debug.php","includes/runtime/plugin-admin.php","includes/runtime/acf-user-profile.php","includes/shortcodes/faq.php","includes/runtime/schema-seo.php","includes/shortcodes/loop.php","includes/shortcodes/organization.php","includes/shortcodes/book.php","includes/shortcodes/founder.php","includes/shortcodes/founder-articles.php","includes/shortcodes/founder-sections.php","includes/runtime/profile-admin-script.php","includes/frontend/author-archive.php","admin/ajax/support.php","admin/ajax/settings.php","admin/ajax/schema-detection.php","admin/ajax/schema-checklist.php","admin/ajax/schema-reprocess.php","admin/ajax/site-structure.php","admin/ajax/templates.php","admin/ajax/maintenance.php","admin/ajax/faq.php","admin/ajax/elementor.php","admin/ajax/professions.php","admin/ajax/debug.php","admin/ajax/articles.php"];
+foreach ( $boundedModules as $relativePath ) {
+    $assert( substr_count( $read( $root . '/' . $relativePath ), PHP_EOL ) < 700, 'Module exceeds the 700-line ownership boundary: ' . $relativePath );
+}
+
 
 $assert(
     false !== strpos( $initialization, "!is_user_logged_in() || !current_user_can('manage_options')" )
@@ -108,8 +150,8 @@ $assert(
     'Profile debug route is not restricted to authenticated administrators.'
 );
 $assert(
-    false !== strpos( $ajaxHandlers, 'wp_verify_nonce' )
-    && false !== strpos( $ajaxHandlers, "current_user_can('manage_options')" ),
+    false !== strpos( $ajaxSupport, 'wp_verify_nonce' )
+    && false !== strpos( $ajaxSupport, "current_user_can('manage_options')" ),
     'Legacy AJAX guard is missing nonce or capability validation.'
 );
 $assert(

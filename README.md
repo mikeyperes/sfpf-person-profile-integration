@@ -153,6 +153,13 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.7.1
+- Reduced the plugin bootstrap from 2,554 lines to a versioned loader under 100 lines.
+- Split frontend, shortcode, ACF, lifecycle, and admin-profile callbacks into focused compatibility modules.
+- Reduced the legacy AJAX entry point from 2,523 lines to a thin loader and separated thirteen action domains.
+- Added namespaced runtime and AJAX module loaders while preserving existing WordPress callback names.
+- Added architecture regression limits so bootstrap files and ownership modules cannot silently flatten again.
+
 ### v1.7.0
 - Updated the vendored Hexa WordPress Plugin Core to 0.19.40 and passed its complete test suite.
 - Added an isolated host adapter that creates PluginContext and boots updater and Core tab modules through CoreBootstrap.

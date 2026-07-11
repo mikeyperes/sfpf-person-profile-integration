@@ -1,0 +1,159 @@
+<?php
+
+declare( strict_types=1 );
+
+namespace sfpf_person_website;
+
+/**
+ * Plugin lifecycle, CPT loading, ACF registration, and activation hooks.
+ *
+ * Callback names remain in the legacy namespace for template and hook compatibility.
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+// ============================================================================
+// CPT LOADING - Hook to init priority 0
+// ============================================================================
+function load_cpt_snippets() {
+    $snippets_dir = SFPF_PLUGIN_DIR . 'snippets/';
+
+    if (get_option('sfpf_enable_book_cpt', false)) {
+        $file = $snippets_dir . 'register-cpt-book.php';
+        if (file_exists($file)) require_once $file;
+    }
+
+    if (get_option('sfpf_enable_organization_cpt', false)) {
+        $file = $snippets_dir . 'register-cpt-organization.php';
+        if (file_exists($file)) require_once $file;
+    }
+
+    if (get_option('sfpf_enable_testimonial_cpt', false)) {
+        $file = $snippets_dir . 'register-cpt-testimonial.php';
+        if (file_exists($file)) require_once $file;
+    }
+}
+add_action('init', __NAMESPACE__ . '\\load_cpt_snippets', 0);
+
+// ============================================================================
+// MAIN INIT - Hook to init priority 5
+// ============================================================================
+function init_plugin() {
+    // Load schema files
+    $schema_files = ['schema-templates.php', 'schema-builder.php', 'schema-manager.php', 'schema-injector.php'];
+    foreach ($schema_files as $file) {
+        $path = SFPF_PLUGIN_DIR . 'schema/' . $file;
+        if (file_exists($path)) require_once $path;
+    }
+
+    if (function_exists(__NAMESPACE__ . '\\enable_schema_on_save')) {
+        enable_schema_on_save();
+    }
+
+    // Enable schema injection on frontend
+    if (!is_admin() && function_exists(__NAMESPACE__ . '\\enable_schema_injection')) {
+        enable_schema_injection();
+    }
+
+    // Admin only
+    if (is_admin()) {
+        require_once SFPF_PLUGIN_DIR . 'admin/settings-dashboard.php';
+        require_once SFPF_PLUGIN_DIR . 'admin/ajax-handlers.php';
+        require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php';
+    }
+}
+add_action('init', __NAMESPACE__ . '\\init_plugin', 5);
+
+// ============================================================================
+// ACF FIELDS LOADING - Hook to acf/init
+// ============================================================================
+function load_acf_field_groups() {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    $snippets_dir = SFPF_PLUGIN_DIR . 'snippets/';
+
+    // Book ACF
+    if (get_option('sfpf_enable_book_acf', false)) {
+        $file = $snippets_dir . 'register-acf-book.php';
+        if (file_exists($file)) {
+            require_once $file;
+            register_book_acf_fields();
+        }
+    }
+
+    // Organization ACF
+    if (get_option('sfpf_enable_organization_acf', false)) {
+        $file = $snippets_dir . 'register-acf-organization.php';
+        if (file_exists($file)) {
+            require_once $file;
+            register_organization_acf_fields();
+        }
+    }
+
+    // User Schema ACF (education, sameas, etc.)
+    if (get_option('sfpf_enable_user_schema_acf', false)) {
+        $file = $snippets_dir . 'register-acf-user-schema.php';
+        if (file_exists($file)) {
+            require_once $file;
+            register_user_schema_acf_fields();
+        }
+    }
+
+    // Homepage ACF
+    if (get_option('sfpf_enable_homepage_acf', false)) {
+        $file = $snippets_dir . 'register-acf-homepage.php';
+        if (file_exists($file)) {
+            require_once $file;
+            register_homepage_acf_fields();
+        }
+    }
+}
+add_action('acf/init', __NAMESPACE__ . '\\load_acf_field_groups', 10);
+
+/**
+ * Plugin activation
+ */
+function activate_plugin() {
+    // Set default options — add_option only writes if key doesn't exist yet
+    add_option('sfpf_homepage_schema_type', 'person');
+    add_option('sfpf_biography_schema_type', 'profile_page_only');
+    add_option('sfpf_rankmath_disable_biography', false);
+    add_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, 1);
+    add_option(SFPF_ELEMENTOR_DYNAMIC_VISIBILITY_OPTION, 1);
+
+    // Migration: fix sites that had the old 'none' default from previous activation bug
+    $current_hp = get_option('sfpf_homepage_schema_type');
+    if ($current_hp === 'none') {
+        // Only auto-fix if the user hasn't explicitly saved a schema type yet
+        // (check if the option was set by old activation code vs. user choice)
+        $hp_was_explicitly_saved = get_option('sfpf_homepage_schema_explicitly_saved', false);
+        if (!$hp_was_explicitly_saved) {
+            update_option('sfpf_homepage_schema_type', 'person');
+        }
+    }
+
+    // Flush rewrite rules
+    flush_rewrite_rules();
+
+    // Log activation
+    if (function_exists(__NAMESPACE__ . '\\write_log')) {
+        write_log('Plugin activated');
+    }
+}
+register_activation_hook(SFPF_PLUGIN_FILE, __NAMESPACE__ . '\\activate_plugin');
+
+/**
+ * Plugin deactivation
+ */
+function deactivate_plugin() {
+    // Flush rewrite rules
+    flush_rewrite_rules();
+
+    // Log deactivation
+    if (function_exists(__NAMESPACE__ . '\\write_log')) {
+        write_log('Plugin deactivated');
+    }
+}
+register_deactivation_hook(SFPF_PLUGIN_FILE, __NAMESPACE__ . '\\deactivate_plugin');

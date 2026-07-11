@@ -39,6 +39,88 @@ $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashbo
 $assert( false !== has_action( 'wp_ajax_sfpf_core_updater_force_update_check' ), 'Core updater AJAX action is missing.' );
 $assert( false !== has_action( 'save_post', 'sfpf_person_website\handle_schema_on_save' ), 'Schema save hook is missing.' );
 
+$requiredFunctions = [
+    'sfpf_person_website\\load_cpt_snippets',
+    'sfpf_person_website\\render_public_profile_debug_page',
+    'sfpf_person_website\\migrate_articles_textarea_to_repeater',
+    'sfpf_person_website\\sfpf_fix_repeater_load_value',
+    'sfpf_person_website\\sfpf_faq_shortcode',
+    'sfpf_person_website\\sanitize_kgid_on_save',
+    'sfpf_person_website\\sfpf_loop_shortcode',
+    'sfpf_person_website\\organization_shortcode',
+    'sfpf_person_website\\book_shortcode',
+    'sfpf_person_website\\founder_shortcode',
+    'sfpf_person_website\\founder_display_articles',
+    'sfpf_person_website\\founder_display_location_born',
+    'sfpf_person_website\\sfpf_render_author_archive_profile',
+    'sfpf_person_website\\verify_ajax_nonce',
+    'sfpf_person_website\\ajax_save_schema_type',
+    'sfpf_person_website\\ajax_detect_schema',
+    'sfpf_person_website\\sfpf_run_full_site_checklist',
+    'sfpf_person_website\\ajax_reprocess_schema',
+    'sfpf_person_website\\register_site_structure_ajax',
+    'sfpf_person_website\\ajax_save_template',
+    'sfpf_person_website\\ajax_clear_log',
+    'sfpf_person_website\\ajax_save_faq_sets',
+    'sfpf_person_website\\ajax_save_elementor_loops',
+    'sfpf_person_website\\ajax_create_profession_page',
+    'sfpf_person_website\\ajax_run_debug',
+    'sfpf_person_website\\ajax_process_articles',
+];
+foreach ( $requiredFunctions as $callback ) {
+    $assert( function_exists( $callback ), 'Module callback is missing: ' . $callback );
+}
+
+$requiredShortcodes = [
+    'sfpf_faq',
+    'sfpf_faq_schema',
+    'sfpf_person_faq',
+    'sfpf_elementor_faq',
+    'sfpf_loop',
+    'organization',
+    'book',
+    'founder',
+];
+foreach ( $requiredShortcodes as $shortcode ) {
+    $assert( shortcode_exists( $shortcode ), 'Shortcode is missing: ' . $shortcode );
+}
+
+$requiredAjaxActions = [
+    'sfpf_toggle_snippet',
+    'sfpf_save_schema_type',
+    'sfpf_save_biography_schema_type',
+    'sfpf_save_rankmath_settings',
+    'sfpf_save_breadcrumb_settings',
+    'sfpf_detect_schema',
+    'sfpf_reprocess_schema',
+    'sfpf_rebuild_all_schema',
+    'sfpf_save_template',
+    'sfpf_apply_template',
+    'sfpf_apply_default_template',
+    'sfpf_clear_log',
+    'sfpf_save_faq_sets',
+    'sfpf_save_elementor_loops',
+    'sfpf_import_elementor_templates',
+    'sfpf_create_profession_page',
+    'sfpf_delete_profession_page',
+    'sfpf_delete_elementor_template',
+    'sfpf_run_debug',
+    'sfpf_export_debug_report',
+    'sfpf_process_articles',
+];
+foreach ( $requiredAjaxActions as $action ) {
+    $assert( false !== has_action( 'wp_ajax_' . $action ), 'AJAX action is missing: ' . $action );
+}
+
+$assert(
+    false !== has_action( 'activate_' . SFPF_PLUGIN_BASENAME, 'sfpf_person_website\\activate_plugin' ),
+    'Plugin activation callback is not bound to the main plugin file.'
+);
+$assert(
+    false !== has_action( 'deactivate_' . SFPF_PLUGIN_BASENAME, 'sfpf_person_website\\deactivate_plugin' ),
+    'Plugin deactivation callback is not bound to the main plugin file.'
+);
+
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- CLI test failure output.
@@ -47,4 +129,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 1.7.1 with healthy Core and guarded runtime hooks.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 1.7.1 with healthy Core, complete module callbacks, and guarded runtime hooks.' . PHP_EOL;

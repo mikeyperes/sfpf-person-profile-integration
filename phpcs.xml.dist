@@ -17,6 +17,7 @@
         <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.NamingConventions"/>
         <exclude name="Squiz.Commenting"/>
         <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
         <exclude name="Generic.Formatting.MultipleStatementAlignment"/>

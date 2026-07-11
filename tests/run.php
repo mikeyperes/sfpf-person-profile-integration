@@ -12,6 +12,7 @@ $assert = static function ( bool $condition, string $message ) use ( &$failures 
 };
 
 $read = static function ( string $path ) use ( &$failures ): string {
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local test fixture.
     $contents = is_readable( $path ) ? file_get_contents( $path ) : false;
     if ( false === $contents ) {
         $failures[] = 'Unable to read ' . $path;
@@ -73,9 +74,9 @@ foreach ( $scanDirectories as $directory ) {
 $sourceFiles[] = $root . '/initialization.php';
 sort( $sourceFiles );
 
-foreach ( $sourceFiles as $path ) {
-    $source = $read( $path );
-    $relativePath = ltrim( substr( $path, strlen( $root ) ), '/' );
+foreach ( $sourceFiles as $sourcePath ) {
+    $source = $read( $sourcePath );
+    $relativePath = ltrim( substr( $sourcePath, strlen( $root ) ), '/' );
 
     $assert( 0 === preg_match( '/\\beval\\s*\\(/i', $source ), 'Arbitrary PHP evaluation remains in ' . $relativePath );
     $assert( false === strpos( $source, 'wp_ajax_nopriv_sfpf_' ), 'Unauthenticated SFPF AJAX action remains in ' . $relativePath );
@@ -138,15 +139,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 $GLOBALS['sfpf_test_options'] = [];
 
 if ( ! function_exists( 'get_option' ) ) {
-    function get_option( $name, $default = false ) {
+    function get_option( $name, $fallback = false ) {
         return array_key_exists( $name, $GLOBALS['sfpf_test_options'] )
             ? $GLOBALS['sfpf_test_options'][ $name ]
-            : $default;
+            : $fallback;
     }
 }
 
 if ( ! function_exists( 'add_filter' ) ) {
     function add_filter( $hook, $callback, $priority = 10, $acceptedArgs = 1 ) {
+        unset( $hook, $callback, $priority, $acceptedArgs );
         return true;
     }
 }
@@ -178,12 +180,13 @@ $assert( false === strpos( $filtered, '>Shortcode<' ), 'Social filter retained a
 
 $GLOBALS['sfpf_test_options']['sfpf_hide_empty_elementor_social_icons'] = 0;
 $assert(
-    $html === sfpf_person_website\filter_empty_elementor_social_icons( $html, $widget ),
+    sfpf_person_website\filter_empty_elementor_social_icons( $html, $widget ) === $html,
     'Social filter toggle does not preserve original HTML when disabled.'
 );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- CLI test failure output.
         fwrite( STDERR, 'FAIL: ' . $failure . PHP_EOL );
     }
     exit( 1 );

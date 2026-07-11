@@ -41,6 +41,7 @@ $assert( false !== has_action( 'save_post', 'sfpf_person_website\handle_schema_o
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- CLI test failure output.
         fwrite( STDERR, 'FAIL: ' . $failure . PHP_EOL );
     }
     exit( 1 );

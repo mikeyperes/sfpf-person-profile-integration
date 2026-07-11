@@ -139,7 +139,35 @@ $assert( substr_count( $ajaxHandlers, PHP_EOL ) < 30, 'Legacy AJAX loader is no 
 $assert( false !== strpos( $runtimeLoader, 'final class LegacyModuleLoader' ), 'Runtime module loader is missing.' );
 $assert( false !== strpos( $ajaxModuleLoader, 'final class ModuleLoader' ), 'AJAX module loader is missing.' );
 
-$boundedModules = ["includes/runtime/lifecycle.php","includes/runtime/profile-debug.php","includes/runtime/plugin-admin.php","includes/runtime/acf-user-profile.php","includes/shortcodes/faq.php","includes/runtime/schema-seo.php","includes/shortcodes/loop.php","includes/shortcodes/organization.php","includes/shortcodes/book.php","includes/shortcodes/founder.php","includes/shortcodes/founder-articles.php","includes/shortcodes/founder-sections.php","includes/runtime/profile-admin-script.php","includes/frontend/author-archive.php","admin/ajax/support.php","admin/ajax/settings.php","admin/ajax/schema-detection.php","admin/ajax/schema-checklist.php","admin/ajax/schema-reprocess.php","admin/ajax/site-structure.php","admin/ajax/templates.php","admin/ajax/maintenance.php","admin/ajax/faq.php","admin/ajax/elementor.php","admin/ajax/professions.php","admin/ajax/debug.php","admin/ajax/articles.php"];
+$boundedModules = [
+    'includes/runtime/lifecycle.php',
+    'includes/runtime/profile-debug.php',
+    'includes/runtime/plugin-admin.php',
+    'includes/runtime/acf-user-profile.php',
+    'includes/shortcodes/faq.php',
+    'includes/runtime/schema-seo.php',
+    'includes/shortcodes/loop.php',
+    'includes/shortcodes/organization.php',
+    'includes/shortcodes/book.php',
+    'includes/shortcodes/founder.php',
+    'includes/shortcodes/founder-articles.php',
+    'includes/shortcodes/founder-sections.php',
+    'includes/runtime/profile-admin-script.php',
+    'includes/frontend/author-archive.php',
+    'admin/ajax/support.php',
+    'admin/ajax/settings.php',
+    'admin/ajax/schema-detection.php',
+    'admin/ajax/schema-checklist.php',
+    'admin/ajax/schema-reprocess.php',
+    'admin/ajax/site-structure.php',
+    'admin/ajax/templates.php',
+    'admin/ajax/maintenance.php',
+    'admin/ajax/faq.php',
+    'admin/ajax/elementor.php',
+    'admin/ajax/professions.php',
+    'admin/ajax/debug.php',
+    'admin/ajax/articles.php',
+];
 foreach ( $boundedModules as $relativePath ) {
     $assert( substr_count( $read( $root . '/' . $relativePath ), PHP_EOL ) < 700, 'Module exceeds the 700-line ownership boundary: ' . $relativePath );
 }

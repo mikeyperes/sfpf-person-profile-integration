@@ -48,6 +48,9 @@ function inject_schema_markup() {
         $schema = !empty($schema_arr) ? json_encode($schema_arr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
         
     } elseif (is_singular('organization')) {
+        if ( class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' ) ) {
+            return;
+        }
         // Single organization page — generate live from unified builder
         global $post;
         $schema_arr = build_organization_schema($post->ID);

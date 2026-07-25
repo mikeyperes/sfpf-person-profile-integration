@@ -1081,23 +1081,6 @@ function get_cpt_php_code($snippet_id) {
     'has_archive'   => 'books',
     'rewrite'       => ['slug' => 'book', 'with_front' => false],
 ]);",
-
-        'sfpf_enable_organization_cpt' => "register_post_type('organization', [
-    'labels' => [
-        'name'          => 'Organizations',
-        'singular_name' => 'Organization',
-        'menu_name'     => 'Organizations',
-        'add_new_item'  => 'Add New Organization',
-        'edit_item'     => 'Edit Organization',
-        'view_item'     => 'View Organization',
-    ],
-    'public'        => true,
-    'show_in_rest'  => true,
-    'menu_icon'     => 'dashicons-building',
-    'supports'      => ['title', 'author', 'editor', 'thumbnail', 'custom-fields'],
-    'has_archive'   => 'organizations',
-    'rewrite'       => ['slug' => 'organization', 'with_front' => false],
-]);",
     ];
     
     return $codes[$snippet_id] ?? '';

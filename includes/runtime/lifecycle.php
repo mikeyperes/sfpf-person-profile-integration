@@ -12,6 +12,31 @@ namespace sfpf_person_website;
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Transfer previously enabled shared CPT options to their HWS-owned options.
+ */
+function migrate_shared_content_type_ownership(): void {
+    $migration_version = '1.8.0';
+
+    if ( $migration_version === get_option( 'sfpf_shared_content_type_ownership_migration', '' ) ) {
+        return;
+    }
+
+    $option_map = [
+        'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization',
+        'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial',
+    ];
+
+    foreach ( $option_map as $legacy_option => $hws_option ) {
+        if ( get_option( $legacy_option, false ) ) {
+            update_option( $hws_option, 1, false );
+        }
+    }
+
+    update_option( 'sfpf_shared_content_type_ownership_migration', $migration_version, false );
+}
+add_action( 'plugins_loaded', __NAMESPACE__ . '\\migrate_shared_content_type_ownership', 5 );
+
 // ============================================================================
 // CPT LOADING - Hook to init priority 0
 // ============================================================================
@@ -20,16 +45,6 @@ function load_cpt_snippets() {
 
     if (get_option('sfpf_enable_book_cpt', false)) {
         $file = $snippets_dir . 'register-cpt-book.php';
-        if (file_exists($file)) require_once $file;
-    }
-
-    if (get_option('sfpf_enable_organization_cpt', false)) {
-        $file = $snippets_dir . 'register-cpt-organization.php';
-        if (file_exists($file)) require_once $file;
-    }
-
-    if (get_option('sfpf_enable_testimonial_cpt', false)) {
-        $file = $snippets_dir . 'register-cpt-testimonial.php';
         if (file_exists($file)) require_once $file;
     }
 }
@@ -84,7 +99,10 @@ function load_acf_field_groups() {
     }
 
     // Organization ACF
-    if (get_option('sfpf_enable_organization_acf', false)) {
+    if (
+        ! class_exists( '\\SMC\\OrganizationProfile\\Acf\\OrganizationFields' )
+        && get_option('sfpf_enable_organization_acf', false)
+    ) {
         $file = $snippets_dir . 'register-acf-organization.php';
         if (file_exists($file)) {
             require_once $file;

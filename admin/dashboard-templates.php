@@ -394,14 +394,14 @@ $loop_cpts = [
     'organization' => [
         'name' => 'Organizations', 
         'icon' => 'dashicons-building',
-        'enabled' => is_snippet_enabled('sfpf_enable_organization_cpt'),
-        'snippet' => 'Organization CPT',
+        'enabled' => post_type_exists('organization'),
+        'snippet' => 'HWS Organization CPT',
     ],
     'testimonial' => [
         'name' => 'Testimonials', 
         'icon' => 'dashicons-format-quote',
-        'enabled' => is_snippet_enabled('sfpf_enable_testimonial_cpt'),
-        'snippet' => 'Testimonial CPT',
+        'enabled' => post_type_exists('testimonial'),
+        'snippet' => 'HWS Testimonial CPT',
     ],
 ];
 ?>

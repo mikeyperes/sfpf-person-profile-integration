@@ -296,7 +296,7 @@ function get_schema_status_summary() {
             'with_schema' => 0,
         ],
         'organizations' => [
-            'enabled' => is_snippet_enabled('sfpf_enable_organization_cpt'),
+            'enabled' => post_type_exists('organization'),
             'total' => 0,
             'with_schema' => 0,
         ],

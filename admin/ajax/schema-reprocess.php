@@ -137,7 +137,7 @@ function ajax_rebuild_all_schema() {
     }
 
     // Organizations
-    if (is_snippet_enabled('sfpf_enable_organization_cpt')) {
+    if (post_type_exists('organization')) {
         $orgs = get_posts([
             'post_type' => 'organization',
             'posts_per_page' => -1,

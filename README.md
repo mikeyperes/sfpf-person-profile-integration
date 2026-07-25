@@ -153,6 +153,12 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.8.0
+- Moved Organization and Testimonial CPT ownership to HWS Base Tools
+- Retained Book as the only CPT registered by SFPF Person
+- Added an option migration for sites using the former SFPF CPT toggles
+- Added coexistence delegation for SMC organization fields, shortcodes, and schema
+
 ### v1.7.2
 - Prevented third-party WordPress admin notices from stretching the responsive SFPF dashboard header.
 - Added narrow-screen wrapping for shared system-check rows and action links.

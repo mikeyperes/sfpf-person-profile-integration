@@ -275,7 +275,7 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
 <?php endif; ?>
 
 <!-- Organization Schema Preview -->
-<?php if (is_snippet_enabled('sfpf_enable_organization_cpt')):
+<?php if (post_type_exists('organization')):
     $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
 ?>
 <div class="sfpf-card">
@@ -342,14 +342,14 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
         </label>
         <?php endif; ?>
         
-        <?php if (is_snippet_enabled('sfpf_enable_organization_cpt')): ?>
+        <?php if (post_type_exists('organization')): ?>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
             <input type="checkbox" name="rankmath_disable_organizations" value="1" <?php checked($rankmath_disable_organizations, true); ?> class="sfpf-rankmath-toggle">
             <span>Disable RankMath schema on <strong>Organizations</strong></span>
         </label>
         <?php endif; ?>
         
-        <?php if (is_snippet_enabled('sfpf_enable_testimonial_cpt')): ?>
+        <?php if (post_type_exists('testimonial')): ?>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
             <input type="checkbox" name="rankmath_disable_testimonials" value="1" <?php checked($rankmath_disable_testimonials, true); ?> class="sfpf-rankmath-toggle">
             <span>Disable RankMath schema on <strong>Testimonials</strong></span>

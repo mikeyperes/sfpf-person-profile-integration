@@ -75,6 +75,9 @@ $socialIcons = $read( $root . '/includes/elementor-social-icons.php' );
 $profileDebug = $read( $root . '/includes/runtime/profile-debug.php' );
 $userFields = $read( $root . '/snippets/register-acf-user-schema.php' );
 $schemaBuilder = $read( $root . '/schema/schema-builder.php' );
+$lifecycle = $read( $root . '/includes/runtime/lifecycle.php' );
+$organizationShortcode = $read( $root . '/includes/shortcodes/organization.php' );
+$schemaInjector = $read( $root . '/schema/schema-injector.php' );
 $ajaxHandlers = $read( $root . '/admin/ajax-handlers.php' );
 $ajaxSupport = $read( $root . '/admin/ajax/support.php' );
 $runtimeLoader = $read( $root . '/src/Runtime/LegacyModuleLoader.php' );
@@ -90,7 +93,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( version_compare( $headerVersion, '1.7.2', '>=' ), 'Plugin version is older than the audited 1.7.2 baseline.' );
+$assert( version_compare( $headerVersion, '1.8.0', '>=' ), 'Plugin version is older than the HWS ownership release.' );
 $assert( '0.19.40' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.40.' );
 
 $sourceFiles = [];
@@ -215,6 +218,39 @@ $assert(
     false !== strpos( $schemaBuilder, "add_action('save_post', __NAMESPACE__ . '\\\\handle_schema_on_save'" ),
     'Schema regeneration is not attached to save_post.'
 );
+$assert(
+    ! is_file( $root . '/snippets/register-cpt-organization.php' )
+    && ! is_file( $root . '/snippets/register-cpt-testimonial.php' ),
+    'Person plugin still ships Organization or Testimonial CPT registration.'
+);
+$assert(
+    false === strpos( $lifecycle, 'register-cpt-organization.php' )
+    && false === strpos( $lifecycle, 'register-cpt-testimonial.php' )
+    && false !== strpos( $lifecycle, 'register-cpt-book.php' ),
+    'Person lifecycle does not exclusively register the Book CPT.'
+);
+$assert(
+    false !== strpos( $lifecycle, "'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization'" )
+    && false !== strpos( $lifecycle, "'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial'" ),
+    'Legacy Person CPT options are not migrated to HWS Base Tools.'
+);
+$assert(
+    false === strpos( $initialization, "'organization_cpt'" )
+    && false === strpos( $initialization, "'testimonial_cpt'" ),
+    'Person Config still advertises shared CPT ownership.'
+);
+$assert(
+    false !== strpos( $lifecycle, 'SMC\\\\OrganizationProfile\\\\Acf\\\\OrganizationFields' )
+    && false !== strpos( $organizationShortcode, 'SMC\\\\OrganizationProfile\\\\Shortcodes\\\\OrganizationShortcode' ),
+    'Person ACF or shortcode compatibility does not defer to SMC ownership.'
+);
+$assert(
+    false !== strpos( $schemaBuilder, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' )
+    && false !== strpos( $schemaInjector, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' ),
+    'Person organization schema compatibility does not delegate to SMC.'
+);
+
+
 
 if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', $root . '/' );

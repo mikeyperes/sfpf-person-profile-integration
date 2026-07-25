@@ -504,6 +504,10 @@ function build_book_schema($post_id) {
  * @return array  Schema array (with @context)
  */
 function build_organization_schema($post_id) {
+    if ( class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' ) ) {
+        return \SMC\OrganizationProfile\Schema\OrganizationSchema::build( (int) $post_id, true );
+    }
+
     $site_url  = rtrim(get_site_url(), '/');
     $permalink = get_permalink($post_id);
     $title     = get_the_title($post_id);
@@ -681,6 +685,9 @@ function enable_schema_on_save() {
 
 function handle_schema_on_save($post_id, $post) {
     if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
+    if ( 'organization' === $post->post_type && class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' ) ) {
+        return;
+    }
     $ok = ['book', 'organization', 'page'];
     if (!in_array($post->post_type, $ok, true)) return;
     if ($post->post_type === 'page' && !is_schema_managed_page_id($post_id)) return;

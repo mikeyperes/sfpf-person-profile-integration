@@ -121,4 +121,6 @@ function organization_shortcode($atts) {
 
     return $value;
 }
-add_shortcode('organization', __NAMESPACE__ . '\\organization_shortcode');
+if ( ! class_exists( '\\SMC\\OrganizationProfile\\Shortcodes\\OrganizationShortcode' ) && ! shortcode_exists( 'organization' ) ) {
+    add_shortcode('organization', __NAMESPACE__ . '\\organization_shortcode');
+}

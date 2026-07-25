@@ -29,22 +29,6 @@ function get_snippets($type = 'all') {
             'type' => 'cpt',
             'info' => 'Post type: book | Archive: /books/',
         ],
-        [
-            'id' => 'sfpf_enable_organization_cpt',
-            'name' => 'Organization Custom Post Type',
-            'description' => 'Registers the "organization" custom post type for companies/organizations.',
-            'file' => 'register-cpt-organization.php',
-            'type' => 'cpt',
-            'info' => 'Post type: organization | Archive: /organizations/',
-        ],
-        [
-            'id' => 'sfpf_enable_testimonial_cpt',
-            'name' => 'Testimonial Custom Post Type',
-            'description' => 'Registers the "testimonial" custom post type for managing testimonials.',
-            'file' => 'register-cpt-testimonial.php',
-            'type' => 'cpt',
-            'info' => 'Post type: testimonial | Archive: /testimonials/',
-        ],
         
         // ACF Snippets
         [

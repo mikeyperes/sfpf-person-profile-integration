@@ -32,12 +32,53 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '1.7.2' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
-$assert( '0.19.40' === (string) ( $report['selected']['version'] ?? '' ), 'Unexpected selected Core version.' );
+$assert( '1.8.1' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '0.19.77', '>=' ), 'Selected Core version is older than 0.19.77.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_core_updater_force_update_check' ), 'Core updater AJAX action is missing.' );
 $assert( false !== has_action( 'save_post', 'sfpf_person_website\handle_schema_on_save' ), 'Schema save hook is missing.' );
+
+require_once $root . '/src/Admin/Ajax/ModuleLoader.php';
+
+$assert( ! function_exists( 'sfpf_person_website\verify_ajax_nonce' ), 'Legacy AJAX modules loaded during an ordinary admin request.' );
+SFPF\PersonProfile\Admin\Ajax\ModuleLoader::load( 'sfpf_load_dashboard_tab' );
+$assert( ! function_exists( 'sfpf_person_website\verify_ajax_nonce' ), 'Dashboard tab AJAX loaded unrelated legacy modules.' );
+
+$legacyAjaxActions = [
+    'sfpf_toggle_snippet',
+    'sfpf_save_schema_type',
+    'sfpf_save_biography_schema_type',
+    'sfpf_save_rankmath_settings',
+    'sfpf_save_breadcrumb_settings',
+    'sfpf_detect_schema',
+    'sfpf_reprocess_schema',
+    'sfpf_rebuild_all_schema',
+    'sfpf_assign_page',
+    'sfpf_create_page',
+    'sfpf_delete_page',
+    'sfpf_create_navigation_menu',
+    'sfpf_delete_navigation_menu',
+    'sfpf_attach_page_to_menu_item',
+    'sfpf_attach_menu_structure',
+    'sfpf_add_pages_to_menu',
+    'sfpf_save_template',
+    'sfpf_apply_template',
+    'sfpf_apply_default_template',
+    'sfpf_clear_log',
+    'sfpf_save_faq_sets',
+    'sfpf_save_elementor_loops',
+    'sfpf_import_elementor_templates',
+    'sfpf_create_profession_page',
+    'sfpf_delete_profession_page',
+    'sfpf_delete_elementor_template',
+    'sfpf_run_debug',
+    'sfpf_export_debug_report',
+    'sfpf_process_articles',
+];
+foreach ( $legacyAjaxActions as $legacyAjaxAction ) {
+    SFPF\PersonProfile\Admin\Ajax\ModuleLoader::load( $legacyAjaxAction );
+}
 
 $requiredFunctions = [
     'sfpf_person_website\\load_cpt_snippets',
@@ -85,30 +126,7 @@ foreach ( $requiredShortcodes as $shortcode ) {
     $assert( shortcode_exists( $shortcode ), 'Shortcode is missing: ' . $shortcode );
 }
 
-$requiredAjaxActions = [
-    'sfpf_toggle_snippet',
-    'sfpf_save_schema_type',
-    'sfpf_save_biography_schema_type',
-    'sfpf_save_rankmath_settings',
-    'sfpf_save_breadcrumb_settings',
-    'sfpf_detect_schema',
-    'sfpf_reprocess_schema',
-    'sfpf_rebuild_all_schema',
-    'sfpf_save_template',
-    'sfpf_apply_template',
-    'sfpf_apply_default_template',
-    'sfpf_clear_log',
-    'sfpf_save_faq_sets',
-    'sfpf_save_elementor_loops',
-    'sfpf_import_elementor_templates',
-    'sfpf_create_profession_page',
-    'sfpf_delete_profession_page',
-    'sfpf_delete_elementor_template',
-    'sfpf_run_debug',
-    'sfpf_export_debug_report',
-    'sfpf_process_articles',
-];
-foreach ( $requiredAjaxActions as $ajaxAction ) {
+foreach ( $legacyAjaxActions as $ajaxAction ) {
     $assert( false !== has_action( 'wp_ajax_' . $ajaxAction ), 'AJAX action is missing: ' . $ajaxAction );
 }
 
@@ -129,4 +147,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 1.7.2 with healthy Core, complete module callbacks, and guarded runtime hooks.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 1.8.1 with grouped Core tabs, action-scoped AJAX modules, and guarded runtime hooks.' . PHP_EOL;

@@ -70,11 +70,19 @@ function init_plugin() {
         enable_schema_injection();
     }
 
-    // Admin only
-    if (is_admin()) {
+    $doing_ajax = wp_doing_ajax();
+    $ajax_action = $doing_ajax && isset($_REQUEST['action']) && is_scalar($_REQUEST['action'])
+        ? sanitize_key(wp_unslash((string) $_REQUEST['action']))
+        : '';
+
+    // Register the dashboard only where its menu or lazy-tab endpoint is needed.
+    if (is_admin() && (!$doing_ajax || 'sfpf_load_dashboard_tab' === $ajax_action)) {
         require_once SFPF_PLUGIN_DIR . 'admin/settings-dashboard.php';
+    }
+
+    // Legacy handlers are selected by action so unrelated AJAX requests stay lean.
+    if ($doing_ajax) {
         require_once SFPF_PLUGIN_DIR . 'admin/ajax-handlers.php';
-        require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php';
     }
 }
 add_action('init', __NAMESPACE__ . '\\init_plugin', 5);

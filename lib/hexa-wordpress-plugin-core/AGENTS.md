@@ -33,19 +33,25 @@ Each sub-namespace must have a matching folder:
 ```text
 src/ActivityLog/        Hexa\PluginCore\ActivityLog
 src/AcfFieldFactory/    Hexa\PluginCore\AcfFieldFactory
+src/BrandColors/        Hexa\PluginCore\BrandColors
+src/BrandProfiles/      Hexa\PluginCore\BrandProfiles
 src/CoreBootstrap/      Hexa\PluginCore\CoreBootstrap
 src/CoreContracts/      Hexa\PluginCore\CoreContracts
 src/CorePackageUpdates/ Hexa\PluginCore\CorePackageUpdates
 src/CoreRuntime/        Hexa\PluginCore\CoreRuntime
 src/CredentialVault/    Hexa\PluginCore\CredentialVault
 src/DatabaseCleanup/    Hexa\PluginCore\DatabaseCleanup
+src/FrontendForms/      Hexa\PluginCore\FrontendForms
 src/LogFiles/           Hexa\PluginCore\LogFiles
+src/MediaUploads/       Hexa\PluginCore\MediaUploads
 src/ObjectCache/        Hexa\PluginCore\ObjectCache
 src/PluginProvisioning/ Hexa\PluginCore\PluginProvisioning
 src/PluginUpdates/      Hexa\PluginCore\PluginUpdates
 src/SnippetRegistry/    Hexa\PluginCore\SnippetRegistry
 src/ShortcodeRegistry/  Hexa\PluginCore\ShortcodeRegistry
 src/SiteStructure/      Hexa\PluginCore\SiteStructure
+src/SearchDisplay/      Hexa\PluginCore\SearchDisplay
+src/SearchQuery/        Hexa\PluginCore\SearchQuery
 src/SmartSearch/        Hexa\PluginCore\SmartSearch
 src/SystemEnvironment/  Hexa\PluginCore\SystemEnvironment
 src/WpAdminAjax/        Hexa\PluginCore\WpAdminAjax
@@ -78,6 +84,9 @@ Never make a module boot itself at file include time. Modules register hooks fro
 - Put reusable object-cache provider status and activation adapters in `src/ObjectCache`.
 - Put admin tab abstractions in `src/WpAdminTabs`.
 - Put reusable visual primitives in `src/WpAdminComponents`.
+- Put normalized public brand identities in `src/BrandProfiles`; product and service data remains host-owned.
+- Put canonical public field schemas and rich-text normalization in `src/FrontendForms`.
+- Put reusable image validation and Media Library adapters in `src/MediaUploads`; hosts retain nonce, capability, ownership, and retention rules.
 - Put reusable error-log viewer/read/classification features in `src/LogFiles`.
 - Put reusable plugin discovery, install, activation, GitHub ZIP provisioning, and folder-normalization helpers in `src/PluginProvisioning`.
 - Put reusable snippet definitions, option toggles, test rules, related snippets, related shortcodes, basic README rendering, and AJAX handlers in `src/SnippetRegistry`.
@@ -86,6 +95,9 @@ Never make a module boot itself at file include time. Modules register hooks fro
 - Put reusable critical page blueprints, assigned page storage, navigation menu creation, menu structure attachment, and page-to-menu-item tools in `src/SiteStructure`.
 - Put activity log abstractions, storage modes, and the shared dark renderer in `src/ActivityLog`.
 - Put shortcode registries, definitions, display renderers, examples, live output, and testing tools in `src/ShortcodeRegistry`.
+- Put reusable front-end WordPress search-form templates and their shared interaction assets in `src/SearchDisplay`.
+- Put reusable native WordPress search-result matching, bounded term parsing, query configuration, and exact-query SQL scoping in `src/SearchQuery`.
+- Keep all three search domains separate: `SearchDisplay` renders native GET forms, `SearchQuery` changes an explicitly eligible native results query, and `SmartSearch` provides AJAX typeahead/content selection.
 - Put safe constants, INI, shell wrappers, size parsing, CPU/memory detection, and byte formatting in `src/SystemEnvironment`.
 - Put host plugin GitHub/update configuration and updater abstractions in `src/PluginUpdates`.
 - Put vendored core package version checks and core package update UI in `src/CorePackageUpdates`; do not treat the shared core as a WordPress plugin.
@@ -102,6 +114,7 @@ Never make a module boot itself at file include time. Modules register hooks fro
 - Do not hard-code plugin slugs, GitHub repos, admin page slugs, paths, URLs, or versions.
 - Do not duplicate credential/API-key storage or masking in host plugins.
 - Do not duplicate typeahead search UI in host plugins.
+- Never attach broad search SQL permanently. Reject admin, AJAX, REST, cron, feeds, nested queries, empty searches, and unrelated requests before loading host settings; attach `posts_search` only for one exact `WP_Query` object and remove it immediately after use.
 
 ## Documentation Rule
 

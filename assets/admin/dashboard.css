@@ -38,15 +38,6 @@
     overflow-wrap: anywhere;
 }
 
-.sfpf-dashboard-version {
-    color: #646970;
-    flex: 0 0 auto;
-    font-size: 12px;
-    font-weight: 600;
-    margin-left: auto;
-    order: 2;
-}
-
 .sfpf-dashboard-header > div > .notice {
     flex: 0 0 100%;
     margin: 8px 0 0;
@@ -55,68 +46,21 @@
     order: 3;
 }
 
-.sfpf-primary-nav {
-    border-bottom: 1px solid #c3c4c7;
-    display: flex;
-    gap: 2px;
-    margin: 0;
-    overflow-x: auto;
-}
-
-.sfpf-primary-tab {
-    align-items: center;
-    border-bottom: 3px solid transparent;
-    color: #3c434a;
-    display: inline-flex;
-    flex: 0 0 auto;
-    gap: 7px;
-    min-height: 44px;
-    padding: 8px 14px 7px;
-    text-decoration: none;
-}
-
-.sfpf-primary-tab:hover,
-.sfpf-primary-tab:focus {
-    background: #f0f0f1;
-    color: #135e96;
-}
-
-.sfpf-primary-tab.is-active {
-    border-bottom-color: #2271b1;
-    color: #135e96;
-    font-weight: 600;
-}
-
-.sfpf-primary-tab .dashicons {
-    font-size: 17px;
-    height: 17px;
-    width: 17px;
-}
-
-.sfpf-dashboard-workspace {
-    min-width: 0;
-    padding-top: 18px;
-}
-
-.sfpf-section-heading {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.sfpf-section-heading h2 {
-    font-size: 18px;
-    line-height: 1.4;
-    margin: 0;
-}
-
 .sfpf-dashboard-shell .hpc-host-tabs-shell,
 .sfpf-dashboard-shell .hpc-host-tab-panel,
 .sfpf-dashboard-shell .sfpf-card,
 .sfpf-dashboard-shell .sfpf-grid-2 > *,
 .sfpf-dashboard-shell .sfpf-profile-card > * {
     max-width: 100%;
+    min-width: 0;
+}
+
+.sfpf-dashboard-shell .hpc-host-tabs-shell.is-sidebar {
+    min-height: 620px;
+    width: 100%;
+}
+
+.sfpf-dashboard-shell .hpc-host-main {
     min-width: 0;
 }
 
@@ -241,23 +185,6 @@
 
     .sfpf-dashboard-header {
         min-height: 52px;
-    }
-
-    .sfpf-primary-nav {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        overflow: visible;
-    }
-
-    .sfpf-primary-tab {
-        justify-content: flex-start;
-        min-width: 0;
-        width: 100%;
-    }
-
-    .sfpf-dashboard-shell .hpc-host-tabs {
-        overflow-x: auto;
-        white-space: nowrap;
     }
 
     .sfpf-dashboard-shell .hpc-system-checks-head,

@@ -153,6 +153,13 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.8.1
+- Replaced the nested custom dashboard navigation with the current grouped Hexa Core sidebar.
+- Added nonce-protected AJAX loading across all dashboard tabs while preserving direct and legacy URLs.
+- Limited legacy AJAX parsing to the handler required by the current action.
+- Deferred updater presentation to the Overview panel and delivered dashboard CSS without a blocking plugin asset request.
+- Updated the vendored Hexa WordPress Plugin Core to 0.19.77.
+
 ### v1.8.0
 - Moved Organization and Testimonial CPT ownership to HWS Base Tools
 - Retained Book as the only CPT registered by SFPF Person

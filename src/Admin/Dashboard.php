@@ -4,6 +4,7 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\Admin;
 
+use Hexa\PluginCore\CoreRuntime\CoreVersion;
 use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
 use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
@@ -16,49 +17,45 @@ final class Dashboard {
     private const AJAX_ACTION = 'sfpf_load_dashboard_tab';
     private const NONCE_ACTION = 'sfpf_dashboard_tabs';
 
-    private const SECTIONS = [
-        'overview' => [
-            'label' => 'Overview',
-            'icon'  => 'dashicons-dashboard',
-        ],
-        'profile' => [
-            'label' => 'Profile',
-            'icon'  => 'dashicons-admin-users',
-        ],
-        'site' => [
-            'label' => 'Site',
-            'icon'  => 'dashicons-admin-site-alt3',
-        ],
-        'integrations' => [
-            'label' => 'Integrations',
-            'icon'  => 'dashicons-admin-plugins',
-        ],
-        'system' => [
-            'label' => 'System',
-            'icon'  => 'dashicons-admin-tools',
-        ],
+    private const TABS = [
+        'overview'   => [ 'label' => 'Status' ],
+        'settings'   => [ 'label' => 'Settings' ],
+        'shortcodes' => [ 'label' => 'Shortcodes' ],
+        'schema'     => [ 'label' => 'Schema' ],
+        'pages'      => [ 'label' => 'Pages & Menus' ],
+        'templates'  => [ 'label' => 'Templates' ],
+        'faq'        => [ 'label' => 'FAQ Structures' ],
+        'snippets'   => [ 'label' => 'Snippets' ],
+        'debug'      => [ 'label' => 'Debug' ],
     ];
 
-    private const TABS = [
-        'overview' => [
-            'overview' => [ 'label' => 'Status' ],
-        ],
-        'profile' => [
-            'settings'   => [ 'label' => 'Settings' ],
-            'shortcodes' => [ 'label' => 'Shortcodes' ],
-            'schema'     => [ 'label' => 'Schema' ],
-        ],
-        'site' => [
-            'pages'     => [ 'label' => 'Pages & Menus' ],
-            'templates' => [ 'label' => 'Templates' ],
-            'faq'       => [ 'label' => 'FAQ Structures' ],
-        ],
-        'integrations' => [
-            'snippets' => [ 'label' => 'Snippets' ],
-        ],
-        'system' => [
-            'debug' => [ 'label' => 'Debug' ],
-        ],
+    private const GROUPS = [
+        [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
+        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'shortcodes', 'schema' ] ],
+        [ 'label' => 'Site', 'tabs' => [ 'pages', 'templates', 'faq' ] ],
+        [ 'label' => 'Integrations', 'tabs' => [ 'snippets' ] ],
+        [ 'label' => 'System', 'tabs' => [ 'debug', 'hexa-core' ] ],
+    ];
+
+    private const LEGACY_SECTION_DEFAULTS = [
+        'overview'     => 'overview',
+        'profile'      => 'settings',
+        'site'         => 'pages',
+        'integrations' => 'snippets',
+        'system'       => 'debug',
+    ];
+
+    private const TAB_SECTIONS = [
+        'overview'   => 'overview',
+        'settings'   => 'profile',
+        'shortcodes' => 'profile',
+        'schema'     => 'profile',
+        'pages'      => 'site',
+        'templates'  => 'site',
+        'faq'        => 'site',
+        'snippets'   => 'integrations',
+        'debug'      => 'system',
+        'hexa-core'  => 'system',
     ];
 
     private static bool $registered = false;
@@ -105,12 +102,10 @@ final class Dashboard {
             return;
         }
 
-        wp_enqueue_style(
-            'sfpf-person-profile-dashboard',
-            SFPF_PLUGIN_URL . 'assets/admin/dashboard.css',
-            [],
-            SFPF_PLUGIN_VERSION
-        );
+        $css = self::dashboardCss();
+        if ( '' !== $css ) {
+            wp_add_inline_style( 'common', $css );
+        }
     }
 
     public static function render(): void {
@@ -118,68 +113,57 @@ final class Dashboard {
             wp_die( esc_html__( 'You do not have permission to view this page.', 'sfpf-person-profile-integration' ) );
         }
 
-        $section = self::currentSection();
-        $tab     = self::currentTab( $section );
-        $tabs    = self::tabsForSection( $section );
+        $tabs = self::tabs();
+        $tab  = self::currentTab( $tabs );
         ?>
         <div class="wrap sfpf-dashboard sfpf-dashboard-shell">
             <header class="sfpf-dashboard-header">
                 <div>
                     <h1>SFPF Person Profile</h1>
-                    <span class="sfpf-dashboard-version">v<?php echo esc_html( SFPF_PLUGIN_VERSION ); ?></span>
                 </div>
             </header>
 
-            <nav class="sfpf-primary-nav" aria-label="SFPF areas">
-                <?php foreach ( self::SECTIONS as $sectionId => $definition ) :
-                    $firstTab = self::firstTab( $sectionId );
-                    $url       = self::dashboardUrl( $sectionId, $firstTab );
-                    $active    = $sectionId === $section;
-                    ?>
-                    <a class="sfpf-primary-tab<?php echo $active ? ' is-active' : ''; ?>"
-                       href="<?php echo esc_url( $url ); ?>"
-                       aria-current="<?php echo $active ? 'page' : 'false'; ?>">
-                        <span class="dashicons <?php echo esc_attr( $definition['icon'] ); ?>" aria-hidden="true"></span>
-                        <span><?php echo esc_html( $definition['label'] ); ?></span>
-                    </a>
-                <?php endforeach; ?>
-            </nav>
-
-            <main class="sfpf-dashboard-workspace">
-                <div class="sfpf-section-heading">
-                    <h2><?php echo esc_html( self::SECTIONS[ $section ]['label'] ); ?></h2>
-                </div>
-                <?php
-                ( new HostTabsRenderer() )->render(
-                    [
-                        'tabs'            => $tabs,
-                        'active'          => $tab,
-                        'page_url'        => self::sectionUrl( $section ),
-                        'ajax_action'     => self::AJAX_ACTION,
-                        'nonce'           => wp_create_nonce( self::NONCE_ACTION ),
-                        'nonce_field'     => 'nonce',
-                        'root_id'         => 'sfpf-secondary-tabs',
-                        'panel_id'        => 'sfpf-dashboard-panel',
-                        'label'           => self::SECTIONS[ $section ]['label'] . ' views',
-                        'render_callback' => [ self::class, 'renderPanel' ],
-                    ]
-                );
-                ?>
-            </main>
+            <?php
+            ( new HostTabsRenderer() )->render(
+                [
+                    'tabs'                => $tabs,
+                    'active'              => $tab,
+                    'page_url'            => self::pageUrl(),
+                    'ajax_action'         => self::AJAX_ACTION,
+                    'nonce'               => wp_create_nonce( self::NONCE_ACTION ),
+                    'nonce_field'         => 'nonce',
+                    'root_id'             => 'sfpf-person-profile-tabs',
+                    'panel_id'            => 'sfpf-dashboard-panel',
+                    'label'               => 'SFPF Person Profile sections',
+                    'layout'              => 'sidebar',
+                    'groups'              => self::GROUPS,
+                    'sidebar_identity'    => [
+                        'plugin_name'     => 'SFPF Person Profile',
+                        'current_version' => SFPF_PLUGIN_VERSION,
+                        'github_url'      => 'https://github.com/mikeyperes/sfpf-person-profile-integration',
+                        'core_name'       => CoreVersion::PACKAGE_NAME,
+                        'core_version'    => CoreVersion::current(),
+                        'core_github_url' => 'https://github.com/mikeyperes/hexa-wordpress-plugin-core',
+                    ],
+                    'sidebar_collapsible' => true,
+                    'sidebar_collapsed'   => false,
+                    'sidebar_persist'     => true,
+                    'render_callback'     => [ self::class, 'renderPanel' ],
+                ]
+            );
+            ?>
             <?php self::renderLegacyHashRedirect(); ?>
         </div>
         <?php
     }
 
     public static function loadTab( AjaxRequest $request ): array {
-        $tab     = $request->key( 'tab', '', 'post' );
-        $section = self::sectionForTab( $tab );
+        $tabs = self::tabs();
+        $tab  = $request->key( 'tab', '', 'post' );
 
-        if ( null === $section ) {
+        if ( ! isset( $tabs[ $tab ] ) ) {
             throw AjaxFailure::not_found( 'Unknown dashboard tab.', 'unknown_tab' );
         }
-
-        $tabs = self::tabsForSection( $section );
 
         ob_start();
         self::renderPanel( $tab );
@@ -188,8 +172,8 @@ final class Dashboard {
         return [
             'html'    => $html,
             'tab'     => $tab,
-            'section' => $section,
-            'label'   => self::tabLabel( $tabs[ $tab ] ?? $tab ),
+            'section' => self::legacySectionForTab( $tab ),
+            'label'   => self::tabLabel( $tabs[ $tab ] ),
         ];
     }
 
@@ -198,10 +182,13 @@ final class Dashboard {
             return;
         }
 
-        $section = self::sectionForTab( $tab );
-        if ( null === $section ) {
+        if ( ! isset( self::TABS[ $tab ] ) ) {
             echo '<div class="notice notice-warning"><p>Dashboard panel not found.</p></div>';
             return;
+        }
+
+        if ( 'overview' === $tab ) {
+            require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php';
         }
 
         $file = SFPF_PLUGIN_DIR . 'admin/dashboard-' . $tab . '.php';
@@ -213,52 +200,31 @@ final class Dashboard {
         include $file;
     }
 
-    private static function currentSection(): string {
-        $requested = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
-        if ( isset( self::SECTIONS[ $requested ] ) ) {
+    /** @param array<string,mixed> $tabs */
+    private static function currentTab( array $tabs ): string {
+        $requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+        if ( isset( $tabs[ $requested ] ) ) {
             return $requested;
         }
 
-        $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
-        return self::sectionForTab( $tab ) ?? 'overview';
-    }
-
-    private static function currentTab( string $section ): string {
-        $tabs      = self::tabsForSection( $section );
-        $requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
-
-        return isset( $tabs[ $requested ] ) ? $requested : self::firstTab( $section );
-    }
-
-    private static function tabsForSection( string $section ): array {
-        $tabs = self::TABS[ $section ] ?? [];
-
-        if ( 'system' === $section ) {
-            $tabs = apply_filters( 'sfpf_dashboard_tabs', $tabs );
+        $section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
+        $legacy  = self::LEGACY_SECTION_DEFAULTS[ $section ] ?? 'overview';
+        if ( isset( $tabs[ $legacy ] ) ) {
+            return $legacy;
         }
 
-        return is_array( $tabs ) ? $tabs : [];
-    }
-
-    private static function firstTab( string $section ): string {
-        $tabs = self::tabsForSection( $section );
         $keys = array_keys( $tabs );
-
         return isset( $keys[0] ) ? (string) $keys[0] : 'overview';
     }
 
-    private static function sectionForTab( string $tab ): ?string {
-        if ( '' === $tab ) {
-            return null;
-        }
+    /** @return array<string,mixed> */
+    private static function tabs(): array {
+        $tabs = apply_filters( 'sfpf_dashboard_tabs', self::TABS );
+        return is_array( $tabs ) ? $tabs : self::TABS;
+    }
 
-        foreach ( array_keys( self::SECTIONS ) as $section ) {
-            if ( isset( self::tabsForSection( $section )[ $tab ] ) ) {
-                return $section;
-            }
-        }
-
-        return null;
+    private static function legacySectionForTab( string $tab ): string {
+        return self::TAB_SECTIONS[ $tab ] ?? 'system';
     }
 
     private static function tabLabel( mixed $tab ): string {
@@ -269,26 +235,14 @@ final class Dashboard {
         return (string) $tab;
     }
 
-    private static function sectionUrl( string $section ): string {
-        return add_query_arg(
-            [
-                'page'    => self::PAGE_SLUG,
-                'section' => $section,
-            ],
-            admin_url( 'options-general.php' )
-        );
-    }
-
-    private static function dashboardUrl( string $section, string $tab ): string {
-        return add_query_arg( 'tab', $tab, self::sectionUrl( $section ) );
+    private static function pageUrl(): string {
+        return add_query_arg( 'page', self::PAGE_SLUG, admin_url( 'options-general.php' ) );
     }
 
     private static function renderLegacyHashRedirect(): void {
         $urls = [];
-        foreach ( array_keys( self::SECTIONS ) as $section ) {
-            foreach ( array_keys( self::tabsForSection( $section ) ) as $tab ) {
-                $urls[ $tab ] = self::dashboardUrl( $section, $tab );
-            }
+        foreach ( array_keys( self::tabs() ) as $tab ) {
+            $urls[ $tab ] = add_query_arg( 'tab', $tab, self::pageUrl() );
         }
         ?>
         <script>
@@ -299,5 +253,18 @@ final class Dashboard {
         })();
         </script>
         <?php
+    }
+
+    private static function dashboardCss(): string {
+        static $css = null;
+
+        if ( is_string( $css ) ) {
+            return $css;
+        }
+
+        $path = SFPF_PLUGIN_DIR . 'assets/admin/dashboard.css';
+        $css  = is_readable( $path ) ? (string) file_get_contents( $path ) : '';
+
+        return $css;
     }
 }

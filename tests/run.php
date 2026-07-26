@@ -93,8 +93,8 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( version_compare( $headerVersion, '1.8.0', '>=' ), 'Plugin version is older than the HWS ownership release.' );
-$assert( '0.19.40' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.40.' );
+$assert( '1.8.1' === $headerVersion, 'Plugin version is not 1.8.1.' );
+$assert( '0.19.77' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.77.' );
 
 $sourceFiles = [];
 $scanDirectories = [ 'admin', 'includes', 'schema', 'snippets', 'src' ];
@@ -132,6 +132,22 @@ $assert( false !== strpos( $coreIntegration, 'CoreBootstrap' ), 'Core integratio
 $assert( false !== strpos( $coreIntegration, 'UpdaterAjaxController' ), 'Core updater controller is not registered.' );
 $assert( false !== strpos( $dashboard, 'HostTabsRenderer' ), 'Dashboard does not use the shared tab renderer.' );
 $assert( false !== strpos( $dashboard, 'AjaxActionRegistry' ), 'Dashboard lazy-tab endpoint is not guarded by the shared AJAX registry.' );
+$assert(
+    1 === preg_match( "/'layout'\\s*=>\\s*'sidebar'/", $dashboard )
+    && false !== strpos( $dashboard, "'groups'" )
+    && false !== strpos( $dashboard, 'sidebar_identity' ),
+    'Dashboard does not use the complete grouped Core sidebar structure.'
+);
+$assert(
+    false === strpos( $dashboard, 'sfpf-primary-nav' )
+    && false === strpos( $dashboardCss, '.sfpf-primary-nav' ),
+    'Legacy primary tab navigation remains in the dashboard.'
+);
+$assert(
+    false !== strpos( $dashboard, "wp_add_inline_style( 'common'" )
+    && false === strpos( $dashboard, 'wp_enqueue_style(' ),
+    'Dashboard CSS is not delivered inline through the existing admin stylesheet.'
+);
 
 foreach ( [ 'Overview', 'Profile', 'Site', 'Integrations', 'System' ] as $area ) {
     $assert( false !== strpos( $dashboard, "'label' => '" . $area . "'" ), 'Dashboard area missing: ' . $area );
@@ -154,6 +170,25 @@ $assert( substr_count( $initialization, PHP_EOL ) < 100, 'Plugin bootstrap is no
 $assert( substr_count( $ajaxHandlers, PHP_EOL ) < 30, 'Legacy AJAX loader is no longer thin.' );
 $assert( false !== strpos( $runtimeLoader, 'final class LegacyModuleLoader' ), 'Runtime module loader is missing.' );
 $assert( false !== strpos( $ajaxModuleLoader, 'final class ModuleLoader' ), 'AJAX module loader is missing.' );
+$assert(
+    false !== strpos( $lifecycle, "'sfpf_load_dashboard_tab' === \$ajax_action" )
+    && false !== strpos( $lifecycle, 'if ($doing_ajax)' )
+    && false === strpos( $lifecycle, "require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php'" ),
+    'Admin lifecycle still eagerly loads dashboard, AJAX, or updater presentation code.'
+);
+$assert(
+    false !== strpos( $ajaxModuleLoader, 'private const ACTION_MODULES' )
+    && false !== strpos( $ajaxModuleLoader, "'sfpf_detect_schema'" )
+    && false !== strpos( $ajaxModuleLoader, "'admin/ajax/schema-checklist.php'" )
+    && false !== strpos( $ajaxModuleLoader, 'requestAction()' )
+    && false === strpos( $ajaxModuleLoader, 'private const MODULES' ),
+    'Legacy AJAX modules are not selected narrowly from the requested action.'
+);
+$assert(
+    false !== strpos( $dashboard, "if ( 'overview' === \$tab )" )
+    && false !== strpos( $dashboard, "admin/dashboard-plugin-info.php" ),
+    'Updater presentation is not lazy-loaded only for the overview panel.'
+);
 
 $boundedModules = [
     'includes/runtime/lifecycle.php',

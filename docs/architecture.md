@@ -7,8 +7,8 @@
 - includes/runtime contains lifecycle, ACF-profile, diagnostics, SEO, and profile-admin compatibility callbacks.
 - includes/shortcodes contains shortcode domains and their rendering helpers.
 - includes/frontend contains frontend route renderers that are not shortcode handlers.
-- admin/ajax-handlers.php is a compatibility entry point only.
-- admin/ajax separates settings, schema, site structure, templates, Elementor, professions, diagnostics, and article actions.
+- admin/ajax-handlers.php is a compatibility entry point that loads only the module mapped to the current AJAX action.
+- admin/ajax separates settings, schema, site structure, templates, Elementor, professions, diagnostics, and article actions; ordinary admin, dashboard-tab, and unrelated AJAX requests do not parse these modules.
 - lib/hexa-wordpress-plugin-core is a vendored copy of canonical Core and is never the source-of-truth editing location.
 
 ## Compatibility Policy
@@ -17,7 +17,7 @@ Public shortcodes, action names, filters, and procedural callback names remain i
 
 ## Shared Core Policy
 
-Generic admin tabs, updater controls, AJAX request guards, site-structure services, and reusable UI primitives belong in Hexa WordPress Plugin Core. SFPF modules own only person-profile behavior and host-specific callback mapping.
+Generic grouped admin tabs, updater controls, AJAX request guards, site-structure services, and reusable UI primitives belong in Hexa WordPress Plugin Core. SFPF owns the tab catalog, person-profile panels, and host-specific callback mapping.
 
 ## Regression Limits
 

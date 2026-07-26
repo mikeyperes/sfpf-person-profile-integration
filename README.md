@@ -153,6 +153,10 @@ add_action('sfpf_page_created', function($page_id, $page_key) {
 
 ## Changelog
 
+### v1.8.2
+- Removed an obsolete site-structure action mapping that is not part of the shared Core controller contract.
+- Aligned the live integration suite with the supported page and navigation actions.
+
 ### v1.8.1
 - Replaced the nested custom dashboard navigation with the current grouped Hexa Core sidebar.
 - Added nonce-protected AJAX loading across all dashboard tabs while preserving direct and legacy URLs.

@@ -37,7 +37,6 @@ function register_site_structure_ajax() {
             'delete_navigation_menu' => 'sfpf_delete_navigation_menu',
             'attach_page_to_menu_item' => 'sfpf_attach_page_to_menu_item',
             'attach_menu_structure' => 'sfpf_attach_menu_structure',
-            'add_pages_to_menu' => 'sfpf_add_pages_to_menu',
         ],
     ]))->register();
 }

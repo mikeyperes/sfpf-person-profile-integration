@@ -93,7 +93,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '1.8.1' === $headerVersion, 'Plugin version is not 1.8.1.' );
+$assert( '1.8.2' === $headerVersion, 'Plugin version is not 1.8.2.' );
 $assert( '0.19.77' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.77.' );
 
 $sourceFiles = [];
@@ -183,6 +183,12 @@ $assert(
     && false !== strpos( $ajaxModuleLoader, 'requestAction()' )
     && false === strpos( $ajaxModuleLoader, 'private const MODULES' ),
     'Legacy AJAX modules are not selected narrowly from the requested action.'
+);
+$assert(
+    false === strpos( $ajaxModuleLoader, 'sfpf_add_pages_to_menu' )
+    && false === strpos( $read( $root . '/admin/ajax/site-structure.php' ), 'sfpf_add_pages_to_menu' )
+    && false === strpos( $read( $root . '/admin/dashboard-pages.php' ), 'sfpf_add_pages_to_menu' ),
+    'Unsupported legacy site-structure actions remain advertised.'
 );
 $assert(
     false !== strpos( $dashboard, "if ( 'overview' === \$tab )" )

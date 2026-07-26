@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '1.8.1' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '1.8.2' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '0.19.77', '>=' ), 'Selected Core version is older than 0.19.77.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -61,7 +61,6 @@ $legacyAjaxActions = [
     'sfpf_delete_navigation_menu',
     'sfpf_attach_page_to_menu_item',
     'sfpf_attach_menu_structure',
-    'sfpf_add_pages_to_menu',
     'sfpf_save_template',
     'sfpf_apply_template',
     'sfpf_apply_default_template',
@@ -147,4 +146,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 1.8.1 with grouped Core tabs, action-scoped AJAX modules, and guarded runtime hooks.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 1.8.2 with grouped Core tabs, action-scoped AJAX modules, and guarded runtime hooks.' . PHP_EOL;

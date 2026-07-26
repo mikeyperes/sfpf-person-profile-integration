@@ -23,7 +23,6 @@ final class ModuleLoader {
         'sfpf_delete_navigation_menu'          => [ 'admin/ajax/site-structure.php' ],
         'sfpf_attach_page_to_menu_item'        => [ 'admin/ajax/site-structure.php' ],
         'sfpf_attach_menu_structure'           => [ 'admin/ajax/site-structure.php' ],
-        'sfpf_add_pages_to_menu'               => [ 'admin/ajax/site-structure.php' ],
         'sfpf_save_template'                   => [ 'admin/ajax/templates.php' ],
         'sfpf_apply_template'                  => [ 'admin/ajax/templates.php' ],
         'sfpf_apply_default_template'          => [ 'admin/ajax/templates.php' ],

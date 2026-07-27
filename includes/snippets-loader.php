@@ -19,51 +19,9 @@ defined('ABSPATH') || exit;
  * @return array Snippets array
  */
 function get_snippets($type = 'all') {
-    $snippets = [
-        // CPT Snippets
-        [
-            'id' => 'sfpf_enable_book_cpt',
-            'name' => 'Book Custom Post Type',
-            'description' => 'Registers the "book" custom post type for managing publications.',
-            'file' => 'register-cpt-book.php',
-            'type' => 'cpt',
-            'info' => 'Post type: book | Archive: /books/',
-        ],
-        
-        // ACF Snippets
-        [
-            'id' => 'sfpf_enable_book_acf',
-            'name' => 'Book ACF Fields',
-            'description' => 'Adds custom fields to books: URLs, description, author bio, featured content, etc. Book images use the native featured image.',
-            'file' => 'register-acf-book.php',
-            'type' => 'acf',
-            'info' => 'Fields: audible_url, google_books_url, goodreads_url, amazon_url, description, author_bio, subtitle, featured, featured_content',
-        ],
-        [
-            'id' => 'sfpf_enable_organization_acf',
-            'name' => 'Organization ACF Fields',
-            'description' => 'Adds custom fields to organizations: logo, description, URLs, founder, etc.',
-            'file' => 'register-acf-organization.php',
-            'type' => 'acf',
-            'info' => 'Fields: logo, description, website, social URLs, founding_date, founder, naics, employees',
-        ],
-        [
-            'id' => 'sfpf_enable_user_schema_acf',
-            'name' => 'User Schema.org ACF Fields',
-            'description' => 'Adds Schema.org structured data fields to user profiles: entity type, education, sameas, headquarters.',
-            'file' => 'register-acf-user-schema.php',
-            'type' => 'acf',
-            'info' => 'Fields: entity_type (Person/Organization), education (repeater), inception_date, headquarters, sameas',
-        ],
-        [
-            'id' => 'sfpf_enable_homepage_acf',
-            'name' => 'Homepage ACF Fields',
-            'description' => 'Adds schema field to the front page for managing homepage schema.',
-            'file' => 'register-acf-homepage.php',
-            'type' => 'acf',
-            'info' => 'Detects front page and adds: schema (readonly), schema_type selection',
-        ],
-    ];
+    // CPT and ACF controls now live exclusively in the Core-rendered
+    // Custom Post Types tab. The legacy option names remain supported there.
+    $snippets = [];
     
     if ($type === 'all') {
         return $snippets;

@@ -15,13 +15,8 @@ defined('ABSPATH') || exit;
 /**
  * Register the Organization ACF field group
  */
-function register_organization_acf_fields() {
-
-    if (!function_exists('acf_add_local_field_group')) {
-        return;
-    }
-
-    acf_add_local_field_group([
+function organization_acf_field_group(): array {
+    return [
         'key' => 'group_sfpf_organization',
         'title' => 'Organization Details',
         'fields' => [
@@ -609,7 +604,7 @@ function register_organization_acf_fields() {
         'instruction_placement' => 'label',
         'active' => true,
         'show_in_rest' => 1,
-    ]);
+    ];
 }
 
 /**
@@ -622,6 +617,6 @@ function build_organization_schema_on_save($post_id) {
 
     $schema = build_organization_schema($post_id);
     if (!empty($schema)) {
-        update_field('schema_markup', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $post_id);
+        update_field('schema_markup', schema_json($schema), $post_id);
     }
 }

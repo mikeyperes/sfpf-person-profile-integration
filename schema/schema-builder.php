@@ -61,6 +61,14 @@ function _single_or_array($arr) {
     return count($arr) === 1 ? $arr[0] : $arr;
 }
 
+/** Encode schema through the shared Hexa WP Core renderer. */
+function schema_json($schema) {
+    if (!is_array($schema) || empty($schema) || !class_exists('\\Hexa\\PluginCore\\SchemaTools\\SchemaDocumentRenderer')) {
+        return '';
+    }
+    return (new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer())->json($schema);
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  PERSON
@@ -359,7 +367,7 @@ function build_homepage_schema_for_injection($schema_type, $page_id = null) {
             break;
     }
 
-    return json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    return schema_json($schema);
 }
 
 // Backward-compat wrappers

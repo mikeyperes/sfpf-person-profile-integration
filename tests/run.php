@@ -27,6 +27,9 @@ $requiredFiles = [
     'src/Plugin.php',
     'src/Core/CoreIntegration.php',
     'src/Admin/Dashboard.php',
+    'src/ContentTypes/PersonContentTypes.php',
+    'src/Schema/SchemaProvider.php',
+    'admin/dashboard-content-types.php',
     'assets/admin/dashboard.css',
     'includes/elementor-social-icons.php',
     'snippets/register-acf-user-schema.php',
@@ -82,6 +85,10 @@ $ajaxHandlers = $read( $root . '/admin/ajax-handlers.php' );
 $ajaxSupport = $read( $root . '/admin/ajax/support.php' );
 $runtimeLoader = $read( $root . '/src/Runtime/LegacyModuleLoader.php' );
 $ajaxModuleLoader = $read( $root . '/src/Admin/Ajax/ModuleLoader.php' );
+$contentTypes = $read( $root . '/src/ContentTypes/PersonContentTypes.php' );
+$schemaProvider = $read( $root . '/src/Schema/SchemaProvider.php' );
+$helperFunctions = $read( $root . '/includes/helper-functions.php' );
+$faqShortcodes = $read( $root . '/includes/shortcodes/faq.php' );
 
 preg_match( '/Version:\s*([0-9.]+)/', $initialization, $headerMatch );
 preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)['\"]/", $initialization, $constantMatch );
@@ -93,8 +100,8 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '1.8.2' === $headerVersion, 'Plugin version is not 1.8.2.' );
-$assert( '0.19.77' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.77.' );
+$assert( '1.8.3' === $headerVersion, 'Plugin version is not 1.8.3.' );
+$assert( '0.19.78' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 0.19.78.' );
 
 $sourceFiles = [];
 $scanDirectories = [ 'admin', 'includes', 'schema', 'snippets', 'src' ];
@@ -149,7 +156,7 @@ $assert(
     'Dashboard CSS is not delivered inline through the existing admin stylesheet.'
 );
 
-foreach ( [ 'Overview', 'Profile', 'Site', 'Integrations', 'System' ] as $area ) {
+foreach ( [ 'Overview', 'Profile', 'Site', 'System' ] as $area ) {
     $assert( false !== strpos( $dashboard, "'label' => '" . $area . "'" ), 'Dashboard area missing: ' . $area );
 }
 
@@ -267,8 +274,10 @@ $assert(
 $assert(
     false === strpos( $lifecycle, 'register-cpt-organization.php' )
     && false === strpos( $lifecycle, 'register-cpt-testimonial.php' )
-    && false !== strpos( $lifecycle, 'register-cpt-book.php' ),
-    'Person lifecycle does not exclusively register the Book CPT.'
+    && false === strpos( $lifecycle, 'register-cpt-book.php' )
+    && false !== strpos( $contentTypes, "'key' => 'book'" )
+    && false !== strpos( $coreIntegration, 'PersonContentTypes::content_types()' ),
+    'Book registration does not run exclusively through the Core content-type registry.'
 );
 $assert(
     false !== strpos( $lifecycle, "'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization'" )
@@ -281,14 +290,39 @@ $assert(
     'Person Config still advertises shared CPT ownership.'
 );
 $assert(
-    false !== strpos( $lifecycle, 'SMC\\\\OrganizationProfile\\\\Acf\\\\OrganizationFields' )
+    false !== strpos( $contentTypes, 'OrganizationProfile' )
+    && false !== strpos( $contentTypes, 'OrganizationFields' )
     && false !== strpos( $organizationShortcode, 'SMC\\\\OrganizationProfile\\\\Shortcodes\\\\OrganizationShortcode' ),
     'Person ACF or shortcode compatibility does not defer to SMC ownership.'
 );
 $assert(
     false !== strpos( $schemaBuilder, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' )
-    && false !== strpos( $schemaInjector, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' ),
+    && false !== strpos( $schemaProvider, 'OrganizationSchema' ),
     'Person organization schema compatibility does not delegate to SMC.'
+);
+$assert(
+    false !== strpos( $coreIntegration, 'CoreSchemaInjector' )
+    && false !== strpos( $coreIntegration, "[ SchemaProvider::class, 'current' ]" )
+    && false !== strpos( $schemaInjector, 'SchemaDocumentRenderer' )
+    && false !== strpos( $schemaBuilder, 'SchemaDocumentRenderer' ),
+    'Person schema injection, rendering, and stored JSON do not use Hexa WP Core.'
+);
+$assert(
+    false !== strpos( $contentTypes, 'AcfFieldGroupRegistry' )
+    && false !== strpos( $read( $root . '/admin/dashboard-content-types.php' ), 'AcfFieldGroupRenderer' )
+    && false !== strpos( $read( $root . '/admin/dashboard-content-types.php' ), 'ContentTypeRenderer' ),
+    'CPT and standalone ACF registration/UI are not both delegated to Hexa WP Core.'
+);
+$assert(
+    false !== strpos( $helperFunctions, 'CanonicalEntityResolver::resolve()' )
+    && false !== strpos( $helperFunctions, "get_hws_primary_entity(['person'])" )
+    && false !== strpos( $helperFunctions, "['attached_user_id']" ),
+    'Founder resolution does not consume the optional canonical HWS entity and its bound author.'
+);
+$assert(
+    false !== strpos( $faqShortcodes, 'FaqSourceResolver' )
+    && false !== strpos( $faqShortcodes, 'FaqSetManager' ),
+    'Person FAQ source, renderer, and schema paths do not use Hexa WP Core.'
 );
 
 
@@ -344,6 +378,10 @@ $assert(
     sfpf_person_website\filter_empty_elementor_social_icons( $html, $widget ) === $html,
     'Social filter toggle does not preserve original HTML when disabled.'
 );
+
+$canonicalTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/canonical-entity.php' );
+passthru( $canonicalTest, $canonicalStatus );
+$assert( 0 === $canonicalStatus, 'Canonical HWS entity regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

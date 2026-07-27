@@ -29,6 +29,14 @@ function sfpf_faq_manager() {
     return $manager;
 }
 
+function sfpf_faq_source_resolver() {
+    static $resolver = null;
+    if (null === $resolver) {
+        $resolver = new \Hexa\PluginCore\FaqSets\FaqSourceResolver(sfpf_faq_manager());
+    }
+    return $resolver;
+}
+
 function get_faq_set_by_slug($slug) {
     $faq_sets = get_option("sfpf_faq_sets", []);
 
@@ -156,7 +164,7 @@ function sfpf_faq_schema_shortcode($atts) {
 add_shortcode('sfpf_faq_schema', __NAMESPACE__ . '\\sfpf_faq_schema_shortcode');
 
 function founder_display_faq($user_id, $atts = []) {
-    $items = sfpf_normalize_faq_items(function_exists("get_field") ? get_field("faq", "user_" . $user_id) : []);
+    $items = sfpf_faq_source_resolver()->acf("user_" . (int) $user_id, "faq");
     $format = strtolower((string) ($atts["format"] ?? "accordion"));
     $style = strtolower((string) ($atts["style"] ?? $format));
 

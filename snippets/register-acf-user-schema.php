@@ -34,12 +34,8 @@ defined('ABSPATH') || exit;
 /**
  * Register ACF User fields: Schema.org Structured Data
  */
-function register_user_schema_acf_fields() {
-    if (!function_exists('acf_add_local_field_group')) {
-        return;
-    }
-
-    acf_add_local_field_group([
+function user_schema_acf_field_group(): array {
+    return [
         'key'                   => 'group_sfpf_user_schema_structures',
         'title'                 => 'Schema.org Structured Data',
         'fields'                => [
@@ -786,13 +782,11 @@ function register_user_schema_acf_fields() {
         'active'                => true,
         'description'           => 'Configure Schema.org structured data for this user profile.',
         'show_in_rest'          => 0,
-    ]);
-
-    // Add admin CSS/JS for entity type visibility + styling
-    // Use BOTH hooks for maximum reliability
-    add_action('admin_head', __NAMESPACE__ . '\\user_schema_admin_styles', 99);
-    add_action('admin_footer', __NAMESPACE__ . '\\user_schema_admin_styles', 5);
+    ];
 }
+
+add_action('admin_head', __NAMESPACE__ . '\\user_schema_admin_styles', 99);
+add_action('admin_footer', __NAMESPACE__ . '\\user_schema_admin_styles', 5);
 
 /**
  * Add admin styles for user schema fields

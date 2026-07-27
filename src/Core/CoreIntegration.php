@@ -9,8 +9,11 @@ use Hexa\PluginCore\CoreRuntime\PluginContext;
 use Hexa\PluginCore\PluginUpdates\GitHubPluginUpdater;
 use Hexa\PluginCore\PluginUpdates\UpdaterAjaxController;
 use Hexa\PluginCore\PluginUpdates\UpdaterConfig;
+use Hexa\PluginCore\SchemaTools\SchemaInjector as CoreSchemaInjector;
 use Hexa\PluginCore\WpAdminTabs\CoreTabConfig;
 use Hexa\PluginCore\WpAdminTabs\CoreTabModule;
+use SFPF\PersonProfile\ContentTypes\PersonContentTypes;
+use SFPF\PersonProfile\Schema\SchemaProvider;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -20,6 +23,9 @@ final class CoreIntegration {
     private static ?UpdaterConfig $updaterConfig = null;
 
     public static function boot(): void {
+        require_once dirname( __DIR__ ) . '/ContentTypes/PersonContentTypes.php';
+        require_once dirname( __DIR__ ) . '/Schema/SchemaProvider.php';
+
         if ( self::$bootstrap instanceof CoreBootstrap || ! self::classesAvailable() ) {
             return;
         }
@@ -42,7 +48,15 @@ final class CoreIntegration {
 
         $bootstrap
             ->add_module( new GitHubPluginUpdater( $updater ) )
-            ->add_module( new UpdaterAjaxController( $updater ) );
+            ->add_module( new UpdaterAjaxController( $updater ) )
+            ->add_module( PersonContentTypes::content_types() )
+            ->add_module( PersonContentTypes::acf_groups() )
+            ->add_module(
+                new CoreSchemaInjector(
+                    [ SchemaProvider::class, 'current' ],
+                    [ 'hook' => 'wp_head', 'priority' => 1, 'script_id' => 'sfpf-person-website-schema' ]
+                )
+            );
 
         if ( is_admin() || wp_doing_ajax() ) {
             $bootstrap->add_module(

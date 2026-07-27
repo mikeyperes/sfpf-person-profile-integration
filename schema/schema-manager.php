@@ -88,7 +88,7 @@ function save_post_schema($post_id, $schema) {
     if (is_array($schema)) {
         // Remove empty values before encoding
         $schema = sanitize_schema($schema);
-        $schema = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $schema = schema_json($schema);
     }
 
     if (!is_string($schema) || trim($schema) === '') {
@@ -173,9 +173,7 @@ function generate_and_save_schema($post_id) {
     // Save the schema
     if (save_post_schema($post_id, $schema)) {
         $result['success'] = true;
-        $result['schema'] = is_array($schema) 
-            ? json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-            : $schema;
+        $result['schema'] = is_array($schema) ? schema_json($schema) : $schema;
         $result['message'] = 'Schema generated successfully';
     } else {
         $result['message'] = 'Failed to save schema';

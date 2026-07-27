@@ -20,20 +20,19 @@ final class Dashboard {
     private const TABS = [
         'overview'   => [ 'label' => 'Status' ],
         'settings'   => [ 'label' => 'Settings' ],
+        'content-types' => [ 'label' => 'Custom Post Types' ],
         'shortcodes' => [ 'label' => 'Shortcodes' ],
         'schema'     => [ 'label' => 'Schema' ],
         'pages'      => [ 'label' => 'Pages & Menus' ],
         'templates'  => [ 'label' => 'Templates' ],
         'faq'        => [ 'label' => 'FAQ Structures' ],
-        'snippets'   => [ 'label' => 'Snippets' ],
         'debug'      => [ 'label' => 'Debug' ],
     ];
 
     private const GROUPS = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'shortcodes', 'schema' ] ],
+        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'content-types', 'shortcodes', 'schema' ] ],
         [ 'label' => 'Site', 'tabs' => [ 'pages', 'templates', 'faq' ] ],
-        [ 'label' => 'Integrations', 'tabs' => [ 'snippets' ] ],
         [ 'label' => 'System', 'tabs' => [ 'debug', 'hexa-core' ] ],
     ];
 
@@ -41,19 +40,19 @@ final class Dashboard {
         'overview'     => 'overview',
         'profile'      => 'settings',
         'site'         => 'pages',
-        'integrations' => 'snippets',
+        'integrations' => 'content-types',
         'system'       => 'debug',
     ];
 
     private const TAB_SECTIONS = [
         'overview'   => 'overview',
         'settings'   => 'profile',
+        'content-types' => 'profile',
         'shortcodes' => 'profile',
         'schema'     => 'profile',
         'pages'      => 'site',
         'templates'  => 'site',
         'faq'        => 'site',
-        'snippets'   => 'integrations',
         'debug'      => 'system',
         'hexa-core'  => 'system',
     ];

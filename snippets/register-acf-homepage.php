@@ -15,15 +15,7 @@ defined('ABSPATH') || exit;
 /**
  * Register the Homepage ACF field group
  */
-function register_homepage_acf_fields() {
-    
-    if (!function_exists('acf_add_local_field_group')) {
-        return;
-    }
-    
-    // Add admin footer scripts for the homepage editor
-    add_action('admin_footer', __NAMESPACE__ . '\\homepage_schema_admin_scripts');
-    
+function homepage_acf_field_group(): array {
     // Use page_type location rule for front page
     $location = [
         [
@@ -35,7 +27,7 @@ function register_homepage_acf_fields() {
         ],
     ];
     
-    acf_add_local_field_group([
+    return [
         'key' => 'group_sfpf_homepage',
         'title' => 'Homepage Schema',
         'fields' => [
@@ -110,9 +102,10 @@ function register_homepage_acf_fields() {
         'instruction_placement' => 'label',
         'active' => true,
         'show_in_rest' => 0,
-    ]);
-    
+    ];
 }
+
+add_action('admin_footer', __NAMESPACE__ . '\\homepage_schema_admin_scripts');
 
 /**
  * Add JavaScript for schema preview and reprocessing on homepage editor

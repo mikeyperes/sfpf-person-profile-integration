@@ -38,19 +38,6 @@ function migrate_shared_content_type_ownership(): void {
 add_action( 'plugins_loaded', __NAMESPACE__ . '\\migrate_shared_content_type_ownership', 5 );
 
 // ============================================================================
-// CPT LOADING - Hook to init priority 0
-// ============================================================================
-function load_cpt_snippets() {
-    $snippets_dir = SFPF_PLUGIN_DIR . 'snippets/';
-
-    if (get_option('sfpf_enable_book_cpt', false)) {
-        $file = $snippets_dir . 'register-cpt-book.php';
-        if (file_exists($file)) require_once $file;
-    }
-}
-add_action('init', __NAMESPACE__ . '\\load_cpt_snippets', 0);
-
-// ============================================================================
 // MAIN INIT - Hook to init priority 5
 // ============================================================================
 function init_plugin() {
@@ -63,11 +50,6 @@ function init_plugin() {
 
     if (function_exists(__NAMESPACE__ . '\\enable_schema_on_save')) {
         enable_schema_on_save();
-    }
-
-    // Enable schema injection on frontend
-    if (!is_admin() && function_exists(__NAMESPACE__ . '\\enable_schema_injection')) {
-        enable_schema_injection();
     }
 
     $doing_ajax = wp_doing_ajax();
@@ -86,57 +68,6 @@ function init_plugin() {
     }
 }
 add_action('init', __NAMESPACE__ . '\\init_plugin', 5);
-
-// ============================================================================
-// ACF FIELDS LOADING - Hook to acf/init
-// ============================================================================
-function load_acf_field_groups() {
-    if (!function_exists('acf_add_local_field_group')) {
-        return;
-    }
-
-    $snippets_dir = SFPF_PLUGIN_DIR . 'snippets/';
-
-    // Book ACF
-    if (get_option('sfpf_enable_book_acf', false)) {
-        $file = $snippets_dir . 'register-acf-book.php';
-        if (file_exists($file)) {
-            require_once $file;
-            register_book_acf_fields();
-        }
-    }
-
-    // Organization ACF
-    if (
-        ! class_exists( '\\SMC\\OrganizationProfile\\Acf\\OrganizationFields' )
-        && get_option('sfpf_enable_organization_acf', false)
-    ) {
-        $file = $snippets_dir . 'register-acf-organization.php';
-        if (file_exists($file)) {
-            require_once $file;
-            register_organization_acf_fields();
-        }
-    }
-
-    // User Schema ACF (education, sameas, etc.)
-    if (get_option('sfpf_enable_user_schema_acf', false)) {
-        $file = $snippets_dir . 'register-acf-user-schema.php';
-        if (file_exists($file)) {
-            require_once $file;
-            register_user_schema_acf_fields();
-        }
-    }
-
-    // Homepage ACF
-    if (get_option('sfpf_enable_homepage_acf', false)) {
-        $file = $snippets_dir . 'register-acf-homepage.php';
-        if (file_exists($file)) {
-            require_once $file;
-            register_homepage_acf_fields();
-        }
-    }
-}
-add_action('acf/init', __NAMESPACE__ . '\\load_acf_field_groups', 10);
 
 /**
  * Plugin activation

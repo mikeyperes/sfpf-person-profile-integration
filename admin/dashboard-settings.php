@@ -4,7 +4,7 @@ namespace sfpf_person_website;
 /**
  * Dashboard Settings Tab
  * 
- * Primary Organization and Primary Book selection.
+ * SFPF-specific settings. Website/entity ownership is delegated to HWS Base Tools.
  * 
  * @package sfpf_person_website
  * @since 1.3.9
@@ -14,12 +14,10 @@ defined('ABSPATH') || exit;
 
 // Handle form submission
 if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_nonce')) {
-    $primary_org = isset($_POST['sfpf_primary_organization']) ? intval($_POST['sfpf_primary_organization']) : 0;
     $primary_book = isset($_POST['sfpf_primary_book']) ? intval($_POST['sfpf_primary_book']) : 0;
     $hide_empty_social_icons = isset($_POST['sfpf_hide_empty_elementor_social_icons']) ? 1 : 0;
     $elementor_dynamic_visibility = isset($_POST['sfpf_elementor_dynamic_visibility']) ? 1 : 0;
     
-    update_option('sfpf_primary_organization', $primary_org);
     update_option('sfpf_primary_book', $primary_book);
     update_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, $hide_empty_social_icons);
     update_option(SFPF_ELEMENTOR_DYNAMIC_VISIBILITY_OPTION, $elementor_dynamic_visibility);
@@ -28,19 +26,9 @@ if (isset($_POST['sfpf_save_settings']) && check_admin_referer('sfpf_settings_no
 }
 
 // Get current values
-$current_primary_org = get_option('sfpf_primary_organization', 0);
 $current_primary_book = get_option('sfpf_primary_book', 0);
 $hide_empty_social_icons_enabled = should_hide_empty_elementor_social_icons();
 $elementor_dynamic_visibility_enabled = should_enable_elementor_dynamic_visibility();
-
-// Get all organizations
-$organizations = get_posts([
-    'post_type' => 'organization',
-    'posts_per_page' => -1,
-    'post_status' => 'publish',
-    'orderby' => 'title',
-    'order' => 'ASC',
-]);
 
 // Get all books
 $books = get_posts([
@@ -59,35 +47,14 @@ $books = get_posts([
     </div>
     
     <p style="color:#666;margin-bottom:20px;">
-        Select the primary organization and book for your website. These will be used by shortcodes when no specific ID is provided.
+        The primary Person, Organization, or Publication is selected in HWS Base Tools. SFPF keeps only its Book-specific fallback here.
     </p>
     
     <form method="post" action="">
         <?php wp_nonce_field('sfpf_settings_nonce'); ?>
         
         <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="sfpf_primary_organization">Primary Organization</label>
-                </th>
-                <td>
-                    <select name="sfpf_primary_organization" id="sfpf_primary_organization" style="min-width:300px;">
-                        <option value="0">— Select Organization —</option>
-                        <?php foreach ($organizations as $org): ?>
-                            <option value="<?php echo esc_attr($org->ID); ?>" <?php selected($current_primary_org, $org->ID); ?>>
-                                <?php echo esc_html($org->post_title); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="description">
-                        Used by <code>[organization field="name"]</code> shortcodes when no ID specified.
-                        <?php if (empty($organizations)): ?>
-                            <br><strong style="color:#dc2626;">No organizations found.</strong> 
-                            <a href="<?php echo admin_url('post-new.php?post_type=organization'); ?>">Create one →</a>
-                        <?php endif; ?>
-                    </p>
-                </td>
-            </tr>
+            <tr><th scope="row">Website &amp; Primary Entity</th><td><a class="button" href="<?php echo esc_url(admin_url('options-general.php?page=hws-core-tools&tab=website-types')); ?>">Open HWS Website Profile</a><p class="description">SFPF consumes a Person assignment and, for post-backed profiles, the WordPress author bound to that profile. Legacy SFPF assignments remain read-only fallbacks during migration.</p></td></tr>
             
             <tr>
                 <th scope="row">

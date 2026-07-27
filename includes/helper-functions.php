@@ -13,6 +13,18 @@ namespace sfpf_person_website;
 
 defined('ABSPATH') || exit;
 
+/** @return array<string,mixed>|null */
+function get_hws_primary_entity(array $entity_types = []) {
+    if (!class_exists('\\Hexa\\PluginCore\\EntitySources\\CanonicalEntityResolver')) {
+        return null;
+    }
+    $entity = \Hexa\PluginCore\EntitySources\CanonicalEntityResolver::resolve();
+    if (!is_array($entity)) {
+        return null;
+    }
+    return empty($entity_types) || in_array((string) ($entity['entity_type'] ?? ''), $entity_types, true) ? $entity : null;
+}
+
 /**
  * =============================================================================
  * FOUNDER USER DETECTION
@@ -31,6 +43,16 @@ defined('ABSPATH') || exit;
  * @return int User ID or 0 if not found
  */
 function get_founder_user_id() {
+    $entity = get_hws_primary_entity(['person']);
+    if ($entity) {
+        $user_id = 'user' === ($entity['kind'] ?? '')
+            ? (int) ($entity['id'] ?? 0)
+            : (int) ($entity['attached_user_id'] ?? 0);
+        if ($user_id > 0 && get_userdata($user_id)) {
+            return $user_id;
+        }
+    }
+
     if (!function_exists('get_field')) {
         return 0;
     }
@@ -70,6 +92,16 @@ function get_founder_user_id() {
  * @return int User ID or 0 if not found
  */
 function get_company_user_id() {
+    $entity = get_hws_primary_entity(['organization']);
+    if ($entity) {
+        $user_id = 'user' === ($entity['kind'] ?? '')
+            ? (int) ($entity['id'] ?? 0)
+            : (int) ($entity['attached_user_id'] ?? 0);
+        if ($user_id > 0 && get_userdata($user_id)) {
+            return $user_id;
+        }
+    }
+
     if (!function_exists('get_field')) {
         return 0;
     }
@@ -1189,6 +1221,14 @@ function sanitize_schema($schema) {
  * @return WP_Post|null Primary organization post or null
  */
 function get_primary_organization() {
+    $entity = get_hws_primary_entity(['organization']);
+    if ($entity && 'post' === ($entity['kind'] ?? '') && 'organization' === ($entity['post_type'] ?? '')) {
+        $post = get_post((int) $entity['id']);
+        if ($post && 'publish' === $post->post_status) {
+            return $post;
+        }
+    }
+
     // Check for option setting first
     $primary_id = get_option('sfpf_primary_organization', 0);
     if ($primary_id) {

@@ -27,50 +27,8 @@ function enable_schema_injection() {
  * Checks the current page type and injects appropriate schema.
  */
 function inject_schema_markup() {
-    $schema = null;
-    
-    // Check what type of page we're on
-    if (is_front_page()) {
-        // Homepage - build schema dynamically based on settings
-        $schema_type = get_option('sfpf_homepage_schema_type', 'person');
-        
-        if ($schema_type === 'none') {
-            return; // Schema injection disabled
-        }
-        
-        // Build the schema
-        $schema = build_homepage_schema_for_injection($schema_type, get_front_page_id());
-        
-    } elseif (is_singular('book')) {
-        // Single book page — generate live from unified builder
-        global $post;
-        $schema_arr = build_book_schema($post->ID);
-        $schema = !empty($schema_arr) ? json_encode($schema_arr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
-        
-    } elseif (is_singular('organization')) {
-        if ( class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' ) ) {
-            return;
-        }
-        // Single organization page — generate live from unified builder
-        global $post;
-        $schema_arr = build_organization_schema($post->ID);
-        $schema = !empty($schema_arr) ? json_encode($schema_arr, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
-        
-    } elseif (is_page()) {
-        // Check if this is the biography page
-        global $post;
-            $bio_schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
-        if ($bio_schema_type !== 'none') {
-            $bio_page_id = get_option('sfpf_page_biography');
-            if ($bio_page_id && $post->ID == $bio_page_id) {
-                $schema = build_homepage_schema_for_injection($bio_schema_type, $post->ID);
-            }
-        }
-    }
-    
-    // Output schema if we have it
-    if ($schema && !empty($schema)) {
-        output_schema_script($schema);
+    if (class_exists('\\SFPF\\PersonProfile\\Schema\\SchemaProvider')) {
+        output_schema_script(\SFPF\PersonProfile\Schema\SchemaProvider::current());
     }
 }
 // build_homepage_schema_for_injection() moved to schema-builder.php
@@ -81,24 +39,13 @@ function inject_schema_markup() {
  * @param string $schema JSON schema string
  */
 function output_schema_script($schema) {
-    // Handle if schema is an array
-    if (is_array($schema)) {
-        $schema = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if (is_string($schema)) {
+        $schema = json_decode($schema, true);
     }
-    
-    // Validate JSON
-    $decoded = json_decode($schema);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo "\n<!-- SFPF Schema Error: Invalid JSON - " . esc_html(json_last_error_msg()) . " -->\n";
+    if (!is_array($schema) || empty($schema) || !class_exists('\\Hexa\\PluginCore\\SchemaTools\\SchemaDocumentRenderer')) {
         return;
     }
-    
-    // Output the schema
-    echo "\n<!-- SFPF Person Website Schema -->\n";
-    echo '<script type="application/ld+json">' . "\n";
-    echo $schema;
-    echo "\n</script>\n";
-    echo "<!-- /SFPF Person Website Schema -->\n\n";
+    echo (new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer())->script($schema, 'sfpf-person-website-schema');
 }
 
 /**
@@ -112,10 +59,14 @@ function get_schema_for_display($post_id) {
         ? get_post_schema($post_id)
         : get_post_meta($post_id, 'schema_markup', true);
     
+    $decoded = is_array($schema) ? $schema : json_decode((string) $schema, true);
+    $normalized = is_array($decoded) && class_exists('\\Hexa\\PluginCore\\SchemaTools\\SchemaDocumentRenderer')
+        ? (new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer())->json($decoded)
+        : '';
     return [
-        'raw' => $schema,
-        'formatted' => $schema ? format_json_display($schema) : '<em>No schema generated</em>',
-        'valid' => $schema ? (json_decode($schema) !== null) : false,
+        'raw' => $normalized,
+        'formatted' => $normalized ? format_json_display($normalized) : '<em>No schema generated</em>',
+        'valid' => '' !== $normalized,
         'validator_url' => get_schema_validator_url(get_permalink($post_id)),
         'google_url' => get_google_rich_results_url(get_permalink($post_id)),
     ];

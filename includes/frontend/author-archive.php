@@ -23,8 +23,39 @@ function sfpf_author_archive_disable_rankmath_schema($data) {
     return is_author() ? [] : $data;
 }
 
+/**
+ * Determine whether Elementor Pro owns the current archive request.
+ *
+ * Theme Builder evaluates its archive conditions against the current query. If
+ * a document matches, SFPF must leave rendering to Elementor instead of
+ * printing its fallback profile and exiting before template_include runs.
+ */
+function sfpf_author_archive_has_elementor_template() {
+    $module_class = '\\ElementorPro\\Modules\\ThemeBuilder\\Module';
+
+    if ( ! class_exists( $module_class ) || ! is_callable( [ $module_class, 'instance' ] ) ) {
+        return false;
+    }
+
+    try {
+        $module = $module_class::instance();
+        if ( ! is_object( $module ) || ! is_callable( [ $module, 'get_conditions_manager' ] ) ) {
+            return false;
+        }
+
+        $conditions_manager = $module->get_conditions_manager();
+        if ( ! is_object( $conditions_manager ) || ! is_callable( [ $conditions_manager, 'get_documents_for_location' ] ) ) {
+            return false;
+        }
+
+        return ! empty( $conditions_manager->get_documents_for_location( 'archive' ) );
+    } catch ( \Throwable $exception ) {
+        return false;
+    }
+}
+
 function sfpf_author_archive_template() {
-    if (is_admin() || wp_doing_ajax() || is_feed() || !is_author()) {
+    if (is_admin() || wp_doing_ajax() || is_feed() || !is_author() || sfpf_author_archive_has_elementor_template()) {
         return;
     }
     $author = get_queried_object();

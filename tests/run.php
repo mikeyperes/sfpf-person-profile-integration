@@ -49,6 +49,7 @@ $requiredFiles = [
     'includes/shortcodes/founder-sections.php',
     'includes/runtime/profile-admin-script.php',
     'includes/frontend/author-archive.php',
+    'tests/author-archive-elementor.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -89,6 +90,7 @@ $contentTypes = $read( $root . '/src/ContentTypes/PersonContentTypes.php' );
 $schemaProvider = $read( $root . '/src/Schema/SchemaProvider.php' );
 $helperFunctions = $read( $root . '/includes/helper-functions.php' );
 $faqShortcodes = $read( $root . '/includes/shortcodes/faq.php' );
+$authorArchive = $read( $root . '/includes/frontend/author-archive.php' );
 
 preg_match( '/Version:\s*([0-9.]+)/', $initialization, $headerMatch );
 preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)['\"]/", $initialization, $constantMatch );
@@ -100,7 +102,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.0' === $headerVersion, 'Plugin version is not 2.0.0.' );
+$assert( '2.0.1' === $headerVersion, 'Plugin version is not 2.0.1.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -251,6 +253,12 @@ $assert(
     false !== strpos( $socialIcons, "get_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, '1')" )
     && false !== strpos( $socialIcons, "add_filter('elementor/widget/render_content'" ),
     'Empty social-icon filtering is not default-enabled and server-side.'
+);
+$assert(
+    false !== strpos( $authorArchive, 'sfpf_author_archive_has_elementor_template()' )
+    && false !== strpos( $authorArchive, "get_documents_for_location( 'archive' )" )
+    && false !== strpos( $authorArchive, '!is_author() || sfpf_author_archive_has_elementor_template()' ),
+    'Author archive fallback does not defer to a matching Elementor Theme Builder archive.'
 );
 $assert(
     false !== strpos( $userFields, "'name'              => 'gallery'" )

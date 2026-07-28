@@ -85,6 +85,11 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.1
+
+- Defers author archive rendering to Elementor Pro when Theme Builder has a matching archive template.
+- Preserves the built-in SFPF author profile as a fallback when Elementor has no matching archive.
+
 ### 2.0.0
 
 - Established the stable major baseline for Person fields, schema, FAQs, Book structures, shortcodes, and presentation helpers.

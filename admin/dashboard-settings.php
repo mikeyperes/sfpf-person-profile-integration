@@ -112,7 +112,7 @@ $books = get_posts([
                         Enable SFPF content display conditions
                     </label>
                     <p class="description">
-                        Enabled by default. Adds native Elementor Pro display conditions for founder education, published organizations, and published books so empty sections do not render.
+                        Enabled by default. Adds native Elementor Pro display conditions for founder education, articles, person FAQs, published organizations, and published books so empty sections do not render.
                     </p>
                 </td>
             </tr>

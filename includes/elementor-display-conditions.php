@@ -86,6 +86,8 @@ function register_sfpf_elementor_display_conditions($manager) {
                         'label' => esc_html__('Content source', 'sfpf-person-profile-integration'),
                         'options' => [
                             'education' => esc_html__('Founder education', 'sfpf-person-profile-integration'),
+                            'articles' => esc_html__('Founder articles', 'sfpf-person-profile-integration'),
+                            'faq' => esc_html__('Founder FAQs', 'sfpf-person-profile-integration'),
                             'organizations_founded' => esc_html__('Published organizations', 'sfpf-person-profile-integration'),
                             'books' => esc_html__('Published books', 'sfpf-person-profile-integration'),
                         ],
@@ -125,6 +127,10 @@ function sfpf_elementor_dynamic_source_has_content($source) {
     switch (sanitize_key((string) $source)) {
         case 'education':
             return sfpf_founder_has_public_education();
+        case 'articles':
+            return sfpf_founder_has_public_articles();
+        case 'faq':
+            return sfpf_founder_has_public_faq();
         case 'organizations_founded':
             return sfpf_has_published_posts('organization');
         case 'books':
@@ -151,6 +157,82 @@ function sfpf_founder_has_public_education() {
     }
 
     return sfpf_repeater_has_public_row($education, ['college', 'designation', 'major', 'year', 'wiki_url']);
+}
+
+/**
+ * Check if the selected founder user has at least one usable article URL.
+ *
+ * @return bool
+ */
+function sfpf_founder_has_public_articles() {
+    $user_id = function_exists(__NAMESPACE__ . '\\get_founder_user_id') ? get_founder_user_id() : 0;
+    if (!$user_id) {
+        return false;
+    }
+
+    $articles = function_exists('get_field') ? get_field('articles', 'user_' . $user_id) : [];
+    if (empty($articles)) {
+        $articles = get_user_meta($user_id, 'articles', true);
+    }
+
+    if (is_string($articles)) {
+        foreach (preg_split('/\\R/', $articles) ?: [] as $url) {
+            if (filter_var(trim($url), FILTER_VALIDATE_URL)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    if (!is_array($articles)) {
+        return false;
+    }
+
+    foreach ($articles as $article) {
+        if (is_array($article) && filter_var(trim((string) ($article['url'] ?? '')), FILTER_VALIDATE_URL)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Check if the selected founder user has at least one complete person FAQ.
+ *
+ * @return bool
+ */
+function sfpf_founder_has_public_faq() {
+    $user_id = function_exists(__NAMESPACE__ . '\\get_founder_user_id') ? get_founder_user_id() : 0;
+    if (!$user_id) {
+        return false;
+    }
+
+    if (function_exists(__NAMESPACE__ . '\\sfpf_faq_source_resolver')) {
+        return [] !== sfpf_faq_source_resolver()->acf('user_' . $user_id, 'faq');
+    }
+
+    $faqs = function_exists('get_field') ? get_field('faq', 'user_' . $user_id) : [];
+    if (empty($faqs)) {
+        $faqs = get_user_meta($user_id, 'faq', true);
+    }
+
+    if (!is_array($faqs)) {
+        return false;
+    }
+
+    foreach ($faqs as $faq) {
+        if (!is_array($faq)) {
+            continue;
+        }
+
+        if (trim((string) ($faq['question'] ?? '')) !== '' && trim((string) ($faq['answer'] ?? '')) !== '') {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**

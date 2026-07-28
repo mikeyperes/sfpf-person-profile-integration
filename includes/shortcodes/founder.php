@@ -296,12 +296,17 @@ function founder_display_gallery($user_id, $atts = []) {
  */
 function founder_display_education($user_id) {
     $education = get_field('education', 'user_' . $user_id);
-    if (empty($education)) {
+    $education_keys = ['college', 'designation', 'major', 'year', 'wiki_url'];
+    if (empty($education) || !sfpf_repeater_has_public_row($education, $education_keys)) {
         return '';
     }
 
     $output = '<div class="founder-education">';
     foreach ($education as $i => $edu) {
+        if (!is_array($edu) || !sfpf_repeater_has_public_row([$edu], $education_keys)) {
+            continue;
+        }
+
         $output .= '<div class="education-item">';
 
         $school_name = esc_html($edu['college'] ?? '');

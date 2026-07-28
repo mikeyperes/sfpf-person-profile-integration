@@ -85,6 +85,11 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.2
+
+- Adds native Elementor content-availability conditions for founder articles and person-scoped FAQs.
+- Prevents blank Education repeater rows from emitting empty frontend markup.
+
 ### 2.0.1
 
 - Defers author archive rendering to Elementor Pro when Theme Builder has a matching archive template.

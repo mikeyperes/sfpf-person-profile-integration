@@ -91,6 +91,7 @@ $schemaProvider = $read( $root . '/src/Schema/SchemaProvider.php' );
 $helperFunctions = $read( $root . '/includes/helper-functions.php' );
 $faqShortcodes = $read( $root . '/includes/shortcodes/faq.php' );
 $authorArchive = $read( $root . '/includes/frontend/author-archive.php' );
+$elementorConditions = $read( $root . '/includes/elementor-display-conditions.php' );
 
 preg_match( '/Version:\s*([0-9.]+)/', $initialization, $headerMatch );
 preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)['\"]/", $initialization, $constantMatch );
@@ -102,7 +103,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.1' === $headerVersion, 'Plugin version is not 2.0.1.' );
+$assert( '2.0.2' === $headerVersion, 'Plugin version is not 2.0.2.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -259,6 +260,13 @@ $assert(
     && false !== strpos( $authorArchive, "get_documents_for_location( 'archive' )" )
     && false !== strpos( $authorArchive, '!is_author() || sfpf_author_archive_has_elementor_template()' ),
     'Author archive fallback does not defer to a matching Elementor Theme Builder archive.'
+);
+$assert(
+    false !== strpos( $elementorConditions, "case 'articles':" )
+    && false !== strpos( $elementorConditions, 'sfpf_founder_has_public_articles()' )
+    && false !== strpos( $elementorConditions, "case 'faq':" )
+    && false !== strpos( $elementorConditions, 'sfpf_founder_has_public_faq()' ),
+    'Elementor conditions do not cover founder articles and person FAQs.'
 );
 $assert(
     false !== strpos( $userFields, "'name'              => 'gallery'" )

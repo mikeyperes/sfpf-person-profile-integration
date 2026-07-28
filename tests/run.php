@@ -90,6 +90,7 @@ $contentTypes = $read( $root . '/src/ContentTypes/PersonContentTypes.php' );
 $schemaProvider = $read( $root . '/src/Schema/SchemaProvider.php' );
 $helperFunctions = $read( $root . '/includes/helper-functions.php' );
 $faqShortcodes = $read( $root . '/includes/shortcodes/faq.php' );
+$founderShortcodes = $read( $root . '/includes/shortcodes/founder.php' );
 $authorArchive = $read( $root . '/includes/frontend/author-archive.php' );
 $elementorConditions = $read( $root . '/includes/elementor-display-conditions.php' );
 
@@ -103,7 +104,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.2' === $headerVersion, 'Plugin version is not 2.0.2.' );
+$assert( '2.0.3' === $headerVersion, 'Plugin version is not 2.0.3.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -339,6 +340,11 @@ $assert(
     false !== strpos( $faqShortcodes, 'FaqSourceResolver' )
     && false !== strpos( $faqShortcodes, 'FaqSetManager' ),
     'Person FAQ source, renderer, and schema paths do not use Hexa WP Core.'
+);
+$assert(
+    false !== strpos( $founderShortcodes, 'function register_founder_shortcode()' )
+    && false !== strpos( $founderShortcodes, "add_action('init', __NAMESPACE__ . '\\\\register_founder_shortcode', 100)" ),
+    'SFPF does not reassert ownership of the founder shortcode after generic fallbacks register.'
 );
 
 

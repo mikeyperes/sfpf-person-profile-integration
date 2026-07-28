@@ -85,6 +85,10 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.3
+
+- Keeps SFPF authoritative for the <code>[founder]</code> shortcode when HWS Base Tools also supplies its generic fallback.
+
 ### 2.0.2
 
 - Adds native Elementor content-availability conditions for founder articles and person-scoped FAQs.

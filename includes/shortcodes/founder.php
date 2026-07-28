@@ -277,7 +277,18 @@ function founder_shortcode($atts) {
             return '';
     }
 }
-add_shortcode('founder', __NAMESPACE__ . '\\founder_shortcode');
+
+/**
+ * Keep the person-profile implementation authoritative when generic tools also
+ * provide a fallback [founder] shortcode.
+ *
+ * @return void
+ */
+function register_founder_shortcode() {
+    add_shortcode('founder', __NAMESPACE__ . '\\founder_shortcode');
+}
+register_founder_shortcode();
+add_action('init', __NAMESPACE__ . '\\register_founder_shortcode', 100);
 
 /**
  * Display founder gallery in formatted HTML.

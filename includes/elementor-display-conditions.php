@@ -87,6 +87,7 @@ function register_sfpf_elementor_display_conditions($manager) {
                         'options' => [
                             'education' => esc_html__('Founder education', 'sfpf-person-profile-integration'),
                             'articles' => esc_html__('Founder articles', 'sfpf-person-profile-integration'),
+                            'additional_urls' => esc_html__('Founder additional URLs', 'sfpf-person-profile-integration'),
                             'faq' => esc_html__('Founder FAQs', 'sfpf-person-profile-integration'),
                             'organizations_founded' => esc_html__('Published organizations', 'sfpf-person-profile-integration'),
                             'books' => esc_html__('Published books', 'sfpf-person-profile-integration'),
@@ -129,6 +130,8 @@ function sfpf_elementor_dynamic_source_has_content($source) {
             return sfpf_founder_has_public_education();
         case 'articles':
             return sfpf_founder_has_public_articles();
+        case 'additional_urls':
+            return sfpf_founder_has_public_additional_urls();
         case 'faq':
             return sfpf_founder_has_public_faq();
         case 'organizations_founded':
@@ -165,18 +168,42 @@ function sfpf_founder_has_public_education() {
  * @return bool
  */
 function sfpf_founder_has_public_articles() {
+    return sfpf_founder_has_public_link_repeater('articles');
+}
+
+/**
+ * Check if the selected founder user has at least one usable additional URL.
+ *
+ * @return bool
+ */
+function sfpf_founder_has_public_additional_urls() {
+    return sfpf_founder_has_public_link_repeater('additional_urls');
+}
+
+/**
+ * Check a supported founder link repeater for a public URL.
+ *
+ * @param string $field_name ACF field name.
+ * @return bool
+ */
+function sfpf_founder_has_public_link_repeater($field_name) {
     $user_id = function_exists(__NAMESPACE__ . '\\get_founder_user_id') ? get_founder_user_id() : 0;
     if (!$user_id) {
         return false;
     }
 
-    $articles = function_exists('get_field') ? get_field('articles', 'user_' . $user_id) : [];
-    if (empty($articles)) {
-        $articles = get_user_meta($user_id, 'articles', true);
+    $field_name = sanitize_key((string) $field_name);
+    if (!in_array($field_name, ['articles', 'additional_urls'], true)) {
+        return false;
     }
 
-    if (is_string($articles)) {
-        foreach (preg_split('/\\R/', $articles) ?: [] as $url) {
+    $links = function_exists('get_field') ? get_field($field_name, 'user_' . $user_id) : [];
+    if (empty($links)) {
+        $links = get_user_meta($user_id, $field_name, true);
+    }
+
+    if (is_string($links)) {
+        foreach (preg_split('/\\R/', $links) ?: [] as $url) {
             if (filter_var(trim($url), FILTER_VALIDATE_URL)) {
                 return true;
             }
@@ -185,12 +212,12 @@ function sfpf_founder_has_public_articles() {
         return false;
     }
 
-    if (!is_array($articles)) {
+    if (!is_array($links)) {
         return false;
     }
 
-    foreach ($articles as $article) {
-        if (is_array($article) && filter_var(trim((string) ($article['url'] ?? '')), FILTER_VALIDATE_URL)) {
+    foreach ($links as $link) {
+        if (is_array($link) && filter_var(trim((string) ($link['url'] ?? '')), FILTER_VALIDATE_URL)) {
             return true;
         }
     }

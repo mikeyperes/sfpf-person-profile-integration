@@ -378,6 +378,9 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder id="mission_statement"]', 'description' => 'Mission statement'],
             ['shortcode' => '[founder id="avatar"]', 'description' => 'Avatar URL'],
             ['shortcode' => '[founder action="display_gallery"]', 'description' => 'Founder photo gallery'],
+            ['shortcode' => '[founder action="display_articles"]', 'description' => 'Recent articles repeater'],
+            ['shortcode' => '[founder action="display_additional_urls"]', 'description' => 'Additional URLs repeater'],
+            ['shortcode' => '[founder id="additional_urls" format="json"]', 'description' => 'Additional URLs as JSON'],
             ['shortcode' => '[founder id="website"]', 'description' => 'Website URL'],
             ['shortcode' => '[founder id="additional_public_email"]', 'description' => 'Public email'],
             ['shortcode' => '[founder id="additional_public_phone"]', 'description' => 'Public phone'],
@@ -639,6 +642,12 @@ function sfpf_site_structure_pages_definition() {
             'parent' => null,
             'children' => [],
         ],
+        'additional_urls' => [
+            'title' => 'Additional URLs',
+            'slug' => 'additional-urls',
+            'parent' => null,
+            'children' => [],
+        ],
         'connect' => [
             'title' => 'Connect',
             'slug' => 'connect',
@@ -670,12 +679,12 @@ function sfpf_site_structure_menu_definition() {
         'header' => [
             'title' => 'Header Menu',
             'description' => 'Primary top navigation for high-intent public pages.',
-            'page_keys' => ['biography', 'professions', 'recent_articles', 'gallery', 'connect'],
+            'page_keys' => ['biography', 'professions', 'recent_articles', 'additional_urls', 'gallery', 'connect'],
         ],
         'footer' => [
             'title' => 'Footer Menu',
             'description' => 'Comprehensive footer navigation with profile, content, and support pages.',
-            'page_keys' => ['biography', 'education', 'organizations_founded', 'professions', 'recent_articles', 'gallery', 'faqs', 'connect'],
+            'page_keys' => ['biography', 'education', 'organizations_founded', 'professions', 'recent_articles', 'additional_urls', 'gallery', 'faqs', 'connect'],
         ],
         'sub_footer' => [
             'title' => 'Sub-Footer Utility Menu',
@@ -821,6 +830,8 @@ function get_default_page_template($page_key) {
 <p>[founder id="additional_title"]</p>',
 
         'recent_articles' => '[founder action="display_articles"]',
+
+        'additional_urls' => '[founder action="display_additional_urls"]',
 
         'gallery' => '[founder action="display_gallery"]',
 

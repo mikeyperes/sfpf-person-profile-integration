@@ -435,7 +435,10 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
       "url": "<span style="color:#dc2626;">ACF: works_for_url</span>"
     }
   ],
-  "<span style="color:#9cdcfe;">sameAs</span>": ["<span style="color:#dc2626;">ACF: sameAs URLs</span>"]
+  "<span style="color:#9cdcfe;">sameAs</span>": [
+    "<span style="color:#dc2626;">ACF: sameAs URLs</span>",
+    "<span style="color:#dc2626;">ACF: Additional URLs repeater</span>"
+  ]
 }</pre>
         </div>
         

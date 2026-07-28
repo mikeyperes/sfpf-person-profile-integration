@@ -248,6 +248,13 @@ if ($founder && function_exists('get_field')) {
     $sc_add('Person', 'Articles / Press', $article_count > 0 ? 'pass' : 'fail',
         $article_count > 0 ? $article_count . ' article(s)' : 'None set — add at least one for sameAs links',
         $profile_url, 'Edit Profile');
+
+    // Additional URLs (at least one)
+    $additional_urls = get_field('additional_urls', $user_key);
+    $additional_url_count = is_array($additional_urls) ? count(array_filter($additional_urls, function($link) { return !empty($link['url']); })) : 0;
+    $sc_add('Person', 'Additional URLs', $additional_url_count > 0 ? 'pass' : 'warn',
+        $additional_url_count > 0 ? $additional_url_count . ' additional URL(s)' : 'None set — optional sameAs links',
+        $profile_url, 'Edit Profile');
 }
 
 // ────────────────────────────────────────

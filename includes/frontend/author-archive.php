@@ -133,6 +133,7 @@ function sfpf_render_author_archive_profile($user_id) {
     $sameas = sfpf_author_archive_lines(sfpf_author_archive_field($user_id, "sameas"));
     $education = sfpf_author_archive_field($user_id, "education", []);
     $articles = sfpf_author_archive_field($user_id, "articles", []);
+    $additional_urls = sfpf_author_archive_field($user_id, "additional_urls", []);
     $labels = ["website" => "Website", "linkedin" => "LinkedIn", "crunchbase" => "Crunchbase", "wikipedia" => "Wikipedia", "facebook" => "Facebook", "instagram" => "Instagram", "x" => "X", "youtube" => "YouTube", "imdb" => "IMDb", "muckrack" => "Muck Rack"];
 
     ob_start();
@@ -144,6 +145,7 @@ function sfpf_render_author_archive_profile($user_id) {
         <?php if ($bio): ?><section class="sfpf-author-section"><h2>Biography</h2><div class="sfpf-author-bio"><?php echo wp_kses_post(wpautop($bio)); ?></div></section><?php endif; ?>
         <?php if (is_array($education) && !empty($education)): ?><section class="sfpf-author-section"><h2>Education</h2><ul class="sfpf-author-list"><?php foreach ($education as $row): $college = trim((string) ($row["college"] ?? "")); if (!$college) continue; ?><li><strong><?php echo esc_html($college); ?></strong><?php if (!empty($row["designation"]) || !empty($row["major"])): ?> <span class="sfpf-author-muted">— <?php echo esc_html(trim(($row["designation"] ?? "") . " " . ($row["major"] ?? ""))); ?></span><?php endif; ?><?php if (!empty($row["year"])): ?> <span class="sfpf-author-muted">(<?php echo esc_html($row["year"]); ?>)</span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
         <?php if (is_array($articles) && !empty($articles)): ?><section class="sfpf-author-section"><h2>Articles and Press</h2><ul class="sfpf-author-list"><?php foreach ($articles as $article): $url = $article["url"] ?? ""; $article_title = $article["title"] ?? $url; if (!$url && !$article_title) continue; ?><li><?php if ($url): ?><a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo esc_html($article_title ?: $url); ?></a><?php else: ?><?php echo esc_html($article_title); ?><?php endif; ?><?php if (!empty($article["source"])): ?> <span class="sfpf-author-muted">— <?php echo esc_html($article["source"]); ?></span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
+        <?php if (is_array($additional_urls) && !empty($additional_urls)): ?><section class="sfpf-author-section"><h2>Additional URLs</h2><ul class="sfpf-author-list"><?php foreach ($additional_urls as $link): $url = $link["url"] ?? ""; $link_title = $link["title"] ?? $url; if (!$url && !$link_title) continue; ?><li><?php if ($url): ?><a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo esc_html($link_title ?: $url); ?></a><?php else: ?><?php echo esc_html($link_title); ?><?php endif; ?><?php if (!empty($link["source"])): ?> <span class="sfpf-author-muted">— <?php echo esc_html($link["source"]); ?></span><?php endif; ?></li><?php endforeach; ?></ul></section><?php endif; ?>
     </main>
     <?php
     return ob_get_clean();

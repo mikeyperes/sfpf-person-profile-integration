@@ -16,6 +16,7 @@ namespace sfpf_person_website;
  *   - inception_date (text): Founding date (Organization only)
  *   - headquarters (group): location, wiki_url (Organization only)
  *   - sameas (textarea): Schema.org sameAs URLs, one per line
+ *   - additional_urls (repeater): title, source, URL (Person only)
  *
  * SHORTCODES:
  *   [founder id="entity_type"] / [company id="entity_type"]
@@ -24,6 +25,7 @@ namespace sfpf_person_website;
  *   [company id="inception_date"]
  *   [company id="headquarters_location"] / [company id="headquarters_wiki"]
  *   [founder id="sameas"] / [founder id="sameas" format="json"] / [founder id="sameas" format="ul"]
+ *   [founder action="display_additional_urls"] / [founder id="additional_urls" format="json"]
  *
  * @package sfpf_person_website
  * @since 1.2.0
@@ -716,6 +718,57 @@ function user_schema_acf_field_group(): array {
                         'required'          => 0,
                         'wrapper'           => ['width' => '35'],
                         'placeholder'       => 'https://forbes.com/article-slug',
+                    ],
+                ],
+            ],
+            [
+                'key'               => 'field_sfpf_additional_urls',
+                'label'             => 'Additional URLs',
+                'name'              => 'additional_urls',
+                'type'              => 'repeater',
+                'instructions'      => '<code>[founder action="display_additional_urls"]</code> - Title list with source badges (default)<br>
+<code>[founder action="display_additional_urls" format="titled"]</code> - Titles as links (new tab)<br>
+<code>[founder action="display_additional_urls" format="cards"]</code> - Cards with title, source, URL<br>
+<code>[founder action="display_additional_urls" format="sources"]</code> - Grouped by source domain<br>
+<code>[founder action="display_additional_urls" format="compact"]</code> - One-line per URL: title - source<br>
+<code>[founder id="additional_urls" format="json"]</code> - JSON array of all URLs',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person'],
+                'layout'            => 'table',
+                'pagination'        => 0,
+                'min'               => 0,
+                'max'               => 100,
+                'collapsed'         => 'field_sfpf_additional_url_title',
+                'button_label'      => 'Add URL',
+                'rows_per_page'     => 20,
+                'sub_fields'        => [
+                    [
+                        'key'               => 'field_sfpf_additional_url_title',
+                        'label'             => 'Title',
+                        'name'              => 'title',
+                        'type'              => 'text',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '45'],
+                        'placeholder'       => 'Link title',
+                    ],
+                    [
+                        'key'               => 'field_sfpf_additional_url_source',
+                        'label'             => 'Source',
+                        'name'              => 'source',
+                        'type'              => 'text',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '20'],
+                        'placeholder'       => 'example.com',
+                    ],
+                    [
+                        'key'               => 'field_sfpf_additional_url_url',
+                        'label'             => 'URL',
+                        'name'              => 'url',
+                        'type'              => 'url',
+                        'required'          => 0,
+                        'wrapper'           => ['width' => '35'],
+                        'placeholder'       => 'https://example.com/profile',
                     ],
                 ],
             ],

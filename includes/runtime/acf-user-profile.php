@@ -103,6 +103,7 @@ function sfpf_repeater_meta_name($field) {
         'field_sfpf_knows_language'      => 'knows_language',
         'field_sfpf_awards'              => 'awards',
         'field_sfpf_articles'            => 'articles',
+        'field_sfpf_additional_urls'     => 'additional_urls',
     ];
     $key = $field['key'] ?? '';
     return $map[$key] ?? '';
@@ -246,6 +247,7 @@ $sfpf_repeater_keys = [
     'field_sfpf_knows_language',
     'field_sfpf_awards',
     'field_sfpf_articles',
+    'field_sfpf_additional_urls',
 ];
 
 foreach ($sfpf_repeater_keys as $rk) {

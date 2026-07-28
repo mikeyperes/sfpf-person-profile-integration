@@ -44,7 +44,7 @@ The plugin bundles Core 1.0.0 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGI
 - Person FAQ sets and reusable FAQ output.
 - Book CPT, fields, schema, and shortcodes.
 - Biography, education, profession, organization-founded, and related page structures.
-- Person/profile galleries, social identities, awards, credentials, press, and Knowledge Graph identifiers.
+- Person/profile galleries, social identities, additional URLs, awards, credentials, press, and Knowledge Graph identifiers.
 - Shortcode catalog and Elementor-compatible output helpers.
 - Admin previews, diagnostics, and GitHub/Core update reporting.
 
@@ -84,6 +84,12 @@ php tests/run.php
 Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environment to verify the selected Core package and live hooks.
 
 ## Changelog
+
+### 2.0.4
+
+- Adds a Person-level Additional URLs ACF repeater matching Recent Articles with title, source, and URL columns.
+- Adds titled, cards, sources, and compact display formats plus raw, JSON, count, author-archive, managed-page, and Elementor availability support.
+- Maps valid Additional URLs into the Person schema `sameAs` collection with deduplication.
 
 ### 2.0.3
 

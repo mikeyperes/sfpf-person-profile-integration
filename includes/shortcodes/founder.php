@@ -54,6 +54,8 @@ function founder_shortcode($atts) {
                 return founder_display_socials($user_id);
             case 'display_articles':
                 return founder_display_articles($user_id, $atts['format'] ?? 'titled');
+            case 'display_additional_urls':
+                return founder_display_additional_urls($user_id, $atts['format'] ?? 'titled');
             case 'display_faq':
                 return founder_display_faq($user_id, $atts);
             case 'display_location_born':
@@ -201,13 +203,16 @@ function founder_shortcode($atts) {
             return sfpf_render_gallery_html($images, 'sfpf-founder-gallery', (int) ($atts['columns'] ?? 3));
 
         case 'articles':
-            $articles = get_field('articles', 'user_' . $user_id);
-            if (empty($articles) || !is_array($articles)) return '';
+        case 'additional_urls':
+            $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));
+            if (empty($links)) return '';
             if ($atts['format'] === 'json') {
-                return wp_json_encode($articles);
+                return wp_json_encode($links);
             }
-            // Plain text list of URLs
-            $urls = array_filter(array_map(function($a) { return $a['url'] ?? ''; }, $articles));
+            if ($atts['format'] === 'count') {
+                return (string) count($links);
+            }
+            $urls = array_column($links, 'url');
             return esc_html(implode("\n", $urls));
 
         case 'faq':

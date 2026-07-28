@@ -381,6 +381,27 @@ defined('ABSPATH') || exit;
                     </details>
                 </td>
             </tr>
+            <tr>
+                <td><code class="sfpf-copy-code">[founder action="display_additional_urls"]</code></td>
+                <td>
+                    <strong>Displays the Additional URLs repeater with the same title, source, URL presentation used by Recent Articles.</strong><br>
+                    <div style="margin-top:6px;font-size:12px;color:#6b7280;">
+                        <strong>Formats:</strong>
+                        <code class="sfpf-copy-code">[founder action="display_additional_urls" format="titled"]</code> - Titles as links with source badge (default)<br>
+                        <code class="sfpf-copy-code">[founder action="display_additional_urls" format="cards"]</code> - Cards with title, source, and full URL<br>
+                        <code class="sfpf-copy-code">[founder action="display_additional_urls" format="sources"]</code> - Grouped by source domain with counts<br>
+                        <code class="sfpf-copy-code">[founder action="display_additional_urls" format="compact"]</code> - One-line title and source<br>
+                        <code class="sfpf-copy-code">[founder id="additional_urls" format="json"]</code> - Raw repeater JSON
+                    </div>
+                    <div style="background:#f9fafb;padding:10px;border-radius:4px;margin-top:8px;border:1px solid #e5e7eb;">
+                        <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Live preview:</div>
+                        <?php
+                        $additional_urls_preview = $user_id ? founder_display_additional_urls($user_id, 'titled') : '';
+                        echo $additional_urls_preview ?: '<em style="color:#6b7280;">No Additional URLs are saved for the selected founder.</em>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer escapes every field.
+                        ?>
+                    </div>
+                </td>
+            </tr>
             <!-- Location Born -->
             <tr>
                 <td><code class="sfpf-copy-code">[founder action="display_location_born"]</code></td>

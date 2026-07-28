@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '2.0.3' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '2.0.4' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '1.0.0', '>=' ), 'Selected Core version is older than 1.0.0.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -80,7 +80,6 @@ foreach ( $legacyAjaxActions as $legacyAjaxAction ) {
 }
 
 $requiredFunctions = [
-    'sfpf_person_website\\load_cpt_snippets',
     'sfpf_person_website\\render_public_profile_debug_page',
     'sfpf_person_website\\migrate_articles_textarea_to_repeater',
     'sfpf_person_website\\sfpf_fix_repeater_load_value',
@@ -91,6 +90,8 @@ $requiredFunctions = [
     'sfpf_person_website\\book_shortcode',
     'sfpf_person_website\\founder_shortcode',
     'sfpf_person_website\\founder_display_articles',
+    'sfpf_person_website\\founder_display_additional_urls',
+    'sfpf_person_website\\sfpf_normalize_link_repeater',
     'sfpf_person_website\\founder_display_location_born',
     'sfpf_person_website\\sfpf_render_author_archive_profile',
     'sfpf_person_website\\sfpf_author_archive_has_elementor_template',
@@ -126,6 +127,33 @@ foreach ( $requiredShortcodes as $shortcode ) {
     $assert( shortcode_exists( $shortcode ), 'Shortcode is missing: ' . $shortcode );
 }
 
+$profileFieldGroup = function_exists( 'sfpf_person_website\\user_schema_acf_field_group' )
+    ? sfpf_person_website\user_schema_acf_field_group()
+    : [];
+$profileFields = is_array( $profileFieldGroup['fields'] ?? null ) ? $profileFieldGroup['fields'] : [];
+$additionalUrlFields = array_values(
+    array_filter(
+        $profileFields,
+        static fn ( $field ): bool => is_array( $field ) && 'field_sfpf_additional_urls' === ( $field['key'] ?? '' )
+    )
+);
+$additionalUrlField = $additionalUrlFields[0] ?? [];
+$additionalUrlSubfieldNames = array_values(
+    array_filter(
+        array_map(
+            static fn ( $field ): string => is_array( $field ) ? (string) ( $field['name'] ?? '' ) : '',
+            is_array( $additionalUrlField['sub_fields'] ?? null ) ? $additionalUrlField['sub_fields'] : []
+        )
+    )
+);
+$assert( 'repeater' === ( $additionalUrlField['type'] ?? '' ), 'Additional URLs ACF repeater is missing.' );
+$assert( [ 'title', 'source', 'url' ] === $additionalUrlSubfieldNames, 'Additional URLs does not mirror the Recent Articles subfields.' );
+
+$managedPages = function_exists( 'sfpf_person_website\\sfpf_site_structure_pages_definition' )
+    ? sfpf_person_website\sfpf_site_structure_pages_definition()
+    : [];
+$assert( 'additional-urls' === ( $managedPages['additional_urls']['slug'] ?? '' ), 'Managed Additional URLs page is missing.' );
+
 foreach ( $legacyAjaxActions as $ajaxAction ) {
     $assert( false !== has_action( 'wp_ajax_' . $ajaxAction ), 'AJAX action is missing: ' . $ajaxAction );
 }
@@ -147,4 +175,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 2.0.3 with grouped Core tabs, action-scoped AJAX modules, and guarded runtime hooks.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 2.0.4 with grouped Core tabs, action-scoped AJAX modules, and the Additional URLs repeater.' . PHP_EOL;

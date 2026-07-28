@@ -40,54 +40,94 @@ function format_url_output($url, $atts) {
 }
 
 // =============================================================================
-// ARTICLES DISPLAY
+// LINK REPEATER DISPLAY
 // =============================================================================
 
 /**
- * Display articles with multiple format options
- * Supports new repeater format (title/source/url) with fallback to old textarea
+ * Display articles with multiple format options.
  *
  * Formats: titled (default), cards, sources, compact
  */
 function founder_display_articles($user_id, $format = 'titled') {
-    $articles_raw = get_field('articles', 'user_' . $user_id);
+    return sfpf_display_link_repeater($user_id, 'articles', $format, 'founder-article-links');
+}
 
-    // Normalize to array of {title, source, url}
-    $articles = [];
-    if (is_array($articles_raw) && !empty($articles_raw)) {
-        foreach ($articles_raw as $item) {
-            if (empty($item['url'])) continue;
-            $url = $item['url'];
-            $source = $item['source'] ?? '';
-            if (empty($source)) {
+/**
+ * Display additional profile URLs with the same presentation contract as articles.
+ *
+ * @param int    $user_id WordPress user ID.
+ * @param string $format  titled, cards, sources, or compact.
+ * @return string
+ */
+function founder_display_additional_urls($user_id, $format = 'titled') {
+    return sfpf_display_link_repeater($user_id, 'additional_urls', $format, 'founder-additional-urls');
+}
+
+/**
+ * Normalize a link repeater or its legacy newline-delimited value.
+ *
+ * @param mixed $links_raw Raw ACF value.
+ * @return array<int,array{title:string,source:string,url:string}>
+ */
+function sfpf_normalize_link_repeater($links_raw) {
+    $links = [];
+
+    if (is_array($links_raw) && !empty($links_raw)) {
+        foreach ($links_raw as $item) {
+            if (!is_array($item)) continue;
+            $url = trim((string) ($item['url'] ?? ''));
+            if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
+
+            $source = trim((string) ($item['source'] ?? ''));
+            if ($source === '') {
                 $parsed = wp_parse_url($url);
                 $source = preg_replace('/^www\./', '', $parsed['host'] ?? '');
             }
-            $articles[] = [
-                'title' => $item['title'] ?? '',
+
+            $links[] = [
+                'title' => trim((string) ($item['title'] ?? '')),
                 'source' => $source,
                 'url' => $url,
             ];
         }
-    } elseif (is_string($articles_raw) && !empty(trim($articles_raw))) {
-        $urls = array_filter(array_map('trim', explode("\n", $articles_raw)));
+    } elseif (is_string($links_raw) && trim($links_raw) !== '') {
+        $urls = array_filter(array_map('trim', preg_split('/\R/', $links_raw) ?: []));
         foreach ($urls as $url) {
             if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
             $parsed = wp_parse_url($url);
-            $source = preg_replace('/^www\./', '', $parsed['host'] ?? '');
-            $articles[] = [
+            $links[] = [
                 'title' => '',
-                'source' => $source,
+                'source' => preg_replace('/^www\./', '', $parsed['host'] ?? ''),
                 'url' => $url,
             ];
         }
     }
+
+    return $links;
+}
+
+/**
+ * Render a user link repeater through the shared article presentation.
+ *
+ * @param int    $user_id      WordPress user ID.
+ * @param string $field_name   ACF field name.
+ * @param string $format       Display format.
+ * @param string $context_class Context-specific CSS class.
+ * @return string
+ */
+function sfpf_display_link_repeater($user_id, $field_name, $format = 'titled', $context_class = '') {
+    $articles_raw = get_field($field_name, 'user_' . $user_id);
+
+    $articles = sfpf_normalize_link_repeater($articles_raw);
 
     if (empty($articles)) {
         return '';
     }
 
-    $output = '<div class="founder-articles format-' . esc_attr($format) . '">';
+    $allowed_formats = ['titled', 'cards', 'sources', 'compact'];
+    $format = in_array($format, $allowed_formats, true) ? $format : 'titled';
+    $context_class = preg_replace('/[^a-z0-9_-]/', '', strtolower((string) $context_class));
+    $output = '<div class="founder-articles' . ($context_class !== '' ? ' ' . esc_attr($context_class) : '') . ' format-' . esc_attr($format) . '">';
 
     // Shared styles block (injected once)
     static $articles_styles_injected = false;

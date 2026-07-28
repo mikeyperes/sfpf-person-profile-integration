@@ -50,6 +50,7 @@ $requiredFiles = [
     'includes/runtime/profile-admin-script.php',
     'includes/frontend/author-archive.php',
     'tests/author-archive-elementor.php',
+    'tests/additional-urls.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -91,6 +92,8 @@ $schemaProvider = $read( $root . '/src/Schema/SchemaProvider.php' );
 $helperFunctions = $read( $root . '/includes/helper-functions.php' );
 $faqShortcodes = $read( $root . '/includes/shortcodes/faq.php' );
 $founderShortcodes = $read( $root . '/includes/shortcodes/founder.php' );
+$founderArticles = $read( $root . '/includes/shortcodes/founder-articles.php' );
+$acfUserProfile = $read( $root . '/includes/runtime/acf-user-profile.php' );
 $authorArchive = $read( $root . '/includes/frontend/author-archive.php' );
 $elementorConditions = $read( $root . '/includes/elementor-display-conditions.php' );
 
@@ -104,7 +107,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.3' === $headerVersion, 'Plugin version is not 2.0.3.' );
+$assert( '2.0.4' === $headerVersion, 'Plugin version is not 2.0.4.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -265,9 +268,34 @@ $assert(
 $assert(
     false !== strpos( $elementorConditions, "case 'articles':" )
     && false !== strpos( $elementorConditions, 'sfpf_founder_has_public_articles()' )
+    && false !== strpos( $elementorConditions, "case 'additional_urls':" )
+    && false !== strpos( $elementorConditions, 'sfpf_founder_has_public_additional_urls()' )
     && false !== strpos( $elementorConditions, "case 'faq':" )
     && false !== strpos( $elementorConditions, 'sfpf_founder_has_public_faq()' ),
-    'Elementor conditions do not cover founder articles and person FAQs.'
+    'Elementor conditions do not cover founder articles, additional URLs, and person FAQs.'
+);
+$assert(
+    false !== strpos( $userFields, "'key'               => 'field_sfpf_additional_urls'" )
+    && false !== strpos( $userFields, "'name'              => 'additional_urls'" )
+    && false !== strpos( $userFields, "'collapsed'         => 'field_sfpf_additional_url_title'" )
+    && false !== strpos( $userFields, "'key'               => 'field_sfpf_additional_url_source'" )
+    && false !== strpos( $userFields, "'key'               => 'field_sfpf_additional_url_url'" ),
+    'Additional URLs does not mirror the article title/source/URL ACF repeater.'
+);
+$assert(
+    false !== strpos( $founderArticles, 'function founder_display_additional_urls(' )
+    && false !== strpos( $founderArticles, "sfpf_display_link_repeater(\$user_id, 'additional_urls'" )
+    && false !== strpos( $founderShortcodes, "case 'display_additional_urls':" )
+    && false !== strpos( $founderShortcodes, "case 'additional_urls':" ),
+    'Additional URLs does not expose the shared article display and raw shortcode contract.'
+);
+$assert(
+    false !== strpos( $acfUserProfile, "'field_sfpf_additional_urls'     => 'additional_urls'" )
+    && false !== strpos( $schemaBuilder, "['articles', 'additional_urls']" )
+    && false !== strpos( $authorArchive, '<h2>Additional URLs</h2>' )
+    && false !== strpos( $helperFunctions, "'additional_urls' => [" )
+    && false !== strpos( $helperFunctions, "'additional_urls' => '[founder action=\"display_additional_urls\"]'" ),
+    'Additional URLs is not connected to hydration, Person schema, archive, and managed-page output.'
 );
 $assert(
     false !== strpos( $userFields, "'name'              => 'gallery'" )

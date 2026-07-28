@@ -250,12 +250,13 @@ function build_person_schema() {
             }
         }
     }
-    // Article URLs
-    $arts = _sf('articles', $uk, []);
-    if (is_array($arts)) {
-        foreach ($arts as $a) {
-            $au = $a['url'] ?? '';
-            if ($au && filter_var($au, FILTER_VALIDATE_URL)) $sa[] = $au;
+    // Article and additional profile URLs
+    foreach (['articles', 'additional_urls'] as $link_field) {
+        $links = _sf($link_field, $uk, []);
+        if (!is_array($links)) continue;
+        foreach ($links as $link) {
+            $link_url = is_array($link) ? ($link['url'] ?? '') : '';
+            if ($link_url && filter_var($link_url, FILTER_VALIDATE_URL)) $sa[] = $link_url;
         }
     }
     $sa = array_values(array_unique(array_map('esc_url_raw', $sa)));

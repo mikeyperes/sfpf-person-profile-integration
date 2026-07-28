@@ -68,6 +68,8 @@ function sfpf_profile_debug_data() {
         'education' => '[founder action="display_education"]',
         'gallery' => '[founder action="display_gallery"]',
         'gallery_urls' => '[founder id="gallery" format="urls"]',
+        'additional_urls' => '[founder action="display_additional_urls"]',
+        'additional_urls_json' => '[founder id="additional_urls" format="json"]',
         'organization_gallery' => '[organization field="gallery"]',
     ];
     $rendered = [];
@@ -83,6 +85,7 @@ function sfpf_profile_debug_data() {
         'organization' => ['post_id' => $org ? $org->ID : 0, 'name' => $org ? get_the_title($org) : '', 'gallery_count' => count(sfpf_normalize_gallery_images($org_gallery)), 'gallery' => sfpf_normalize_gallery_images($org_gallery)],
         'mappings' => [
             ['scope' => 'person', 'notion_field' => 'Gallery', 'wordpress_field' => 'gallery', 'type' => 'ACF Gallery', 'shortcode' => '[founder action="display_gallery"]'],
+            ['scope' => 'person', 'notion_field' => 'Additional URLs', 'wordpress_field' => 'additional_urls', 'type' => 'ACF Repeater', 'shortcode' => '[founder action="display_additional_urls"]'],
             ['scope' => 'company', 'notion_field' => 'Gallery', 'wordpress_field' => 'gallery', 'type' => 'Organization ACF Gallery', 'shortcode' => '[organization field="gallery"]'],
         ],
         'shortcodes' => $shortcodes,

@@ -244,6 +244,7 @@ function build_person_schema() {
         }
     }
     $sa = array_merge($sa, _parse_url_textarea(_sf('sameas', $uk)));
+    $sa = array_merge($sa, sfpf_collect_wikidata_urls(_sf('urls_wikidata', $uk)));
     // Social media from website options
     if (function_exists('get_field')) {
         $wo = get_field('website', 'option');

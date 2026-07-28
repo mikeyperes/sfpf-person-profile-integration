@@ -120,6 +120,10 @@ function sfpf_display_link_repeater($user_id, $field_name, $format = 'titled', $
 
     $articles = sfpf_normalize_link_repeater($articles_raw);
 
+    if ($field_name === 'additional_urls') {
+        $articles = sfpf_filter_public_link_repeater($articles);
+    }
+
     if (empty($articles)) {
         return '';
     }

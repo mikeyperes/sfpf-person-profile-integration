@@ -204,7 +204,11 @@ function sfpf_founder_has_public_link_repeater($field_name) {
 
     if (is_string($links)) {
         foreach (preg_split('/\\R/', $links) ?: [] as $url) {
-            if (filter_var(trim($url), FILTER_VALIDATE_URL)) {
+            $url = trim($url);
+            if (
+                filter_var($url, FILTER_VALIDATE_URL)
+                && ($field_name !== 'additional_urls' || !sfpf_is_wikidata_url($url))
+            ) {
                 return true;
             }
         }
@@ -217,7 +221,11 @@ function sfpf_founder_has_public_link_repeater($field_name) {
     }
 
     foreach ($links as $link) {
-        if (is_array($link) && filter_var(trim((string) ($link['url'] ?? '')), FILTER_VALIDATE_URL)) {
+        $url = is_array($link) ? trim((string) ($link['url'] ?? '')) : '';
+        if (
+            filter_var($url, FILTER_VALIDATE_URL)
+            && ($field_name !== 'additional_urls' || !sfpf_is_wikidata_url($url))
+        ) {
             return true;
         }
     }

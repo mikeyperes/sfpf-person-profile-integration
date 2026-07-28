@@ -33,6 +33,7 @@ namespace {
 }
 
 namespace sfpf_person_website {
+    require_once dirname( __DIR__ ) . '/includes/helper-functions.php';
     require_once dirname( __DIR__ ) . '/includes/shortcodes/founder-articles.php';
 
     $failures = [];
@@ -59,6 +60,11 @@ namespace sfpf_person_website {
                 'source' => 'unsafe',
                 'url'    => 'javascript:alert(1)',
             ],
+            [
+                'title'  => 'Schema identity',
+                'source' => 'Wikidata',
+                'url'    => 'https://www.wikidata.org/wiki/Q12345',
+            ],
         ],
         'articles' => [
             [
@@ -74,6 +80,7 @@ namespace sfpf_person_website {
     $assert( str_contains( $titled, 'Knowledge &lt;Profile&gt;' ), 'Additional URL title is not escaped.' );
     $assert( str_contains( $titled, 'example.org' ), 'Source is not derived from the URL host.' );
     $assert( ! str_contains( $titled, 'javascript:' ), 'Invalid URLs are not rejected.' );
+    $assert( ! str_contains( $titled, 'wikidata.org' ), 'Wikidata leaked into public Additional URLs output.' );
 
     $cards = founder_display_additional_urls( 7, 'cards' );
     $assert( str_contains( $cards, 'format-cards' ) && str_contains( $cards, 'article-card-wrap' ), 'Cards format is not rendered.' );
@@ -93,6 +100,15 @@ namespace sfpf_person_website {
     $legacy = founder_display_additional_urls( 7, 'titled' );
     $assert( str_contains( $legacy, 'legacy.test' ) && ! str_contains( $legacy, '>invalid<' ), 'Legacy newline URL fallback failed.' );
 
+    $assert(
+        [ 'https://example.test/profile' ] === sfpf_filter_public_urls("https://www.wikidata.org/wiki/Q12345\nhttps://example.test/profile"),
+        'Wikidata was not removed from a public URL collection.'
+    );
+    $assert(
+        'https://www.google.com/search?kgmid=%2Fg%2F11abc_123&hl=en-US' === sfpf_knowledge_panel_url('/g/11abc_123'),
+        'The dynamic Google Knowledge Panel URL was not constructed from a KGMID.'
+    );
+
     if ( [] !== $failures ) {
         foreach ( $failures as $failure ) {
             fwrite( STDERR, 'FAIL: ' . $failure . PHP_EOL );
@@ -100,5 +116,5 @@ namespace sfpf_person_website {
         exit( 1 );
     }
 
-    echo 'PASS: Additional URLs shares the Recent Articles repeater renderer across all formats.' . PHP_EOL;
+    echo 'PASS: Additional URLs hides Wikidata publicly and Knowledge Panel URLs remain dynamic.' . PHP_EOL;
 }

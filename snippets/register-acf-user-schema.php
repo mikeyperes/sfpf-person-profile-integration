@@ -76,6 +76,7 @@ function user_schema_acf_field_group(): array {
                 'type'              => 'text',
                 'instructions'      => 'Enter the KGMID (e.g., <code>/g/11gyz2y3lp</code>). If you paste the full Google URL, the ID will be extracted automatically.<br>
 <code>[founder id="knowledge_graph_id"]</code> — Raw KGMID<br>
+<code>[founder id="knowledge_graph_url"]</code> — Plain dynamic URL for Elementor links<br>
 <code>[founder action="display_knowledge_panel"]</code> — Link to Knowledge Panel<br>
 <span id="sfpf-kgid-link-display">Enter a KGMID above to see the full Knowledge Panel URL.</span>',
                 'required'          => 0,
@@ -761,7 +762,8 @@ function user_schema_acf_field_group(): array {
 <code>[founder action="display_additional_urls" format="cards"]</code> - Cards with title, source, URL<br>
 <code>[founder action="display_additional_urls" format="sources"]</code> - Grouped by source domain<br>
 <code>[founder action="display_additional_urls" format="compact"]</code> - One-line per URL: title - source<br>
-<code>[founder id="additional_urls" format="json"]</code> - JSON array of all URLs',
+<code>[founder id="additional_urls" format="json"]</code> - JSON array of public URLs<br>
+Wikidata rows are retained for Person schema <code>sameAs</code> but are never rendered publicly.',
                 'required'          => 0,
                 'conditional_logic' => 0,
                 'wrapper'           => ['class' => 'sfpf-entity-person'],

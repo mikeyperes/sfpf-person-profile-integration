@@ -130,10 +130,13 @@ function sfpf_render_author_archive_profile($user_id) {
     $kgid = sfpf_author_archive_plain(sfpf_author_archive_field($user_id, "knowledge_graph_id"));
     $avatar = get_avatar_url($user_id, ["size" => 300]);
     $urls = sfpf_author_archive_url_group($user_id);
-    $sameas = sfpf_author_archive_lines(sfpf_author_archive_field($user_id, "sameas"));
+    $urls = array_filter($urls, function($url) { return !sfpf_is_wikidata_url($url); });
+    $sameas = sfpf_filter_public_urls(sfpf_author_archive_field($user_id, "sameas"));
     $education = sfpf_author_archive_field($user_id, "education", []);
     $articles = sfpf_author_archive_field($user_id, "articles", []);
-    $additional_urls = sfpf_author_archive_field($user_id, "additional_urls", []);
+    $additional_urls = sfpf_filter_public_link_repeater(
+        sfpf_normalize_link_repeater(sfpf_author_archive_field($user_id, "additional_urls", []))
+    );
     $labels = ["website" => "Website", "linkedin" => "LinkedIn", "crunchbase" => "Crunchbase", "wikipedia" => "Wikipedia", "facebook" => "Facebook", "instagram" => "Instagram", "x" => "X", "youtube" => "YouTube", "imdb" => "IMDb", "muckrack" => "Muck Rack"];
 
     ob_start();

@@ -85,6 +85,11 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.6
+
+- Keeps Wikidata URLs in Person schema `sameAs` while excluding them from public Additional URLs and author-profile output.
+- Adds a plain dynamic Google Knowledge Panel URL shortcode for native Elementor link controls.
+
 ### 2.0.5
 
 - Stacks every Education History input on its own row in the user-profile editor.

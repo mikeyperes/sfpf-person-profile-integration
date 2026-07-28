@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '2.0.5' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '2.0.6' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '1.0.0', '>=' ), 'Selected Core version is older than 1.0.0.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -92,6 +92,9 @@ $requiredFunctions = [
     'sfpf_person_website\\founder_display_articles',
     'sfpf_person_website\\founder_display_additional_urls',
     'sfpf_person_website\\sfpf_normalize_link_repeater',
+    'sfpf_person_website\\sfpf_is_wikidata_url',
+    'sfpf_person_website\\sfpf_filter_public_urls',
+    'sfpf_person_website\\sfpf_knowledge_panel_url',
     'sfpf_person_website\\founder_display_location_born',
     'sfpf_person_website\\sfpf_render_author_archive_profile',
     'sfpf_person_website\\sfpf_author_archive_has_elementor_template',
@@ -204,4 +207,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 2.0.5 with vertical Education fields and shared Wikimedia Commons URLs.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 2.0.6 with schema-only Wikidata URLs and dynamic Google Knowledge links.' . PHP_EOL;

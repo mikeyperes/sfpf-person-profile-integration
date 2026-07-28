@@ -8,10 +8,19 @@ namespace {
     }
 
     $GLOBALS['sfpf_wikimedia_test_fields'] = [
+        'founder' => [
+            'founder_user' => 9,
+        ],
         'wikimedia_commons_urls' => [
             [ 'url' => 'https://commons.wikimedia.org/wiki/File:Portrait.jpg' ],
             [ 'url' => 'javascript:alert(1)' ],
             [ 'url' => 'https://commons.wikimedia.org/wiki/File:Portrait.jpg' ],
+        ],
+        'sameas' => "https://example.com/profile\nhttps://www.wikidata.org/wiki/Q12345",
+        'urls_wikidata' => "https://www.wikidata.org/wiki/Q12345\nhttps://www.wikidata.org/wiki/Q67890",
+        'additional_urls' => [
+            [ 'url' => 'https://www.wikidata.org/wiki/Q12345' ],
+            [ 'url' => 'https://publisher.test/profile' ],
         ],
     ];
 
@@ -22,6 +31,29 @@ namespace {
 
     function get_site_url(): string {
         return 'https://example.com';
+    }
+
+    function get_userdata( int $user_id ): object|false {
+        if ( 9 !== $user_id ) {
+            return false;
+        }
+
+        return (object) [
+            'display_name' => 'Example Person',
+            'first_name'   => 'Example',
+            'last_name'    => 'Person',
+            'user_email'   => '',
+            'description'  => '',
+            'user_url'     => '',
+        ];
+    }
+
+    function get_edit_user_link( int $user_id ): string {
+        return 'https://example.com/wp-admin/user-edit.php?user_id=' . $user_id;
+    }
+
+    function get_author_posts_url( int $user_id ): string {
+        return 'https://example.com/author/' . $user_id . '/';
     }
 
     function get_posts( array $args = [] ): array {
@@ -49,18 +81,7 @@ namespace {
 }
 
 namespace sfpf_person_website {
-    function get_founder_full_info(): array {
-        return [
-            'id'           => 9,
-            'display_name' => 'Example Person',
-            'first_name'   => 'Example',
-            'last_name'    => 'Person',
-            'email'        => '',
-            'urls'         => [],
-            'avatar_url'   => '',
-        ];
-    }
-
+    require_once dirname( __DIR__ ) . '/includes/helper-functions.php';
     require_once dirname( __DIR__ ) . '/schema/schema-builder.php';
 
     $schema = build_person_schema();
@@ -75,5 +96,18 @@ namespace sfpf_person_website {
         exit( 1 );
     }
 
-    echo 'PASS: Wikimedia Commons URLs are validated and merged into Person schema images.' . PHP_EOL;
+    $same_as = $schema['sameAs'] ?? [];
+    $expected_same_as = [
+        'https://example.com/profile',
+        'https://www.wikidata.org/wiki/Q12345',
+        'https://www.wikidata.org/wiki/Q67890',
+        'https://publisher.test/profile',
+    ];
+
+    if ( $expected_same_as !== $same_as ) {
+        fwrite( STDERR, 'FAIL: Wikidata URLs were not retained and deduplicated in Person schema sameAs.' . PHP_EOL );
+        exit( 1 );
+    }
+
+    echo 'PASS: Wikimedia Commons images and schema-only Wikidata sameAs URLs are normalized.' . PHP_EOL;
 }

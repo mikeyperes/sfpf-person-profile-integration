@@ -13,6 +13,135 @@ namespace sfpf_person_website;
 
 defined('ABSPATH') || exit;
 
+/**
+ * Normalize valid URLs from strings, textareas, and nested ACF values.
+ *
+ * @param mixed $value Raw URL value or collection.
+ * @return array<int,string>
+ */
+function sfpf_normalize_url_values($value) {
+    $urls = [];
+    $walk = function($candidate) use (&$walk, &$urls) {
+        if (is_array($candidate)) {
+            foreach ($candidate as $item) {
+                $walk($item);
+            }
+            return;
+        }
+
+        if (!is_scalar($candidate)) {
+            return;
+        }
+
+        foreach (preg_split('/\R/', trim((string) $candidate)) ?: [] as $url) {
+            $url = trim($url);
+            if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+                $urls[] = $url;
+            }
+        }
+    };
+
+    $walk($value);
+
+    return array_values(array_unique($urls));
+}
+
+/**
+ * Determine whether a URL belongs to Wikidata.
+ *
+ * @param mixed $url Candidate URL.
+ * @return bool
+ */
+function sfpf_is_wikidata_url($url) {
+    $url = trim((string) $url);
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return false;
+    }
+
+    $host = strtolower(rtrim((string) parse_url($url, PHP_URL_HOST), '.'));
+    return $host === 'wikidata.org' || str_ends_with($host, '.wikidata.org');
+}
+
+/**
+ * Return valid public URLs while retaining Wikidata for schema-only use.
+ *
+ * @param mixed $value Raw URL value or collection.
+ * @return array<int,string>
+ */
+function sfpf_filter_public_urls($value) {
+    return array_values(array_filter(
+        sfpf_normalize_url_values($value),
+        function($url) {
+            return !sfpf_is_wikidata_url($url);
+        }
+    ));
+}
+
+/**
+ * Remove schema-only Wikidata rows from a normalized public link repeater.
+ *
+ * @param mixed $links Normalized ACF link rows.
+ * @return array<int,array<string,mixed>>
+ */
+function sfpf_filter_public_link_repeater($links) {
+    if (!is_array($links)) {
+        return [];
+    }
+
+    return array_values(array_filter($links, function($link) {
+        return is_array($link) && !sfpf_is_wikidata_url($link['url'] ?? '');
+    }));
+}
+
+/**
+ * Collect only Wikidata URLs from one or more field values.
+ *
+ * @param mixed ...$sources Raw URL sources.
+ * @return array<int,string>
+ */
+function sfpf_collect_wikidata_urls(...$sources) {
+    $urls = [];
+    foreach ($sources as $source) {
+        foreach (sfpf_normalize_url_values($source) as $url) {
+            if (sfpf_is_wikidata_url($url)) {
+                $urls[] = $url;
+            }
+        }
+    }
+
+    return array_values(array_unique($urls));
+}
+
+/**
+ * Build a Google Knowledge Panel search URL from a saved KGMID.
+ *
+ * @param mixed $kgid Raw KGMID or Google search URL.
+ * @return string
+ */
+function sfpf_knowledge_panel_url($kgid) {
+    $kgid = trim((string) $kgid);
+    if ($kgid === '') {
+        return '';
+    }
+
+    if (filter_var($kgid, FILTER_VALIDATE_URL)) {
+        parse_str((string) parse_url($kgid, PHP_URL_QUERY), $query);
+        $kgid = isset($query['kgmid']) ? rawurldecode((string) $query['kgmid']) : '';
+    } else {
+        $kgid = rawurldecode($kgid);
+    }
+
+    if ($kgid !== '' && $kgid[0] !== '/' && preg_match('#^(?:g|m)/[A-Za-z0-9_-]+$#', $kgid)) {
+        $kgid = '/' . $kgid;
+    }
+
+    if (!preg_match('#^/(?:g|m)/[A-Za-z0-9_-]+$#', $kgid)) {
+        return '';
+    }
+
+    return 'https://www.google.com/search?kgmid=' . rawurlencode($kgid) . '&hl=en-US';
+}
+
 /** @return array<string,mixed>|null */
 function get_hws_primary_entity(array $entity_types = []) {
     if (!class_exists('\\Hexa\\PluginCore\\EntitySources\\CanonicalEntityResolver')) {
@@ -381,6 +510,7 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder action="display_articles"]', 'description' => 'Recent articles repeater'],
             ['shortcode' => '[founder action="display_additional_urls"]', 'description' => 'Additional URLs repeater'],
             ['shortcode' => '[founder id="additional_urls" format="json"]', 'description' => 'Additional URLs as JSON'],
+            ['shortcode' => '[founder id="knowledge_graph_url"]', 'description' => 'Google Knowledge Panel URL for dynamic links'],
             ['shortcode' => '[founder id="website"]', 'description' => 'Website URL'],
             ['shortcode' => '[founder id="additional_public_email"]', 'description' => 'Public email'],
             ['shortcode' => '[founder id="additional_public_phone"]', 'description' => 'Public phone'],

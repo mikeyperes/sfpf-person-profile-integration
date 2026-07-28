@@ -62,8 +62,8 @@ function founder_shortcode($atts) {
                 return founder_display_location_born($user_id, $atts['format'] ?? 'link');
             case 'display_knowledge_panel':
                 $kgid = get_field('knowledge_graph_id', 'user_' . $user_id);
-                if (empty($kgid)) return '';
-                $full_url = 'https://www.google.com/search?kgmid=' . urlencode($kgid) . '&hl=en-US';
+                $full_url = sfpf_knowledge_panel_url($kgid);
+                if ($full_url === '') return '';
                 return '<a href="' . esc_url($full_url) . '" target="_blank" rel="noopener" title="' . esc_attr($full_url) . '">' . esc_html($full_url) . '</a>';
             case 'display_nationality':
                 $nationality = get_field('nationality', 'user_' . $user_id);
@@ -122,6 +122,9 @@ function founder_shortcode($atts) {
         case 'website':
             $user = get_userdata($user_id);
             return $user ? esc_url($user->user_url) : '';
+
+        case 'knowledge_graph_url':
+            return esc_url(sfpf_knowledge_panel_url(get_field('knowledge_graph_id', 'user_' . $user_id)));
 
         case 'avatar':
             $size_map = [
@@ -205,6 +208,9 @@ function founder_shortcode($atts) {
         case 'articles':
         case 'additional_urls':
             $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));
+            if ($field_name === 'additional_urls') {
+                $links = sfpf_filter_public_link_repeater($links);
+            }
             if (empty($links)) return '';
             if ($atts['format'] === 'json') {
                 return wp_json_encode($links);
@@ -214,6 +220,16 @@ function founder_shortcode($atts) {
             }
             $urls = array_column($links, 'url');
             return esc_html(implode("\n", $urls));
+
+        case 'sameas':
+            $urls = sfpf_filter_public_urls(get_field('sameas', 'user_' . $user_id));
+            if (empty($urls)) return '';
+            if ($atts['format'] === 'json') return wp_json_encode($urls);
+            if ($atts['format'] === 'count') return (string) count($urls);
+            return esc_html(implode("\n", $urls));
+
+        case 'urls_wikidata':
+            return '';
 
         case 'wikimedia_commons_urls':
             $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));

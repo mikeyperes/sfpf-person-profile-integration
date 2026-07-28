@@ -108,7 +108,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.5' === $headerVersion, 'Plugin version is not 2.0.5.' );
+$assert( '2.0.6' === $headerVersion, 'Plugin version is not 2.0.6.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -286,17 +286,21 @@ $assert(
 $assert(
     false !== strpos( $founderArticles, 'function founder_display_additional_urls(' )
     && false !== strpos( $founderArticles, "sfpf_display_link_repeater(\$user_id, 'additional_urls'" )
+    && false !== strpos( $founderArticles, 'sfpf_filter_public_link_repeater($articles)' )
     && false !== strpos( $founderShortcodes, "case 'display_additional_urls':" )
-    && false !== strpos( $founderShortcodes, "case 'additional_urls':" ),
-    'Additional URLs does not expose the shared article display and raw shortcode contract.'
+    && false !== strpos( $founderShortcodes, "case 'additional_urls':" )
+    && false !== strpos( $founderShortcodes, "case 'knowledge_graph_url':" ),
+    'Additional URLs public filtering or the dynamic Knowledge Graph URL shortcode is missing.'
 );
 $assert(
     false !== strpos( $acfUserProfile, "'field_sfpf_additional_urls'     => 'additional_urls'" )
     && false !== strpos( $schemaBuilder, "['articles', 'additional_urls']" )
+    && false !== strpos( $schemaBuilder, "sfpf_collect_wikidata_urls(_sf('urls_wikidata', \$uk))" )
     && false !== strpos( $authorArchive, '<h2>Additional URLs</h2>' )
+    && false !== strpos( $authorArchive, 'sfpf_filter_public_link_repeater(' )
     && false !== strpos( $helperFunctions, "'additional_urls' => [" )
     && false !== strpos( $helperFunctions, "'additional_urls' => '[founder action=\"display_additional_urls\"]'" ),
-    'Additional URLs is not connected to hydration, Person schema, archive, and managed-page output.'
+    'Additional URLs is not connected to schema-only Wikidata handling and public output.'
 );
 $educationOffset = strpos( $userFields, "'key'               => 'field_sfpf_education_repeater'" );
 $educationSource = false === $educationOffset ? '' : substr( $userFields, $educationOffset, 3500 );
@@ -457,6 +461,10 @@ $assert(
 $canonicalTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/canonical-entity.php' );
 passthru( $canonicalTest, $canonicalStatus );
 $assert( 0 === $canonicalStatus, 'Canonical HWS entity regression test failed.' );
+
+$additionalUrlsTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/additional-urls.php' );
+passthru( $additionalUrlsTest, $additionalUrlsStatus );
+$assert( 0 === $additionalUrlsStatus, 'Schema-only Wikidata visibility regression test failed.' );
 
 $wikimediaTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/wikimedia-commons.php' );
 passthru( $wikimediaTest, $wikimediaStatus );

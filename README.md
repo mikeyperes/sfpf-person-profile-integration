@@ -85,6 +85,11 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.5
+
+- Stacks every Education History input on its own row in the user-profile editor.
+- Adds shared Wikimedia Commons photo URLs for Person and Organization entities, with shortcode and Person-schema image support.
+
 ### 2.0.4
 
 - Adds a Person-level Additional URLs ACF repeater matching Recent Articles with title, source, and URL columns.

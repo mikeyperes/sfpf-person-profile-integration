@@ -215,6 +215,14 @@ function founder_shortcode($atts) {
             $urls = array_column($links, 'url');
             return esc_html(implode("\n", $urls));
 
+        case 'wikimedia_commons_urls':
+            $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));
+            $urls = array_values(array_unique(array_column($links, 'url')));
+            if (empty($urls)) return '';
+            if ($atts['format'] === 'json') return wp_json_encode($urls);
+            if ($atts['format'] === 'count') return (string) count($urls);
+            return esc_html(implode("\n", $urls));
+
         case 'faq':
             $faq = sfpf_normalize_faq_items(get_field('faq', 'user_' . $user_id));
             if ($atts['format'] === 'json') {

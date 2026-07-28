@@ -51,6 +51,7 @@ $requiredFiles = [
     'includes/frontend/author-archive.php',
     'tests/author-archive-elementor.php',
     'tests/additional-urls.php',
+    'tests/wikimedia-commons.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -107,7 +108,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.4' === $headerVersion, 'Plugin version is not 2.0.4.' );
+$assert( '2.0.5' === $headerVersion, 'Plugin version is not 2.0.5.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -297,6 +298,30 @@ $assert(
     && false !== strpos( $helperFunctions, "'additional_urls' => '[founder action=\"display_additional_urls\"]'" ),
     'Additional URLs is not connected to hydration, Person schema, archive, and managed-page output.'
 );
+$educationOffset = strpos( $userFields, "'key'               => 'field_sfpf_education_repeater'" );
+$educationSource = false === $educationOffset ? '' : substr( $userFields, $educationOffset, 3500 );
+$assert(
+    false !== strpos( $educationSource, "'layout'            => 'row'" )
+    && 5 === substr_count( $educationSource, "'wrapper'           => ['width' => '100']" ),
+    'Education History does not stack all five inputs one per row.'
+);
+$knowledgeGraphOffset = strpos( $userFields, "'key'               => 'field_sfpf_knowledge_graph_id'" );
+$wikimediaOffset = strpos( $userFields, "'key'               => 'field_sfpf_wikimedia_commons_urls'" );
+$assert(
+    false !== $knowledgeGraphOffset
+    && false !== $wikimediaOffset
+    && $wikimediaOffset > $knowledgeGraphOffset
+    && false !== strpos( $userFields, "'label'             => 'Wikimedia Commons URLs (Photos)'" )
+    && false !== strpos( $userFields, "'wrapper'           => ['class' => 'sfpf-entity-person-or-org', 'width' => '100']" )
+    && false !== strpos( $userFields, "'key'         => 'field_sfpf_wikimedia_commons_url'" ),
+    'Shared Wikimedia Commons photo URL repeater is missing below the Knowledge Graph ID.'
+);
+$assert(
+    false !== strpos( $acfUserProfile, "'field_sfpf_wikimedia_commons_urls' => 'wikimedia_commons_urls'" )
+    && false !== strpos( $schemaBuilder, "_sf('wikimedia_commons_urls', \$uk, [])" )
+    && false !== strpos( $founderShortcodes, "case 'wikimedia_commons_urls':" ),
+    'Wikimedia Commons URLs are not connected to repeater hydration, Person schema, and shortcode output.'
+);
 $assert(
     false !== strpos( $userFields, "'name'              => 'gallery'" )
     && false !== strpos( $userFields, "'type'              => 'gallery'" ),
@@ -432,6 +457,10 @@ $assert(
 $canonicalTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/canonical-entity.php' );
 passthru( $canonicalTest, $canonicalStatus );
 $assert( 0 === $canonicalStatus, 'Canonical HWS entity regression test failed.' );
+
+$wikimediaTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/wikimedia-commons.php' );
+passthru( $wikimediaTest, $wikimediaStatus );
+$assert( 0 === $wikimediaStatus, 'Wikimedia Commons Person-schema regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

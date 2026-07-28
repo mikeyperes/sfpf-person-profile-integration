@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '2.0.4' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '2.0.5' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '1.0.0', '>=' ), 'Selected Core version is older than 1.0.0.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -149,6 +149,35 @@ $additionalUrlSubfieldNames = array_values(
 $assert( 'repeater' === ( $additionalUrlField['type'] ?? '' ), 'Additional URLs ACF repeater is missing.' );
 $assert( [ 'title', 'source', 'url' ] === $additionalUrlSubfieldNames, 'Additional URLs does not mirror the Recent Articles subfields.' );
 
+$profileFieldsByKey = [];
+foreach ( $profileFields as $profileField ) {
+    if ( is_array( $profileField ) && isset( $profileField['key'] ) ) {
+        $profileFieldsByKey[ (string) $profileField['key'] ] = $profileField;
+    }
+}
+$educationField = $profileFieldsByKey['field_sfpf_education_repeater'] ?? [];
+$educationWidths = array_map(
+    static fn ( $field ): string => is_array( $field ) ? (string) ( $field['wrapper']['width'] ?? '' ) : '',
+    is_array( $educationField['sub_fields'] ?? null ) ? $educationField['sub_fields'] : []
+);
+$assert( 'row' === ( $educationField['layout'] ?? '' ), 'Education History does not use the one-field-per-row layout.' );
+$assert( [ '100', '100', '100', '100', '100' ] === $educationWidths, 'Education History subfields do not each span a full row.' );
+
+$wikimediaField = $profileFieldsByKey['field_sfpf_wikimedia_commons_urls'] ?? [];
+$wikimediaSubfields = is_array( $wikimediaField['sub_fields'] ?? null ) ? $wikimediaField['sub_fields'] : [];
+$profileFieldKeys = array_values(
+    array_map(
+        static fn ( $field ): string => is_array( $field ) ? (string) ( $field['key'] ?? '' ) : '',
+        $profileFields
+    )
+);
+$knowledgeGraphIndex = array_search( 'field_sfpf_knowledge_graph_id', $profileFieldKeys, true );
+$wikimediaIndex = array_search( 'field_sfpf_wikimedia_commons_urls', $profileFieldKeys, true );
+$assert( 'repeater' === ( $wikimediaField['type'] ?? '' ), 'Wikimedia Commons photo URL repeater is missing.' );
+$assert( 'sfpf-entity-person-or-org' === ( $wikimediaField['wrapper']['class'] ?? '' ), 'Wikimedia Commons URLs are not shared by Person and Organization.' );
+$assert( 'url' === ( $wikimediaSubfields[0]['type'] ?? '' ) && 'url' === ( $wikimediaSubfields[0]['name'] ?? '' ), 'Wikimedia Commons repeater does not contain a URL field.' );
+$assert( false !== $knowledgeGraphIndex && $wikimediaIndex === $knowledgeGraphIndex + 1, 'Wikimedia Commons URLs are not directly below the Knowledge Graph ID.' );
+
 $managedPages = function_exists( 'sfpf_person_website\\sfpf_site_structure_pages_definition' )
     ? sfpf_person_website\sfpf_site_structure_pages_definition()
     : [];
@@ -175,4 +204,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 2.0.4 with grouped Core tabs, action-scoped AJAX modules, and the Additional URLs repeater.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 2.0.5 with vertical Education fields and shared Wikimedia Commons URLs.' . PHP_EOL;

@@ -80,7 +80,7 @@ final class PersonContentTypes {
                     'group_key' => 'group_sfpf_user_schema_structures', 'legacy_option' => 'sfpf_enable_user_schema_acf',
                     'enabled_default' => false, 'definition' => 'sfpf_person_website\\user_schema_acf_field_group',
                     'location' => 'All WordPress user profile forms',
-                    'fields' => [ 'Entity Type', 'Biography', 'Short Biography', 'Mission Statement', 'Professions', 'Education', 'Awards', 'Languages', 'Birth Details', 'Contact Details', 'SameAs URLs', 'Additional URLs', 'Knowledge Graph ID', 'Gallery', 'FAQ', 'Articles' ],
+                    'fields' => [ 'Entity Type', 'Biography', 'Short Biography', 'Mission Statement', 'Professions', 'Education', 'Awards', 'Languages', 'Birth Details', 'Contact Details', 'SameAs URLs', 'Additional URLs', 'Knowledge Graph ID', 'Wikimedia Commons URLs (Photos)', 'Gallery', 'FAQ', 'Articles' ],
                     'dependencies' => [ 'Advanced Custom Fields Pro', 'HWS Base Tools primary entity (optional)' ],
                 ]
             )

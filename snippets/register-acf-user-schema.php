@@ -12,6 +12,7 @@ namespace sfpf_person_website;
  *   - biography (wysiwyg): Full biography (Person + Organization)
  *   - biography_short (wysiwyg): Short biography (Person + Organization)
  *   - mission_statement (wysiwyg): Mission statement (Person + Organization)
+ *   - wikimedia_commons_urls (repeater): Wikimedia Commons photo URLs (Person + Organization)
  *   - education (repeater): college, wiki_url, year, designation, major (Person only)
  *   - inception_date (text): Founding date (Organization only)
  *   - headquarters (group): location, wiki_url (Organization only)
@@ -81,6 +82,35 @@ function user_schema_acf_field_group(): array {
                 'conditional_logic' => 0,
                 'wrapper'           => ['class' => 'sfpf-entity-person-or-org', 'width' => '100'],
                 'placeholder'       => '/g/11gyz2y3lp',
+            ],
+
+            [
+                'key'               => 'field_sfpf_wikimedia_commons_urls',
+                'label'             => 'Wikimedia Commons URLs (Photos)',
+                'name'              => 'wikimedia_commons_urls',
+                'type'              => 'repeater',
+                'instructions'      => 'Add one Wikimedia Commons photo URL per row.<br><code>[founder id="wikimedia_commons_urls"]</code> - URLs, one per line<br><code>[founder id="wikimedia_commons_urls" format="json"]</code> - JSON array',
+                'required'          => 0,
+                'conditional_logic' => 0,
+                'wrapper'           => ['class' => 'sfpf-entity-person-or-org', 'width' => '100'],
+                'layout'            => 'row',
+                'pagination'        => 0,
+                'min'               => 0,
+                'max'               => 100,
+                'collapsed'         => 'field_sfpf_wikimedia_commons_url',
+                'button_label'      => 'Add Photo URL',
+                'rows_per_page'     => 20,
+                'sub_fields'        => [
+                    [
+                        'key'         => 'field_sfpf_wikimedia_commons_url',
+                        'label'       => 'Photo URL',
+                        'name'        => 'url',
+                        'type'        => 'url',
+                        'required'    => 0,
+                        'wrapper'     => ['width' => '100'],
+                        'placeholder' => 'https://commons.wikimedia.org/wiki/File:...',
+                    ],
+                ],
             ],
 
             // ═══════════════════════════════════════════════════════════════
@@ -522,7 +552,7 @@ function user_schema_acf_field_group(): array {
                 'required'          => 0,
                 'conditional_logic' => 0,
                 'wrapper'           => ['class' => 'sfpf-entity-person'],
-                'layout'            => 'block',
+                'layout'            => 'row',
                 'pagination'        => 0,
                 'min'               => 0,
                 'max'               => 10,
@@ -536,7 +566,7 @@ function user_schema_acf_field_group(): array {
                         'name'              => 'college',
                         'type'              => 'text',
                         'required'          => 0,
-                        'wrapper'           => ['width' => '50'],
+                        'wrapper'           => ['width' => '100'],
                         'placeholder'       => 'Harvard University',
                     ],
                     [
@@ -545,7 +575,7 @@ function user_schema_acf_field_group(): array {
                         'name'              => 'wiki_url',
                         'type'              => 'url',
                         'required'          => 0,
-                        'wrapper'           => ['width' => '50'],
+                        'wrapper'           => ['width' => '100'],
                         'placeholder'       => 'https://en.wikipedia.org/wiki/...',
                     ],
                     [
@@ -554,7 +584,7 @@ function user_schema_acf_field_group(): array {
                         'name'              => 'year',
                         'type'              => 'text',
                         'required'          => 0,
-                        'wrapper'           => ['width' => '33'],
+                        'wrapper'           => ['width' => '100'],
                         'placeholder'       => '2015 or 2011-2015',
                     ],
                     [
@@ -563,7 +593,7 @@ function user_schema_acf_field_group(): array {
                         'name'              => 'designation',
                         'type'              => 'text',
                         'required'          => 0,
-                        'wrapper'           => ['width' => '33'],
+                        'wrapper'           => ['width' => '100'],
                         'placeholder'       => 'B.S., M.A., Ph.D.',
                     ],
                     [
@@ -572,7 +602,7 @@ function user_schema_acf_field_group(): array {
                         'name'              => 'major',
                         'type'              => 'text',
                         'required'          => 0,
-                        'wrapper'           => ['width' => '34'],
+                        'wrapper'           => ['width' => '100'],
                         'placeholder'       => 'Computer Science',
                     ],
                 ],

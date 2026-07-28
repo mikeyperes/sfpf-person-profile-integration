@@ -172,6 +172,10 @@ function build_person_schema() {
             if (is_array($i) && !empty($i['url'])) $img_urls[] = esc_url_raw($i['url']);
         }
     }
+    $img_urls = array_merge(
+        $img_urls,
+        _collect_urls(_repeater_values(_sf('wikimedia_commons_urls', $uk, []), 'url'))
+    );
     $avatar = $founder['avatar_url'] ?? '';
     if (empty($avatar)) $avatar = get_avatar_url($uid, ['size' => 400]);
     if ($avatar) $img_urls[] = esc_url_raw($avatar);

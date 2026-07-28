@@ -1051,6 +1051,7 @@ function get_acf_field_structure($snippet_id) {
                 ],
                 'Shared' => [
                     ['label' => 'SameAs URLs', 'name' => 'sameas', 'key' => 'field_sfpf_sameas', 'type' => 'textarea'],
+                    ['label' => 'Wikimedia Commons URLs (Photos)', 'name' => 'wikimedia_commons_urls', 'key' => 'field_sfpf_wikimedia_commons_urls', 'type' => 'repeater'],
                 ],
             ],
         ],

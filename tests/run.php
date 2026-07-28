@@ -108,7 +108,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.6' === $headerVersion, 'Plugin version is not 2.0.6.' );
+$assert( '2.0.7' === $headerVersion, 'Plugin version is not 2.0.7.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -370,9 +370,23 @@ $assert(
     'Person ACF or shortcode compatibility does not defer to SMC ownership.'
 );
 $assert(
+    false !== strpos( $organizationShortcode, 'function sfpf_resolve_organization_id' )
+    && false !== strpos( $organizationShortcode, "is_singular('organization')" )
+    && false !== strpos( $organizationShortcode, "'display_profile'" ),
+    'Organization shortcodes do not resolve the current CPT or expose the reusable profile renderer.'
+);
+$assert(
+    false !== strpos( $helperFunctions, "\$post->post_type === 'organization'" ),
+    'Primary organization resolution accepts a published post from the wrong post type.'
+);
+$assert(
     false !== strpos( $schemaBuilder, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' )
     && false !== strpos( $schemaProvider, 'OrganizationSchema' ),
     'Person organization schema compatibility does not delegate to SMC.'
+);
+$assert(
+    false === strpos( $schemaBuilder, "elseif (\$th = get_the_post_thumbnail_url(\$post_id, 'full')) {\n        \$s['logo']" ),
+    'Organization schema incorrectly treats the featured image as the organization logo.'
 );
 $assert(
     false !== strpos( $coreIntegration, 'CoreSchemaInjector' )

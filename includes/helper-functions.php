@@ -551,6 +551,7 @@ function get_all_shortcodes() {
             ['shortcode' => '[founder id="url_tiktok"]', 'description' => 'Founder TikTok'],
         ],
         'Organization URLs' => [
+            ['shortcode' => '[organization action="display_profile"]', 'description' => 'Complete organization detail profile'],
             ['shortcode' => '[organization field="url"]', 'description' => 'Website URL'],
             ['shortcode' => '[organization field="url_facebook"]', 'description' => 'Facebook'],
             ['shortcode' => '[organization field="url_instagram"]', 'description' => 'Instagram'],
@@ -1375,7 +1376,7 @@ function get_primary_organization() {
     $primary_id = get_option('sfpf_primary_organization', 0);
     if ($primary_id) {
         $post = get_post($primary_id);
-        if ($post && $post->post_status === 'publish') {
+        if ($post && $post->post_status === 'publish' && $post->post_type === 'organization') {
             return $post;
         }
     }

@@ -85,6 +85,12 @@ Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environmen
 
 ## Changelog
 
+### 2.0.7
+
+- Resolves organization shortcodes from the current Organization CPT before using the configured primary organization.
+- Adds a reusable, responsive `[organization action="display_profile"]` detail renderer.
+- Rejects stale primary IDs from other post types and keeps featured media out of the Organization `logo` schema property.
+
 ### 2.0.6
 
 - Keeps Wikidata URLs in Person schema `sameAs` while excluding them from public Additional URLs and author-profile output.

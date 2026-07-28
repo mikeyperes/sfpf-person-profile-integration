@@ -579,7 +579,6 @@ function build_organization_schema($post_id) {
         $s['logo'] = esc_url_raw($logo['url']);
         $image_urls[] = esc_url_raw($logo['url']);
     } elseif ($th = get_the_post_thumbnail_url($post_id, 'full')) {
-        $s['logo'] = esc_url_raw($th);
         $image_urls[] = esc_url_raw($th);
     }
     if (function_exists(__NAMESPACE__ . '\\sfpf_normalize_gallery_images')) {

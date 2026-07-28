@@ -1,0 +1,229 @@
+.sfpf-organization-profile {
+    --sfpf-org-accent: var(--e-global-color-primary, #b9822f);
+    --sfpf-org-ink: var(--e-global-color-secondary, #111111);
+    --sfpf-org-text: var(--e-global-color-text, #374151);
+    --sfpf-org-surface: var(--e-global-color-accent, #f8f3eb);
+    --sfpf-org-border: rgba(17, 24, 39, 0.12);
+    color: var(--sfpf-org-text);
+    margin: 0 auto;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.sfpf-organization-profile__hero {
+    align-items: center;
+    background:
+        radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--sfpf-org-accent) 20%, transparent), transparent 34%),
+        linear-gradient(135deg, #fff 0%, color-mix(in srgb, var(--sfpf-org-surface) 78%, #fff) 100%);
+    border: 1px solid var(--sfpf-org-border);
+    border-radius: 24px;
+    display: grid;
+    gap: clamp(24px, 5vw, 64px);
+    grid-template-columns: minmax(120px, 220px) minmax(0, 1fr);
+    overflow: hidden;
+    padding: clamp(28px, 6vw, 72px);
+    position: relative;
+}
+
+.sfpf-organization-profile__hero:not(:has(.sfpf-organization-profile__logo-wrap)) {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.sfpf-organization-profile__logo-wrap {
+    align-items: center;
+    aspect-ratio: 1;
+    background: #fff;
+    border: 1px solid var(--sfpf-org-border);
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    padding: clamp(18px, 3vw, 32px);
+    width: 100%;
+}
+
+.sfpf-organization-profile__logo {
+    display: block;
+    height: auto;
+    max-height: 150px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.sfpf-organization-profile__eyebrow {
+    color: var(--sfpf-org-accent);
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.sfpf-organization-profile__title {
+    color: var(--sfpf-org-ink);
+    font-family: inherit;
+    font-size: clamp(2.25rem, 6vw, 4.75rem);
+    line-height: 1.02;
+    margin: 0;
+    text-wrap: balance;
+}
+
+.sfpf-organization-profile__subtitle {
+    color: var(--sfpf-org-ink);
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 600;
+    margin: 16px 0 0;
+}
+
+.sfpf-organization-profile__summary {
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    line-height: 1.75;
+    margin-top: 18px;
+    max-width: 760px;
+}
+
+.sfpf-organization-profile__summary > :first-child,
+.sfpf-organization-profile__rich-text > :first-child {
+    margin-top: 0;
+}
+
+.sfpf-organization-profile__summary > :last-child,
+.sfpf-organization-profile__rich-text > :last-child {
+    margin-bottom: 0;
+}
+
+.sfpf-organization-profile__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.sfpf-organization-profile__link {
+    align-items: center;
+    border: 1px solid var(--sfpf-org-border);
+    border-radius: 999px;
+    color: var(--sfpf-org-ink);
+    display: inline-flex;
+    font-size: 0.86rem;
+    font-weight: 700;
+    gap: 4px;
+    padding: 9px 14px;
+    text-decoration: none;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.sfpf-organization-profile__link:hover,
+.sfpf-organization-profile__link:focus-visible {
+    border-color: var(--sfpf-org-accent);
+    color: var(--sfpf-org-accent);
+}
+
+.sfpf-organization-profile__link--primary {
+    background: var(--sfpf-org-accent);
+    border-color: var(--sfpf-org-accent);
+    color: #fff;
+}
+
+.sfpf-organization-profile__link--primary:hover,
+.sfpf-organization-profile__link--primary:focus-visible {
+    background: var(--sfpf-org-ink);
+    border-color: var(--sfpf-org-ink);
+    color: #fff;
+}
+
+.sfpf-organization-profile__body {
+    display: grid;
+    gap: clamp(28px, 5vw, 64px);
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+    padding: clamp(40px, 7vw, 88px) clamp(0px, 2vw, 24px) 0;
+}
+
+.sfpf-organization-profile__section + .sfpf-organization-profile__section {
+    border-top: 1px solid var(--sfpf-org-border);
+    margin-top: 36px;
+    padding-top: 36px;
+}
+
+.sfpf-organization-profile__section h2,
+.sfpf-organization-profile__facts h2 {
+    color: var(--sfpf-org-ink);
+    font-family: inherit;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.2;
+    margin: 0 0 18px;
+}
+
+.sfpf-organization-profile__rich-text {
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.sfpf-organization-profile__facts {
+    align-self: start;
+    background: color-mix(in srgb, var(--sfpf-org-surface) 72%, #fff);
+    border: 1px solid var(--sfpf-org-border);
+    border-radius: 18px;
+    padding: 28px;
+}
+
+.sfpf-organization-profile__facts h2 {
+    font-size: 1.25rem;
+}
+
+.sfpf-organization-profile__facts dl {
+    margin: 0;
+}
+
+.sfpf-organization-profile__fact {
+    border-top: 1px solid var(--sfpf-org-border);
+    padding: 16px 0;
+}
+
+.sfpf-organization-profile__fact:last-child {
+    padding-bottom: 0;
+}
+
+.sfpf-organization-profile__fact dt {
+    color: color-mix(in srgb, var(--sfpf-org-text) 70%, transparent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.sfpf-organization-profile__fact dd {
+    color: var(--sfpf-org-ink);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.sfpf-organization-profile__fact a {
+    color: inherit;
+    text-decoration-color: color-mix(in srgb, currentColor 32%, transparent);
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+    .sfpf-organization-profile__hero {
+        border-radius: 18px;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sfpf-organization-profile__logo-wrap {
+        max-width: 150px;
+    }
+
+    .sfpf-organization-profile__body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sfpf-organization-profile__link {
+        transition: none;
+    }
+}

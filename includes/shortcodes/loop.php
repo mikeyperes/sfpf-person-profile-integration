@@ -31,9 +31,15 @@ function sfpf_loop_shortcode($atts) {
     ], $atts);
 
     $cpt = sanitize_key($atts['cpt']);
-    $columns = intval($atts['columns']) ?: 3;
+    $limits = sfpf_frontend_query_limits(
+        'loop',
+        SFPF_LOOP_DEFAULT_QUERY_LIMIT,
+        SFPF_LOOP_HARD_QUERY_MAX
+    );
+    $columns = max(1, intval($atts['columns']) ?: 3);
+    $columns = min($columns, $limits['hard_max']);
     $responsive = $atts['responsive'] === 'true';
-    $rows = !empty($atts['rows']) ? intval($atts['rows']) : 0;
+    $rows = !empty($atts['rows']) ? max(0, intval($atts['rows'])) : 0;
 
     // Get assigned loop template
     $assignments = get_option('sfpf_elementor_loop_assignments', []);
@@ -43,8 +49,19 @@ function sfpf_loop_shortcode($atts) {
         return '<!-- SFPF Loop: No template assigned for ' . esc_html($cpt) . ' -->';
     }
 
-    // Calculate posts per page
-    $posts_per_page = $rows > 0 ? ($columns * $rows) : -1;
+    // Omitted rows use the public default; explicit grids remain hard-capped.
+    $bounded_rows = min($rows, $limits['hard_max']);
+    $requested = 0;
+    if ($bounded_rows > 0) {
+        $requested = $columns > intdiv($limits['hard_max'], $bounded_rows)
+            ? $limits['hard_max']
+            : $columns * $bounded_rows;
+    }
+    $posts_per_page = sfpf_clamp_frontend_query_limit(
+        $requested,
+        $limits['default'],
+        $limits['hard_max']
+    );
 
     // Get posts
     $posts = get_posts([
@@ -53,6 +70,8 @@ function sfpf_loop_shortcode($atts) {
         'post_status' => 'publish',
         'orderby' => 'date',
         'order' => 'DESC',
+        'ignore_sticky_posts' => true,
+        'no_found_rows' => true,
     ]);
 
     if (empty($posts)) {

@@ -77,7 +77,7 @@ function founder_shortcode($atts) {
                 if (empty($values)) return '';
                 return '<span class="founder-nationality">' . esc_html(implode(', ', $values)) . '</span>';
             case 'display_organizations_founded':
-                return founder_display_organizations_founded($atts['format'] ?? 'cards');
+                return founder_display_organizations_founded($atts['format'] ?? 'cards', $user_id);
             case 'display_bio_full':
                 return founder_display_bio_full($user_id);
             default:

@@ -61,6 +61,28 @@ namespace {
         return [];
     }
 
+    final class WP_Query {
+        public array $posts = [];
+        public int $found_posts = 0;
+
+        public function __construct( array $args = [] ) {
+            unset( $args );
+        }
+    }
+
+    function apply_filters( string $hook, mixed $value, mixed ...$args ): mixed {
+        unset( $hook, $args );
+        return $value;
+    }
+
+    function do_action( string $hook, mixed ...$args ): void {
+        unset( $hook, $args );
+    }
+
+    function sanitize_key( mixed $key ): string {
+        return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) ) ?? '';
+    }
+
     function get_avatar_url( int $user_id, array $args = [] ): string {
         unset( $user_id, $args );
         return 'https://example.com/avatar.jpg';
@@ -82,6 +104,7 @@ namespace {
 
 namespace sfpf_person_website {
     require_once dirname( __DIR__ ) . '/includes/helper-functions.php';
+    require_once dirname( __DIR__ ) . '/includes/frontend-query-bounds.php';
     require_once dirname( __DIR__ ) . '/schema/schema-builder.php';
 
     $schema = build_person_schema();

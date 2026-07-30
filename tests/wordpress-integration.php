@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '2.0.7' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '2.0.8' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '1.0.0', '>=' ), 'Selected Core version is older than 1.0.0.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -98,6 +98,7 @@ $requiredFunctions = [
     'sfpf_person_website\\sfpf_filter_public_urls',
     'sfpf_person_website\\sfpf_knowledge_panel_url',
     'sfpf_person_website\\founder_display_location_born',
+    'sfpf_person_website\\sfpf_founder_organization_ids',
     'sfpf_person_website\\sfpf_render_author_archive_profile',
     'sfpf_person_website\\sfpf_author_archive_has_elementor_template',
     'sfpf_person_website\\verify_ajax_nonce',
@@ -209,4 +210,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 2.0.7 with current-organization profiles and schema-safe media handling.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 2.0.8 with bounded founder-organization and loop queries.' . PHP_EOL;

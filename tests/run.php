@@ -47,11 +47,13 @@ $requiredFiles = [
     'includes/shortcodes/founder.php',
     'includes/shortcodes/founder-articles.php',
     'includes/shortcodes/founder-sections.php',
+    'includes/frontend-query-bounds.php',
     'includes/runtime/profile-admin-script.php',
     'includes/frontend/author-archive.php',
     'tests/author-archive-elementor.php',
     'tests/additional-urls.php',
     'tests/wikimedia-commons.php',
+    'tests/frontend-query-bounds.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -108,7 +110,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.7' === $headerVersion, 'Plugin version is not 2.0.7.' );
+$assert( '2.0.8' === $headerVersion, 'Plugin version is not 2.0.8.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -483,6 +485,10 @@ $assert( 0 === $additionalUrlsStatus, 'Schema-only Wikidata visibility regressio
 $wikimediaTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/wikimedia-commons.php' );
 passthru( $wikimediaTest, $wikimediaStatus );
 $assert( 0 === $wikimediaStatus, 'Wikimedia Commons Person-schema regression test failed.' );
+
+$queryBoundsTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/frontend-query-bounds.php' );
+passthru( $queryBoundsTest, $queryBoundsStatus );
+$assert( 0 === $queryBoundsStatus, 'Frontend query bounds regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

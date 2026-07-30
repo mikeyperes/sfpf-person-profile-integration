@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 2.0.7
+ * Version: 2.0.8
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define("SFPF_PLUGIN_VERSION", "2.0.7");
+define("SFPF_PLUGIN_VERSION", "2.0.8");
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = "2.0.7";
+    public static $version = "2.0.8";
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -66,6 +66,7 @@ require_once SFPF_PLUGIN_DIR . 'src/Plugin.php';
 // LOAD HELPER FILES IMMEDIATELY (before any hooks)
 // ============================================================================
 require_once SFPF_PLUGIN_DIR . 'includes/helper-functions.php';
+require_once SFPF_PLUGIN_DIR . 'includes/frontend-query-bounds.php';
 require_once SFPF_PLUGIN_DIR . 'includes/logging.php';
 require_once SFPF_PLUGIN_DIR . 'includes/snippets-loader.php';
 require_once SFPF_PLUGIN_DIR . 'includes/elementor-social-icons.php';

@@ -223,13 +223,13 @@ function build_person_schema() {
         if ($occs) $p['hasOccupation'] = $occs;
     }
 
-    // ── worksFor (Organization CPT) ──
-    $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => -1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
+    // ── worksFor (explicit founder-to-Organization relationships) ──
+    $orgs = sfpf_founder_organization_ids((int) $uid);
     if ($orgs) {
         $wf = [];
-        foreach ($orgs as $org) {
-            $e = ['@type' => 'Organization', 'name' => sanitize_text_field($org->post_title)];
-            $ou = get_field('url', $org->ID);
+        foreach ($orgs as $org_id) {
+            $e = ['@type' => 'Organization', 'name' => sanitize_text_field(get_the_title($org_id))];
+            $ou = get_field('url', $org_id);
             if ($ou && filter_var($ou, FILTER_VALIDATE_URL)) $e['url'] = esc_url_raw($ou);
             $wf[] = $e;
         }

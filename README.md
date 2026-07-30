@@ -83,7 +83,17 @@ php tests/run.php
 
 Run `tests/wordpress-integration.php` inside a bootstrapped WordPress environment to verify the selected Core package and live hooks.
 
+Public loop and founder-Organization query limits, filters, relationship
+semantics, and truncation signaling are documented in
+[Frontend Query Bounds](docs/frontend-query-bounds.md).
+
 ## Changelog
+
+### 2.0.8
+
+- Bounds `[sfpf_loop]` defaults and explicit row grids with filterable positive limits and a hard maximum.
+- Resolves founder Organization output and Person `worksFor` schema from canonical `founder_users` or legacy `founder` relationships first.
+- Pages Organization IDs in counted, capped batches and preserves pre-relationship sites through a signaled, filterable inventory fallback.
 
 ### 2.0.7
 

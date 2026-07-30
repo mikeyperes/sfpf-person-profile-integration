@@ -55,14 +55,8 @@ function founder_display_location_born($user_id, $format = 'link') {
  * Display organizations founded
  * format: cards (default), list, compact
  */
-function founder_display_organizations_founded($format = 'cards') {
-    $orgs = get_posts([
-        'post_type'      => 'organization',
-        'posts_per_page' => -1,
-        'post_status'    => 'publish',
-        'orderby'        => 'date',
-        'order'          => 'ASC',
-    ]);
+function founder_display_organizations_founded($format = 'cards', $user_id = 0) {
+    $orgs = sfpf_founder_organization_ids((int) $user_id);
 
     if (empty($orgs)) {
         return '';
@@ -70,9 +64,8 @@ function founder_display_organizations_founded($format = 'cards') {
 
     $output = '<div class="founder-organizations-founded format-' . esc_attr($format) . '">';
 
-    foreach ($orgs as $org) {
-        $org_id    = $org->ID;
-        $name      = esc_html($org->post_title);
+    foreach ($orgs as $org_id) {
+        $name      = esc_html(get_the_title($org_id));
         $url       = get_field('url', $org_id);
         $summary   = get_field('short_summary', $org_id);
         $founding   = get_field('founding_date', $org_id);
@@ -204,7 +197,7 @@ function founder_display_bio_full($user_id) {
     }
 
     // Organizations Founded
-    $orgs_html = founder_display_organizations_founded('cards');
+    $orgs_html = founder_display_organizations_founded('cards', $user_id);
     if (!empty($orgs_html)) {
         $output .= '<div class="bio-section bio-section-organizations">';
         $output .= '<h3>Organizations Founded</h3>';

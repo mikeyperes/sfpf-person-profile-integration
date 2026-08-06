@@ -90,6 +90,10 @@ semantics, and truncation signaling are documented in
 
 ## Changelog
 
+### 2.0.10
+
+- Gives Press Release fields their own SFPF group and field keys so SMP Article Fields remain independently registered.
+
 ### 2.0.9
 
 - Adds Core-managed Press Release, Interview, and Contributing Profile CPT controls.

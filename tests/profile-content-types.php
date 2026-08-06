@@ -13,7 +13,7 @@ $groups = [
 ];
 
 $expected = [
-    'press-release' => [ 'group_64a7290b61191', [ 'smpi_post_authors', 'post_summary' ] ],
+    'press-release' => [ 'group_sfpf_press_release', [ 'sfpf_press_release_source_name', 'sfpf_press_release_original_url', 'sfpf_press_release_date', 'sfpf_press_release_featured' ] ],
     'interview' => [ 'group_64b623fb36208', [ 'podcast_name', 'guest_name', 'host_name', 'primary_url', 'additional_links', 'press' ] ],
     'contributing-profile' => [ 'group_64bb58d10c008', [ 'url', 'secondary_logo', 'featured_item', 'primary_featured_item' ] ],
 ];

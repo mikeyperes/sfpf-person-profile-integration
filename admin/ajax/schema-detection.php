@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Detect schema on URLs
  */
 function ajax_detect_schema() {
-    verify_ajax_nonce();
-
     $type = sanitize_key($_POST['type'] ?? '');
     $debug = !empty($_POST['debug']);
 
@@ -53,20 +51,6 @@ function ajax_detect_schema() {
             }
             break;
 
-        case 'organizations':
-            $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => 5, 'post_status' => 'publish']);
-            foreach ($orgs as $org) {
-                $urls[] = ['url' => get_permalink($org->ID), 'title' => $org->post_title];
-            }
-            break;
-
-        case 'testimonials':
-            $testimonials = get_posts(['post_type' => 'testimonial', 'posts_per_page' => 5, 'post_status' => 'publish']);
-            foreach ($testimonials as $t) {
-                $urls[] = ['url' => get_permalink($t->ID), 'title' => $t->post_title];
-            }
-            break;
-
         default:
             wp_send_json_error('Invalid type');
     }
@@ -94,10 +78,6 @@ function ajax_detect_schema() {
             $expected[] = "<strong>SFPF Expected:</strong> " . ($expected_map[$bio_type] ?? $bio_type);
         } elseif ($type === "books") {
             $expected[] = "<strong>SFPF Expected:</strong> Book";
-        } elseif ($type === "organizations") {
-            $expected[] = "<strong>SFPF Expected:</strong> Organization";
-        } elseif ($type === "testimonials") {
-            $expected[] = "<strong>SFPF Expected:</strong> Testimonial review schema if enabled";
         }
 
         if (defined("RANK_MATH_VERSION")) {
@@ -105,7 +85,6 @@ function ajax_detect_schema() {
             if ($type === "homepage") $rm_disabled = get_option("sfpf_rankmath_disable_homepage", false);
             elseif ($type === "biography") $rm_disabled = get_option("sfpf_rankmath_disable_biography", false);
             elseif ($type === "books") $rm_disabled = get_option("sfpf_rankmath_disable_books", false);
-            elseif ($type === "organizations") $rm_disabled = get_option("sfpf_rankmath_disable_organizations", false);
             $expected[] = "<strong>RankMath:</strong> " . ($rm_disabled ? "Disabled for this type" : "Active - may inject its own schema");
         }
 
@@ -151,7 +130,6 @@ function ajax_detect_schema() {
         if ($type === 'homepage') $rm_disabled = get_option('sfpf_rankmath_disable_homepage', false);
         elseif ($type === 'biography') $rm_disabled = get_option('sfpf_rankmath_disable_biography', false);
         elseif ($type === 'books') $rm_disabled = get_option('sfpf_rankmath_disable_books', false);
-        elseif ($type === 'organizations') $rm_disabled = get_option('sfpf_rankmath_disable_organizations', false);
         $expected[] = '<strong>RankMath:</strong> ' . ($rm_disabled ? '<span style="color:#f59e0b;">Disabled for this type</span>' : '<span style="color:#e91e63;">Active — may inject its own schema</span>');
     }
     if (!empty($expected)) {
@@ -461,4 +439,3 @@ function ajax_detect_schema() {
 
     wp_send_json_success(['output' => $output]);
 }
-add_action('wp_ajax_sfpf_detect_schema', __NAMESPACE__ . '\\ajax_detect_schema');

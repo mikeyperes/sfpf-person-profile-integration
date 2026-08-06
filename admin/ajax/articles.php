@@ -21,8 +21,6 @@ defined( 'ABSPATH' ) || exit;
  * One parser handles everything: HTML dumps, plain URLs, mixed content, bare domains
  */
 function ajax_process_articles() {
-    verify_ajax_nonce();
-
     $raw_input = $_POST['urls'] ?? '';
     $user_id = intval($_POST['user_id'] ?? get_current_user_id());
 
@@ -247,4 +245,3 @@ function ajax_process_articles() {
         'articles' => $processed,
     ]);
 }
-add_action('wp_ajax_sfpf_process_articles', __NAMESPACE__ . '\\ajax_process_articles');

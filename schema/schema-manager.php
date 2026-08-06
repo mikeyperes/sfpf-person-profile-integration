@@ -137,10 +137,6 @@ function generate_and_save_schema($post_id) {
             $schema = build_book_schema($post_id);
             break;
             
-        case 'organization':
-            $schema = build_organization_schema($post_id);
-            break;
-            
         case 'page':
             if (is_front_page_id($post_id)) {
                 $schema_type = get_option('sfpf_homepage_schema_type', 'person');

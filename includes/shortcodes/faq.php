@@ -119,7 +119,6 @@ function sfpf_faq_shortcode($atts) {
 
     return $html;
 }
-add_shortcode('sfpf_faq', __NAMESPACE__ . '\\sfpf_faq_shortcode');
 
 /**
  * Render FAQ as accordion
@@ -161,7 +160,6 @@ function sfpf_faq_schema_shortcode($atts) {
 
     return render_faq_schema($set['items']);
 }
-add_shortcode('sfpf_faq_schema', __NAMESPACE__ . '\\sfpf_faq_schema_shortcode');
 
 function founder_display_faq($user_id, $atts = []) {
     $items = sfpf_faq_source_resolver()->acf("user_" . (int) $user_id, "faq");
@@ -211,7 +209,6 @@ function sfpf_person_faq_shortcode($atts) {
 
     return founder_display_faq($user_id, $atts);
 }
-add_shortcode('sfpf_person_faq', __NAMESPACE__ . '\\sfpf_person_faq_shortcode');
 
 /**
  * Elementor FAQ integration shortcode
@@ -321,4 +318,3 @@ function sfpf_elementor_faq_shortcode($atts) {
 
     return $html;
 }
-add_shortcode('sfpf_elementor_faq', __NAMESPACE__ . '\\sfpf_elementor_faq_shortcode');

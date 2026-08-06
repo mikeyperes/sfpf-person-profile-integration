@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Run debug action
  */
 function ajax_run_debug() {
-    verify_ajax_nonce();
-
     $action = sanitize_key($_POST['debug_action'] ?? '');
     $output = '';
 
@@ -61,7 +59,6 @@ function ajax_run_debug() {
 
     wp_send_json_success(['output' => $output]);
 }
-add_action('wp_ajax_sfpf_run_debug', __NAMESPACE__ . '\\ajax_run_debug');
 
 /**
  * Debug: Repair Elementor templates by re-importing data
@@ -609,8 +606,6 @@ function debug_acf_fields() {
  * Export debug report
  */
 function ajax_export_debug_report() {
-    verify_ajax_nonce();
-
     $report = "=== SFPF Person Profile Debug Report ===\n";
     $report .= "Generated: " . current_time('Y-m-d H:i:s') . "\n\n";
 
@@ -622,4 +617,3 @@ function ajax_export_debug_report() {
 
     wp_send_json_success(['report' => $report]);
 }
-add_action('wp_ajax_sfpf_export_debug_report', __NAMESPACE__ . '\\ajax_export_debug_report');

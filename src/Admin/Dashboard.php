@@ -9,6 +9,8 @@ use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
 use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 use Hexa\PluginCore\WpAdminTabs\HostTabsRenderer;
+use Hexa\PluginCore\WpAdminTabs\TabDefinition;
+use Hexa\PluginCore\WpAdminTabs\TabRegistry;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,18 +18,6 @@ final class Dashboard {
     private const PAGE_SLUG = 'sfpf-person-profile';
     private const AJAX_ACTION = 'sfpf_load_dashboard_tab';
     private const NONCE_ACTION = 'sfpf_dashboard_tabs';
-
-    private const TABS = [
-        'overview'   => [ 'label' => 'Status' ],
-        'settings'   => [ 'label' => 'Settings' ],
-        'content-types' => [ 'label' => 'Custom Post Types' ],
-        'shortcodes' => [ 'label' => 'Shortcodes' ],
-        'schema'     => [ 'label' => 'Schema' ],
-        'pages'      => [ 'label' => 'Pages & Menus' ],
-        'templates'  => [ 'label' => 'Templates' ],
-        'faq'        => [ 'label' => 'FAQ Structures' ],
-        'debug'      => [ 'label' => 'Debug' ],
-    ];
 
     private const GROUPS = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
@@ -58,6 +48,7 @@ final class Dashboard {
     ];
 
     private static bool $registered = false;
+    private static ?TabRegistry $tabRegistry = null;
 
     public static function register(): void {
         if ( self::$registered ) {
@@ -181,11 +172,16 @@ final class Dashboard {
             return;
         }
 
-        if ( ! isset( self::TABS[ $tab ] ) ) {
+        $definition = self::tabRegistry()->get( $tab );
+        if ( ! $definition instanceof TabDefinition || ! is_callable( $definition->renderer ) ) {
             echo '<div class="notice notice-warning"><p>Dashboard panel not found.</p></div>';
             return;
         }
 
+        call_user_func( $definition->renderer );
+    }
+
+    private static function renderLegacyPanel( string $tab ): void {
         if ( 'overview' === $tab ) {
             require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php';
         }
@@ -218,8 +214,44 @@ final class Dashboard {
 
     /** @return array<string,mixed> */
     private static function tabs(): array {
-        $tabs = apply_filters( 'sfpf_dashboard_tabs', self::TABS );
-        return is_array( $tabs ) ? $tabs : self::TABS;
+        $tabs = [];
+        foreach ( self::tabRegistry()->all() as $tab ) {
+            $tabs[ $tab->id ] = [ 'label' => $tab->label ];
+        }
+
+        $filtered = apply_filters( 'sfpf_dashboard_tabs', $tabs );
+        return is_array( $filtered ) ? $filtered : $tabs;
+    }
+
+    private static function tabRegistry(): TabRegistry {
+        if ( self::$tabRegistry instanceof TabRegistry ) {
+            return self::$tabRegistry;
+        }
+
+        self::$tabRegistry = new TabRegistry();
+        foreach (
+            [
+                'overview'      => 'Status',
+                'settings'      => 'Settings',
+                'content-types' => 'Custom Post Types',
+                'shortcodes'    => 'Shortcodes',
+                'schema'        => 'Schema',
+                'pages'         => 'Pages & Menus',
+                'templates'     => 'Templates',
+                'faq'           => 'FAQ Structures',
+                'debug'         => 'Debug',
+            ] as $id => $label
+        ) {
+            self::$tabRegistry->add(
+                new TabDefinition(
+                    $id,
+                    $label,
+                    static fn(): mixed => self::renderLegacyPanel( $id )
+                )
+            );
+        }
+
+        return self::$tabRegistry;
     }
 
     private static function legacySectionForTab( string $tab ): string {

@@ -20,30 +20,7 @@ defined('ABSPATH') || exit;
  * @return array<int,string>
  */
 function sfpf_normalize_url_values($value) {
-    $urls = [];
-    $walk = function($candidate) use (&$walk, &$urls) {
-        if (is_array($candidate)) {
-            foreach ($candidate as $item) {
-                $walk($item);
-            }
-            return;
-        }
-
-        if (!is_scalar($candidate)) {
-            return;
-        }
-
-        foreach (preg_split('/\R/', trim((string) $candidate)) ?: [] as $url) {
-            $url = trim($url);
-            if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
-                $urls[] = $url;
-            }
-        }
-    };
-
-    $walk($value);
-
-    return array_values(array_unique($urls));
+    return \Hexa\PluginCore\DataNormalization\ValueNormalizer::url_values($value, false, false);
 }
 
 /**
@@ -53,8 +30,8 @@ function sfpf_normalize_url_values($value) {
  * @return bool
  */
 function sfpf_is_wikidata_url($url) {
-    $url = trim((string) $url);
-    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+    $url = \Hexa\PluginCore\DataNormalization\ValueNormalizer::url_values($url, false, false)[0] ?? '';
+    if ($url === '') {
         return false;
     }
 
@@ -124,8 +101,9 @@ function sfpf_knowledge_panel_url($kgid) {
         return '';
     }
 
-    if (filter_var($kgid, FILTER_VALIDATE_URL)) {
-        parse_str((string) parse_url($kgid, PHP_URL_QUERY), $query);
+    $kgid_url = \Hexa\PluginCore\DataNormalization\ValueNormalizer::url_values($kgid, false, false)[0] ?? '';
+    if ($kgid_url !== '') {
+        parse_str((string) parse_url($kgid_url, PHP_URL_QUERY), $query);
         $kgid = isset($query['kgmid']) ? rawurldecode((string) $query['kgmid']) : '';
     } else {
         $kgid = rawurldecode($kgid);
@@ -182,12 +160,8 @@ function get_founder_user_id() {
         }
     }
 
-    if (!function_exists('get_field')) {
-        return 0;
-    }
-
     // 1) Primary: option → founder → founder_user (new field name)
-    $founder = get_field('founder', 'option');
+    $founder = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', []);
     if (is_array($founder) && !empty($founder['founder_user'])) {
         $uf = $founder['founder_user'];
         if (is_array($uf) && isset($uf['ID'])) return (int) $uf['ID'];
@@ -204,7 +178,7 @@ function get_founder_user_id() {
     }
 
     // 3) Fallback: option → website → company
-    $website = get_field('website', 'option');
+    $website = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('website', 'option', []);
     if (is_array($website) && !empty($website['company'])) {
         $uf = $website['company'];
         if (is_array($uf) && isset($uf['ID'])) return (int) $uf['ID'];
@@ -231,11 +205,7 @@ function get_company_user_id() {
         }
     }
 
-    if (!function_exists('get_field')) {
-        return 0;
-    }
-
-    $website = get_field('website', 'option');
+    $website = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('website', 'option', []);
     if (is_array($website) && !empty($website['company'])) {
         $uf = $website['company'];
         if (is_array($uf) && isset($uf['ID'])) return (int) $uf['ID'];
@@ -265,13 +235,13 @@ function get_founder_full_info() {
     $user_key = 'user_' . $user_id;
     
     // Get ACF fields
-    $urls = function_exists('get_field') ? get_field('urls', $user_key) : [];
-    $biography = function_exists('get_field') ? get_field('biography', $user_key) : '';
-    $website = function_exists('get_field') ? get_field('website', $user_key) : '';
-    $additional = function_exists('get_field') ? get_field('additional', $user_key) : [];
+    $urls = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('urls', $user_key, []);
+    $biography = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('biography', $user_key);
+    $website = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('website', $user_key);
+    $additional = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('additional', $user_key, []);
     
     // Get founder group for option-level overrides
-    $founder_group = function_exists('get_field') ? get_field('founder', 'option') : [];
+    $founder_group = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', []);
     $founder_biography = (is_array($founder_group) && !empty($founder_group['biography'])) 
         ? $founder_group['biography'] : '';
 
@@ -314,10 +284,10 @@ function get_company_full_info() {
     $user_key = 'user_' . $user_id;
     
     // Get ACF fields
-    $urls = function_exists('get_field') ? get_field('urls', $user_key) : [];
-    $biography = function_exists('get_field') ? get_field('biography', $user_key) : '';
-    $website = function_exists('get_field') ? get_field('website', $user_key) : '';
-    $additional = function_exists('get_field') ? get_field('additional', $user_key) : [];
+    $urls = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('urls', $user_key, []);
+    $biography = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('biography', $user_key);
+    $website = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('website', $user_key);
+    $additional = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('additional', $user_key, []);
 
     return [
         'id' => $user_id,
@@ -468,12 +438,7 @@ function get_google_rich_results_url($url) {
  * @return mixed Field value or default
  */
 function get_acf_field($field_name, $post_id = false, $default = '') {
-    if (!function_exists('get_field')) {
-        return $default;
-    }
-    
-    $value = get_field($field_name, $post_id);
-    return ($value !== null && $value !== '' && $value !== false) ? $value : $default;
+    return \Hexa\PluginCore\DataNormalization\FieldReader::acf_value($field_name, $post_id, $default);
 }
 
 /**
@@ -575,92 +540,11 @@ function get_all_shortcodes() {
  */
 
 function sfpf_gallery_image_from_attachment($attachment_id, $size = 'large') {
-    $attachment_id = (int) $attachment_id;
-    if ($attachment_id <= 0) return null;
-    $src = wp_get_attachment_image_src($attachment_id, $size ?: 'large');
-    $full = wp_get_attachment_image_src($attachment_id, 'full');
-    $url = is_array($src) && !empty($src[0]) ? $src[0] : (is_array($full) && !empty($full[0]) ? $full[0] : '');
-    if (!$url) return null;
-    return [
-        'id' => $attachment_id,
-        'url' => esc_url_raw($url),
-        'full_url' => is_array($full) && !empty($full[0]) ? esc_url_raw($full[0]) : esc_url_raw($url),
-        'alt' => (string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true),
-        'title' => (string) get_the_title($attachment_id),
-        'caption' => (string) wp_get_attachment_caption($attachment_id),
-    ];
+    return \Hexa\PluginCore\DataNormalization\MediaNormalizer::attachment_image_record($attachment_id, $size ?: 'large');
 }
 
 function sfpf_normalize_gallery_images($raw, $size = 'large') {
-    $images = [];
-    $add = function($item) use (&$images, $size) {
-        if (is_numeric($item)) {
-            $image = sfpf_gallery_image_from_attachment((int) $item, $size);
-            if ($image) $images[] = $image;
-            return;
-        }
-        if (is_array($item)) {
-            $id = $item['ID'] ?? $item['id'] ?? 0;
-            if ($id) {
-                $image = sfpf_gallery_image_from_attachment((int) $id, $size);
-                if ($image) {
-                    $image['alt'] = $item['alt'] ?? $image['alt'];
-                    $image['title'] = $item['title'] ?? $image['title'];
-                    $image['caption'] = $item['caption'] ?? $image['caption'];
-                    $images[] = $image;
-                    return;
-                }
-            }
-            $url = $item['url'] ?? $item['sizes'][$size] ?? $item['full_url'] ?? '';
-            if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
-                $images[] = [
-                    'id' => (int) $id,
-                    'url' => esc_url_raw($url),
-                    'full_url' => esc_url_raw($item['full_url'] ?? $url),
-                    'alt' => (string) ($item['alt'] ?? ''),
-                    'title' => (string) ($item['title'] ?? ''),
-                    'caption' => (string) ($item['caption'] ?? ''),
-                ];
-            }
-            return;
-        }
-        $value = trim((string) $item);
-        if ($value === '') return;
-        if (ctype_digit($value)) {
-            $image = sfpf_gallery_image_from_attachment((int) $value, $size);
-            if ($image) $images[] = $image;
-            return;
-        }
-        if (filter_var($value, FILTER_VALIDATE_URL)) {
-            $images[] = [
-                'id' => 0,
-                'url' => esc_url_raw($value),
-                'full_url' => esc_url_raw($value),
-                'alt' => '',
-                'title' => basename((string) parse_url($value, PHP_URL_PATH)),
-                'caption' => '',
-            ];
-        }
-    };
-    if (is_array($raw)) {
-        foreach ($raw as $item) $add($item);
-    } elseif (is_string($raw) && trim($raw) !== '') {
-        $decoded = json_decode($raw, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            foreach ($decoded as $item) $add($item);
-        } else {
-            preg_match_all('#https?://[^\s,<>]+#', $raw, $matches);
-            if (!empty($matches[0])) foreach ($matches[0] as $url) $add(rtrim($url, '.,;:) ]'));
-            else foreach (preg_split('/[\r\n,]+/', $raw) as $part) $add($part);
-        }
-    }
-    $deduped = [];
-    foreach ($images as $image) {
-        $url = $image['url'] ?? '';
-        if (!$url || isset($deduped[$url])) continue;
-        $deduped[$url] = $image;
-    }
-    return array_values($deduped);
+    return \Hexa\PluginCore\DataNormalization\MediaNormalizer::gallery_records($raw, $size ?: 'large');
 }
 
 function sfpf_render_gallery_html($images, $context = 'sfpf-gallery', $columns = 3) {
@@ -1122,33 +1006,6 @@ function get_acf_field_structure($snippet_id) {
             ],
         ],
         
-        'sfpf_enable_organization_acf' => [
-            'group_key' => 'group_sfpf_organization',
-            'group_title' => 'Organization Details',
-            'location' => 'post_type == organization',
-            'tabs' => [
-                'Schema' => [
-                    ['label' => 'Schema Markup', 'name' => 'schema_markup', 'key' => 'field_sfpf_org_schema', 'type' => 'textarea', 'readonly' => true],
-                ],
-                'Basic Info' => [
-                    ['label' => 'Logo', 'name' => 'logo', 'key' => 'field_sfpf_org_logo', 'type' => 'image'],
-                    ['label' => 'Description', 'name' => 'description', 'key' => 'field_sfpf_org_description', 'type' => 'wysiwyg'],
-                    ['label' => 'Website', 'name' => 'website', 'key' => 'field_sfpf_org_website', 'type' => 'url'],
-                    ['label' => 'Founding Date', 'name' => 'founding_date', 'key' => 'field_sfpf_org_founding_date', 'type' => 'date_picker'],
-                    ['label' => 'Founder', 'name' => 'founder', 'key' => 'field_sfpf_org_founder', 'type' => 'user'],
-                    ['label' => 'Number of Employees', 'name' => 'employees', 'key' => 'field_sfpf_org_employees', 'type' => 'number'],
-                    ['label' => 'NAICS Code', 'name' => 'naics', 'key' => 'field_sfpf_org_naics', 'type' => 'text'],
-                ],
-                'Social URLs' => [
-                    ['label' => 'Facebook URL', 'name' => 'facebook_url', 'key' => 'field_sfpf_org_facebook', 'type' => 'url'],
-                    ['label' => 'Twitter URL', 'name' => 'twitter_url', 'key' => 'field_sfpf_org_twitter', 'type' => 'url'],
-                    ['label' => 'LinkedIn URL', 'name' => 'linkedin_url', 'key' => 'field_sfpf_org_linkedin', 'type' => 'url'],
-                    ['label' => 'Instagram URL', 'name' => 'instagram_url', 'key' => 'field_sfpf_org_instagram', 'type' => 'url'],
-                    ['label' => 'YouTube URL', 'name' => 'youtube_url', 'key' => 'field_sfpf_org_youtube', 'type' => 'url'],
-                ],
-            ],
-        ],
-        
         'sfpf_enable_homepage_acf' => [
             'group_key' => 'group_sfpf_homepage',
             'group_title' => 'Homepage Schema',
@@ -1364,34 +1221,17 @@ function sanitize_schema($schema) {
  * @return WP_Post|null Primary organization post or null
  */
 function get_primary_organization() {
-    $entity = get_hws_primary_entity(['organization']);
-    if ($entity && 'post' === ($entity['kind'] ?? '') && 'organization' === ($entity['post_type'] ?? '')) {
-        $post = get_post((int) $entity['id']);
-        if ($post && 'publish' === $post->post_status) {
-            return $post;
-        }
+    if ( class_exists( '\\SMC\\OrganizationProfile\\Compatibility\\SfpfOrganizationAdapter' ) ) {
+        return \SMC\OrganizationProfile\Compatibility\SfpfOrganizationAdapter::primary_post();
     }
 
-    // Check for option setting first
-    $primary_id = get_option('sfpf_primary_organization', 0);
-    if ($primary_id) {
-        $post = get_post($primary_id);
-        if ($post && $post->post_status === 'publish' && $post->post_type === 'organization') {
-            return $post;
-        }
+    $entity = get_hws_primary_entity( [ 'organization' ] );
+    if ( ! $entity || 'post' !== ( $entity['kind'] ?? '' ) || 'organization' !== ( $entity['post_type'] ?? '' ) ) {
+        return null;
     }
-    
-    // Fallback to first organization
-    $args = [
-        'post_type' => 'organization',
-        'posts_per_page' => 1,
-        'post_status' => 'publish',
-        'orderby' => 'date',
-        'order' => 'ASC',
-    ];
-    
-    $posts = get_posts($args);
-    return !empty($posts) ? $posts[0] : null;
+
+    $post = get_post( (int) $entity['id'] );
+    return $post && 'publish' === $post->post_status ? $post : null;
 }
 
 /**
@@ -1428,26 +1268,9 @@ function get_primary_book() {
  * @return array|null Organization data or null
  */
 function get_primary_organization_info() {
-    $org = get_primary_organization();
-    if (!$org) {
-        return null;
-    }
-    
-    $logo = get_field('image_cropped', $org->ID);
-    $hq = get_field('headquarters', $org->ID);
-    
-    return [
-        'ID' => $org->ID,
-        'title' => $org->post_title,
-        'url' => get_field('url', $org->ID),
-        'logo_url' => $logo['url'] ?? '',
-        'short_summary' => get_field('short_summary', $org->ID),
-        'headquarters_location' => $hq['location'] ?? '',
-        'headquarters_wikipedia' => $hq['wikipedia_url'] ?? '',
-        'founding_date' => get_field('founding_date', $org->ID),
-        'edit_url' => get_edit_post_link($org->ID),
-        'view_url' => get_permalink($org->ID),
-    ];
+    return class_exists( '\\SMC\\OrganizationProfile\\Compatibility\\SfpfOrganizationAdapter' )
+        ? \SMC\OrganizationProfile\Compatibility\SfpfOrganizationAdapter::primary_info()
+        : null;
 }
 
 /**
@@ -1479,11 +1302,11 @@ function is_field_populated($field_name, $context, $type = 'acf') {
     // ACF dot notation for nested group fields
     if (strpos($field_name, '.') !== false) {
         $parts = explode('.', $field_name, 2);
-        $group = get_field($parts[0], $context);
+        $group = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value($parts[0], $context, []);
         return is_array($group) && !empty($group[$parts[1]]);
     }
     
-    $val = get_field($field_name, $context);
+    $val = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value($field_name, $context);
     if (is_array($val)) {
         return !empty(array_filter($val));
     }

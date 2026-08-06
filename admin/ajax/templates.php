@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Save template
  */
 function ajax_save_template() {
-    verify_ajax_nonce();
-
     $template_key = sanitize_key($_POST['template_key'] ?? '');
     $content = wp_kses_post($_POST['content'] ?? '');
 
@@ -30,14 +28,11 @@ function ajax_save_template() {
 
     wp_send_json_success(['template_key' => $template_key]);
 }
-add_action('wp_ajax_sfpf_save_template', __NAMESPACE__ . '\\ajax_save_template');
 
 /**
  * Apply template to page
  */
 function ajax_apply_template() {
-    verify_ajax_nonce();
-
     $template_key = sanitize_key($_POST['template_key'] ?? '');
 
     if (!$template_key) {
@@ -68,14 +63,11 @@ function ajax_apply_template() {
 
     wp_send_json_success(['page_id' => $page_id]);
 }
-add_action('wp_ajax_sfpf_apply_template', __NAMESPACE__ . '\\ajax_apply_template');
 
 /**
  * Apply default template to page
  */
 function ajax_apply_default_template() {
-    verify_ajax_nonce();
-
     $page_id = intval($_POST['page_id'] ?? 0);
     $page_key = sanitize_key($_POST['page_key'] ?? '');
     $force = isset($_POST['force']) && $_POST['force'] === 'true';
@@ -119,4 +111,3 @@ function ajax_apply_default_template() {
 
     wp_send_json_success(['page_id' => $page_id, 'page_key' => $page_key]);
 }
-add_action('wp_ajax_sfpf_apply_default_template', __NAMESPACE__ . '\\ajax_apply_default_template');

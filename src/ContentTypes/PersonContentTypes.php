@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace SFPF\PersonProfile\ContentTypes;
 
 use Hexa\PluginCore\ContentTypes\ContentTypeRegistry;
+use Hexa\PluginCore\CoreContracts\PluginContextInterface;
 use Hexa\PluginCore\FieldStructures\AcfFieldGroupRegistry;
 
 defined( 'ABSPATH' ) || exit;
@@ -13,7 +14,7 @@ final class PersonContentTypes {
     private static ?ContentTypeRegistry $content_types = null;
     private static ?AcfFieldGroupRegistry $acf_groups = null;
 
-    public static function content_types(): ContentTypeRegistry {
+    public static function content_types( ?PluginContextInterface $context = null ): ContentTypeRegistry {
         self::load_definitions();
         if ( self::$content_types instanceof ContentTypeRegistry ) {
             return self::$content_types;
@@ -21,7 +22,7 @@ final class PersonContentTypes {
 
         self::$content_types = new ContentTypeRegistry(
             [
-                'option_name' => 'sfpf_content_type_settings', 'capability' => 'manage_options',
+                'option_name' => 'sfpf_content_type_settings', 'capability' => self::capability( $context ),
                 'ajax_action' => 'sfpf_save_content_type', 'nonce_action' => 'sfpf_content_types',
                 'nonce_field' => 'nonce', 'hook_priority' => 4,
             ]
@@ -59,7 +60,7 @@ final class PersonContentTypes {
         return self::$content_types;
     }
 
-    public static function acf_groups(): AcfFieldGroupRegistry {
+    public static function acf_groups( ?PluginContextInterface $context = null ): AcfFieldGroupRegistry {
         self::load_definitions();
         if ( self::$acf_groups instanceof AcfFieldGroupRegistry ) {
             return self::$acf_groups;
@@ -67,7 +68,7 @@ final class PersonContentTypes {
 
         self::$acf_groups = new AcfFieldGroupRegistry(
             [
-                'option_name' => 'sfpf_acf_structure_settings', 'capability' => 'manage_options',
+                'option_name' => 'sfpf_acf_structure_settings', 'capability' => self::capability( $context ),
                 'ajax_action' => 'sfpf_save_acf_structure', 'nonce_action' => 'sfpf_acf_structures',
                 'nonce_field' => 'nonce', 'hook_priority' => 4,
             ]
@@ -93,25 +94,17 @@ final class PersonContentTypes {
                     'location' => 'WordPress front page', 'fields' => [ 'Schema Type', 'Generated Schema', 'Schema Status' ],
                     'dependencies' => [ 'Advanced Custom Fields Pro' ],
                 ]
-            )
-            ->add(
-                [
-                    'id' => 'legacy-organization-profile', 'label' => 'Legacy Organization Compatibility Fields',
-                    'description' => 'Compatibility only for sites that enabled the former SFPF Organization fields before SMC became the canonical owner.',
-                    'group_key' => 'group_sfpf_organization', 'legacy_option' => 'sfpf_enable_organization_acf',
-                    'enabled_default' => false, 'definition' => 'sfpf_person_website\\organization_acf_field_group',
-                    'available_when' => static fn(): bool => ! class_exists( '\\SMC\\OrganizationProfile\\Acf\\OrganizationFields' ),
-                    'location' => 'Organization posts when SMC is unavailable',
-                    'fields' => [ 'Organization identity, media, contact, people, and schema compatibility fields' ],
-                    'dependencies' => [ 'HWS Base Tools Organization CPT', 'Advanced Custom Fields Pro' ],
-                ]
             );
         return self::$acf_groups;
     }
 
     private static function load_definitions(): void {
-        foreach ( [ 'register-acf-book.php', 'register-acf-user-schema.php', 'register-acf-homepage.php', 'register-acf-organization.php' ] as $file ) {
+        foreach ( [ 'register-acf-book.php', 'register-acf-user-schema.php', 'register-acf-homepage.php' ] as $file ) {
             require_once SFPF_PLUGIN_DIR . 'snippets/' . $file;
         }
+    }
+
+    private static function capability( ?PluginContextInterface $context ): string {
+        return null !== $context ? (string) $context->get( 'capability', 'manage_options' ) : 'manage_options';
     }
 }

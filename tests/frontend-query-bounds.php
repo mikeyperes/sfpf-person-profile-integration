@@ -146,6 +146,8 @@ namespace {
 }
 
 namespace sfpf_person_website {
+    require_once __DIR__ . '/load-core-data-normalization.php';
+
     function get_founder_user_id(): int {
         return 9;
     }

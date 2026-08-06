@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Toggle snippet
  */
 function ajax_toggle_snippet() {
-    verify_ajax_nonce();
-
     $snippet_id = sanitize_key($_POST['snippet_id'] ?? '');
     $enabled = intval($_POST['enabled'] ?? 0);
 
@@ -30,14 +28,11 @@ function ajax_toggle_snippet() {
 
     wp_send_json_success(['snippet_id' => $snippet_id, 'enabled' => $enabled]);
 }
-add_action('wp_ajax_sfpf_toggle_snippet', __NAMESPACE__ . '\\ajax_toggle_snippet');
 
 /**
  * Save schema type
  */
 function ajax_save_schema_type() {
-    verify_ajax_nonce();
-
     $schema_type = sanitize_key($_POST['schema_type'] ?? 'none');
 
     $valid_types = ['none', 'profile_page_only', 'person', 'profile_page'];
@@ -51,14 +46,11 @@ function ajax_save_schema_type() {
 
     wp_send_json_success(['schema_type' => $schema_type]);
 }
-add_action('wp_ajax_sfpf_save_schema_type', __NAMESPACE__ . '\\ajax_save_schema_type');
 
 /**
  * Save Biography schema type
  */
 function ajax_save_biography_schema_type() {
-    verify_ajax_nonce();
-
     $schema_type = sanitize_key($_POST['schema_type'] ?? 'none');
     $valid_types = ['none', 'person', 'profile_page', 'profile_page_only'];
 
@@ -71,38 +63,28 @@ function ajax_save_biography_schema_type() {
 
     wp_send_json_success(['schema_type' => $schema_type]);
 }
-add_action('wp_ajax_sfpf_save_biography_schema_type', __NAMESPACE__ . '\\ajax_save_biography_schema_type');
 
 /**
  * Save RankMath settings
  */
 function ajax_save_rankmath_settings() {
-    verify_ajax_nonce();
-
     $disable_homepage = !empty($_POST['disable_homepage']);
     $disable_biography = !empty($_POST['disable_biography']);
     $disable_books = !empty($_POST['disable_books']);
-    $disable_organizations = !empty($_POST['disable_organizations']);
-    $disable_testimonials = !empty($_POST['disable_testimonials']);
 
     update_option('sfpf_rankmath_disable_homepage', $disable_homepage);
     update_option('sfpf_rankmath_disable_biography', $disable_biography);
     update_option('sfpf_rankmath_disable_books', $disable_books);
-    update_option('sfpf_rankmath_disable_organizations', $disable_organizations);
-    update_option('sfpf_rankmath_disable_testimonials', $disable_testimonials);
 
     write_log("RankMath settings updated");
 
     wp_send_json_success();
 }
-add_action('wp_ajax_sfpf_save_rankmath_settings', __NAMESPACE__ . '\\ajax_save_rankmath_settings');
 
 /**
  * Save Breadcrumb visibility settings
  */
 function ajax_save_breadcrumb_settings() {
-    verify_ajax_nonce();
-
     $hide_frontpage = !empty($_POST['hide_frontpage']);
     $excluded_pages = isset($_POST['excluded_pages']) && is_array($_POST['excluded_pages'])
         ? array_map('intval', $_POST['excluded_pages'])
@@ -119,4 +101,3 @@ function ajax_save_breadcrumb_settings() {
 
     wp_send_json_success();
 }
-add_action('wp_ajax_sfpf_save_breadcrumb_settings', __NAMESPACE__ . '\\ajax_save_breadcrumb_settings');

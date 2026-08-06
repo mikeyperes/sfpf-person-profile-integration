@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Save FAQ Sets
  */
 function ajax_save_faq_sets() {
-    verify_ajax_nonce();
-
     $faq_sets_json = stripslashes($_POST["faq_sets"] ?? "[]");
     $faq_sets = json_decode($faq_sets_json, true);
 
@@ -39,5 +37,3 @@ function ajax_save_faq_sets() {
 
     wp_send_json_success(["count" => count($sanitized_sets)]);
 }
-
-add_action('wp_ajax_sfpf_save_faq_sets', __NAMESPACE__ . '\\ajax_save_faq_sets');

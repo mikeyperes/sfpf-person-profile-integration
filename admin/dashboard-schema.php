@@ -17,8 +17,6 @@ $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
 $rankmath_disable_homepage = get_option('sfpf_rankmath_disable_homepage', false);
 $rankmath_disable_biography = get_option('sfpf_rankmath_disable_biography', false);
 $rankmath_disable_books = get_option('sfpf_rankmath_disable_books', false);
-$rankmath_disable_organizations = get_option('sfpf_rankmath_disable_organizations', false);
-$rankmath_disable_testimonials = get_option('sfpf_rankmath_disable_testimonials', false);
 
 ?>
 
@@ -274,47 +272,6 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
 </div>
 <?php endif; ?>
 
-<!-- Organization Schema Preview -->
-<?php if (post_type_exists('organization')):
-    $orgs = get_posts(['post_type' => 'organization', 'posts_per_page' => 1, 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'ASC']);
-?>
-<div class="sfpf-card">
-    <div class="sfpf-card-header">
-        <span class="dashicons dashicons-building" style="color:#ec4899;"></span>
-        <h3>Organization Schema Preview</h3>
-        <span style="margin-left:auto;font-size:12px;color:#666;">
-            <?php $all_orgs = wp_count_posts('organization'); echo ((int)($all_orgs->publish ?? 0)); ?> published org(s)
-            <?php if (!empty($orgs)): ?> — showing: <strong><?php echo esc_html($orgs[0]->post_title); ?></strong><?php endif; ?>
-        </span>
-    </div>
-    
-    <?php if (empty($orgs)): ?>
-        <p style="color:#666;text-align:center;padding:20px;">No published organizations found.</p>
-    <?php else:
-        $org_schema = build_organization_schema($orgs[0]->ID);
-        if (!empty($org_schema)):
-    ?>
-        <div style="margin-bottom:20px;">
-            <?php echo format_json_display($org_schema, true); ?>
-        </div>
-    <?php else: ?>
-        <p style="color:#dc2626;text-align:center;padding:20px;">Schema builder returned empty.</p>
-    <?php endif; endif; ?>
-    
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-        <button type="button" class="button button-primary" id="sfpf-reprocess-organizations">🔄 Reprocess All Organization Schemas</button>
-        <?php if (!empty($orgs)): ?>
-        <a href="https://validator.schema.org/#url=<?php echo urlencode(get_permalink($orgs[0]->ID)); ?>" target="_blank" class="button button-secondary">
-            🔍 Schema.org Validator
-        </a>
-        <a href="https://search.google.com/test/rich-results?url=<?php echo urlencode(get_permalink($orgs[0]->ID)); ?>" target="_blank" class="button button-secondary">
-            📊 Google Rich Results Test
-        </a>
-        <?php endif; ?>
-    </div>
-</div>
-<?php endif; ?>
-
 <!-- RankMath Schema Control -->
 <div class="sfpf-card">
     <div class="sfpf-card-header">
@@ -342,19 +299,6 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
         </label>
         <?php endif; ?>
         
-        <?php if (post_type_exists('organization')): ?>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" name="rankmath_disable_organizations" value="1" <?php checked($rankmath_disable_organizations, true); ?> class="sfpf-rankmath-toggle">
-            <span>Disable RankMath schema on <strong>Organizations</strong></span>
-        </label>
-        <?php endif; ?>
-        
-        <?php if (post_type_exists('testimonial')): ?>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" name="rankmath_disable_testimonials" value="1" <?php checked($rankmath_disable_testimonials, true); ?> class="sfpf-rankmath-toggle">
-            <span>Disable RankMath schema on <strong>Testimonials</strong></span>
-        </label>
-        <?php endif; ?>
     </div>
     
     <div style="margin-top:15px;">
@@ -650,8 +594,6 @@ jQuery(document).ready(function($) {
             disable_homepage: $('input[name="rankmath_disable_homepage"]').is(':checked') ? 1 : 0,
             disable_biography: $('input[name="rankmath_disable_biography"]').is(':checked') ? 1 : 0,
             disable_books: $('input[name="rankmath_disable_books"]').is(':checked') ? 1 : 0,
-            disable_organizations: $('input[name="rankmath_disable_organizations"]').is(':checked') ? 1 : 0,
-            disable_testimonials: $('input[name="rankmath_disable_testimonials"]').is(':checked') ? 1 : 0,
             nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
         }, function(response) {
             $btn.prop('disabled', false).html('💾 Save RankMath Settings');
@@ -721,18 +663,6 @@ jQuery(document).ready(function($) {
             showToast(response.success ? 'Book schemas reprocessed!' : 'Error', response.success ? 'success' : 'error');
         }).fail(function() {
             $btn.prop('disabled', false).html('🔄 Reprocess All Book Schemas');
-            showToast('Request failed', 'error');
-        });
-    });
-    
-    $('#sfpf-reprocess-organizations').on('click', function() {
-        var $btn = $(this);
-        $btn.prop('disabled', true).text('Processing...');
-        $.post(ajaxurl, {action: 'sfpf_reprocess_schema', type: 'organizations', nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'}, function(response) {
-            $btn.prop('disabled', false).html('🔄 Reprocess All Organization Schemas');
-            showToast(response.success ? 'Organization schemas reprocessed!' : 'Error', response.success ? 'success' : 'error');
-        }).fail(function() {
-            $btn.prop('disabled', false).html('🔄 Reprocess All Organization Schemas');
             showToast('Request failed', 'error');
         });
     });

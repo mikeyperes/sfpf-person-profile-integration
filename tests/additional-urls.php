@@ -33,6 +33,7 @@ namespace {
 }
 
 namespace sfpf_person_website {
+    require_once __DIR__ . '/load-core-data-normalization.php';
     require_once dirname( __DIR__ ) . '/includes/helper-functions.php';
     require_once dirname( __DIR__ ) . '/includes/shortcodes/founder-articles.php';
 

@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Reprocess schema
  */
 function ajax_reprocess_schema() {
-    verify_ajax_nonce();
-
     $type = sanitize_key($_POST['type'] ?? '');
     $count = 0;
 
@@ -66,39 +64,18 @@ function ajax_reprocess_schema() {
             write_log("Reprocessed {$count} book schemas");
             break;
 
-        case 'organizations':
-            $orgs = get_posts([
-                'post_type' => 'organization',
-                'posts_per_page' => -1,
-                'post_status' => 'publish',
-            ]);
-
-            foreach ($orgs as $org) {
-                $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
-                    ? generate_and_save_schema($org->ID)
-                    : ['success' => false];
-                if (!empty($result['success'])) {
-                    $count++;
-                }
-            }
-            write_log("Reprocessed {$count} organization schemas");
-            break;
-
         default:
             wp_send_json_error('Invalid schema type');
     }
 
     wp_send_json_success(['type' => $type, 'count' => $count]);
 }
-add_action('wp_ajax_sfpf_reprocess_schema', __NAMESPACE__ . '\\ajax_reprocess_schema');
 
 /**
  * Rebuild all schemas
  */
 function ajax_rebuild_all_schema() {
-    verify_ajax_nonce();
-
-    $counts = ['homepage' => 0, 'biography' => 0, 'books' => 0, 'organizations' => 0];
+    $counts = ['homepage' => 0, 'biography' => 0, 'books' => 0];
 
     // Homepage
     $hp_schema_type = get_option('sfpf_homepage_schema_type', 'person');
@@ -136,26 +113,7 @@ function ajax_rebuild_all_schema() {
         }
     }
 
-    // Organizations
-    if (post_type_exists('organization')) {
-        $orgs = get_posts([
-            'post_type' => 'organization',
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-        ]);
-
-        foreach ($orgs as $org) {
-            $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
-                ? generate_and_save_schema($org->ID)
-                : ['success' => false];
-            if (!empty($result['success'])) {
-                $counts['organizations']++;
-            }
-        }
-    }
-
-    write_log("Rebuilt all schemas: homepage={$counts['homepage']}, biography={$counts['biography']}, books={$counts['books']}, orgs={$counts['organizations']}");
+    write_log("Rebuilt all schemas: homepage={$counts['homepage']}, biography={$counts['biography']}, books={$counts['books']}");
 
     wp_send_json_success($counts);
 }
-add_action('wp_ajax_sfpf_rebuild_all_schema', __NAMESPACE__ . '\\ajax_rebuild_all_schema');

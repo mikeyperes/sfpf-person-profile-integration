@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Save Elementor Loop Assignments
  */
 function ajax_save_elementor_loops() {
-    verify_ajax_nonce();
-
     $assignments_json = stripslashes($_POST['assignments'] ?? '{}');
     $assignments = json_decode($assignments_json, true);
 
@@ -36,14 +34,11 @@ function ajax_save_elementor_loops() {
 
     wp_send_json_success();
 }
-add_action('wp_ajax_sfpf_save_elementor_loops', __NAMESPACE__ . '\\ajax_save_elementor_loops');
 
 /**
  * Import Elementor Loop Templates
  */
 function ajax_import_elementor_templates() {
-    verify_ajax_nonce();
-
     // Check if Elementor is active
     if (!defined('ELEMENTOR_VERSION')) {
         wp_send_json_error('Elementor is not active');
@@ -183,14 +178,11 @@ function ajax_import_elementor_templates() {
         wp_send_json_error(implode(', ', $errors) ?: 'No templates imported');
     }
 }
-add_action('wp_ajax_sfpf_import_elementor_templates', __NAMESPACE__ . '\\ajax_import_elementor_templates');
 
 /**
  * Delete Elementor template
  */
 function ajax_delete_elementor_template() {
-    verify_ajax_nonce();
-
     $template_id = intval($_POST['template_id'] ?? 0);
 
     if (!$template_id) {
@@ -213,4 +205,3 @@ function ajax_delete_elementor_template() {
         wp_send_json_error('Failed to delete template');
     }
 }
-add_action('wp_ajax_sfpf_delete_elementor_template', __NAMESPACE__ . '\\ajax_delete_elementor_template');

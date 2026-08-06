@@ -4,6 +4,8 @@ declare( strict_types=1 );
 
 namespace sfpf_person_website;
 
+use Hexa\PluginCore\WpAdminAjax\AjaxGuard;
+
 /**
  * Shared nonce, capability, managed-page, and FAQ schema helpers.
  *
@@ -16,15 +18,8 @@ defined( 'ABSPATH' ) || exit;
  * Verify AJAX nonce
  */
 function verify_ajax_nonce() {
-    if (!wp_verify_nonce($_POST['nonce'] ?? '', 'sfpf_ajax')) {
-        wp_send_json_error('Invalid security token');
-        exit;
-    }
-
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Permission denied');
-        exit;
-    }
+    AjaxGuard::require_capability_or_error( 'manage_options', 'Permission denied' );
+    AjaxGuard::require_nonce_or_error( 'sfpf_ajax', 'nonce', 'Invalid security token' );
 }
 
 /**

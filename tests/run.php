@@ -24,8 +24,12 @@ $read = static function ( string $path ) use ( &$failures ): string {
 
 $requiredFiles = [
     'initialization.php',
+    'src/Autoloader.php',
     'src/Plugin.php',
     'src/Core/CoreIntegration.php',
+    'src/Dependencies/PluginRequirements.php',
+    'src/Shortcodes/ShortcodeRegistrar.php',
+    'src/Support/ActivityLogAdapter.php',
     'src/Admin/Dashboard.php',
     'src/ContentTypes/PersonContentTypes.php',
     'src/Schema/SchemaProvider.php',
@@ -77,6 +81,11 @@ foreach ( $requiredFiles as $relativePath ) {
 
 $initialization = $read( $root . '/initialization.php' );
 $coreIntegration = $read( $root . '/src/Core/CoreIntegration.php' );
+$plugin = $read( $root . '/src/Plugin.php' );
+$requirements = $read( $root . '/src/Dependencies/PluginRequirements.php' );
+$shortcodeRegistrar = $read( $root . '/src/Shortcodes/ShortcodeRegistrar.php' );
+$activityLog = $read( $root . '/src/Support/ActivityLogAdapter.php' );
+$logging = $read( $root . '/includes/logging.php' );
 $dashboard = $read( $root . '/src/Admin/Dashboard.php' );
 $dashboardCss = $read( $root . '/assets/admin/dashboard.css' );
 $socialIcons = $read( $root . '/includes/elementor-social-icons.php' );
@@ -105,13 +114,11 @@ preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)[
 
 $headerVersion = $headerMatch[1] ?? '';
 $constantVersion = $constantMatch[1] ?? '';
-$configVersion = false !== strpos( $initialization, 'public static $version = "' . $headerVersion . '"' ) ? $headerVersion : '';
-
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
-$assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.8' === $headerVersion, 'Plugin version is not 2.0.8.' );
-$assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
+$assert( '3.0.0' === $headerVersion, 'Plugin version is not 3.0.0.' );
+$assert( false === strpos( $initialization, 'class Config' ), 'Legacy bootstrap Config implementation remains.' );
+$assert( '3.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core is not synchronized to canonical 3.0.0.' );
 
 $sourceFiles = [];
 $scanDirectories = [ 'admin', 'includes', 'schema', 'snippets', 'src' ];
@@ -138,7 +145,7 @@ foreach ( $sourceFiles as $sourcePath ) {
     $assert( false === strpos( $source, 'sfpf_execute_php' ), 'Legacy PHP execution action remains in ' . $relativePath );
 }
 
-foreach ( [ 'src/Plugin.php', 'src/Core/CoreIntegration.php', 'src/Admin/Dashboard.php' ] as $relativePath ) {
+foreach ( [ 'initialization.php', 'src/Plugin.php', 'src/Core/CoreIntegration.php', 'src/Admin/Dashboard.php' ] as $relativePath ) {
     $source = $read( $root . '/' . $relativePath );
     $assert( false !== strpos( $source, 'declare( strict_types=1 );' ), 'Strict types missing from ' . $relativePath );
     $assert( false !== strpos( $source, 'namespace SFPF\\PersonProfile' ), 'SFPF namespace missing from ' . $relativePath );
@@ -148,6 +155,7 @@ $assert( false !== strpos( $coreIntegration, 'PluginContext' ), 'Core integratio
 $assert( false !== strpos( $coreIntegration, 'CoreBootstrap' ), 'Core integration does not use CoreBootstrap.' );
 $assert( false !== strpos( $coreIntegration, 'UpdaterAjaxController' ), 'Core updater controller is not registered.' );
 $assert( false !== strpos( $dashboard, 'HostTabsRenderer' ), 'Dashboard does not use the shared tab renderer.' );
+$assert( false !== strpos( $dashboard, 'TabRegistry' ) && false !== strpos( $dashboard, 'TabDefinition' ), 'Dashboard tab definitions do not use the Core registry.' );
 $assert( false !== strpos( $dashboard, 'AjaxActionRegistry' ), 'Dashboard lazy-tab endpoint is not guarded by the shared AJAX registry.' );
 $assert(
     1 === preg_match( "/'layout'\\s*=>\\s*'sidebar'/", $dashboard )
@@ -194,12 +202,13 @@ $assert(
     'Admin lifecycle still eagerly loads dashboard, AJAX, or updater presentation code.'
 );
 $assert(
-    false !== strpos( $ajaxModuleLoader, 'private const ACTION_MODULES' )
+    false !== strpos( $ajaxModuleLoader, 'private const ACTIONS' )
     && false !== strpos( $ajaxModuleLoader, "'sfpf_detect_schema'" )
     && false !== strpos( $ajaxModuleLoader, "'admin/ajax/schema-checklist.php'" )
+    && false !== strpos( $ajaxModuleLoader, 'AjaxActionRegistry' )
     && false !== strpos( $ajaxModuleLoader, 'requestAction()' )
     && false === strpos( $ajaxModuleLoader, 'private const MODULES' ),
-    'Legacy AJAX modules are not selected narrowly from the requested action.'
+    'Legacy AJAX modules are not selected narrowly or registered through the Core AJAX registry.'
 );
 $assert(
     false === strpos( $ajaxModuleLoader, 'sfpf_add_pages_to_menu' )
@@ -253,9 +262,10 @@ $assert(
     'Profile debug route is not restricted to authenticated administrators.'
 );
 $assert(
-    false !== strpos( $ajaxSupport, 'wp_verify_nonce' )
-    && false !== strpos( $ajaxSupport, "current_user_can('manage_options')" ),
-    'Legacy AJAX guard is missing nonce or capability validation.'
+    false !== strpos( $ajaxSupport, 'AjaxGuard::require_nonce_or_error' )
+    && false !== strpos( $ajaxSupport, 'AjaxGuard::require_capability_or_error' )
+    && false === strpos( $ajaxSupport, 'wp_verify_nonce(' ),
+    'Legacy AJAX guard does not delegate nonce and capability validation to Core.'
 );
 $assert(
     false !== strpos( $socialIcons, "get_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, '1')" )
@@ -352,7 +362,7 @@ $assert(
     && false === strpos( $lifecycle, 'register-cpt-testimonial.php' )
     && false === strpos( $lifecycle, 'register-cpt-book.php' )
     && false !== strpos( $contentTypes, "'key' => 'book'" )
-    && false !== strpos( $coreIntegration, 'PersonContentTypes::content_types()' ),
+    && false !== strpos( $coreIntegration, 'PersonContentTypes::content_types( $context )' ),
     'Book registration does not run exclusively through the Core content-type registry.'
 );
 $assert(
@@ -366,25 +376,30 @@ $assert(
     'Person Config still advertises shared CPT ownership.'
 );
 $assert(
-    false !== strpos( $contentTypes, 'OrganizationProfile' )
-    && false !== strpos( $contentTypes, 'OrganizationFields' )
-    && false !== strpos( $organizationShortcode, 'SMC\\\\OrganizationProfile\\\\Shortcodes\\\\OrganizationShortcode' ),
-    'Person ACF or shortcode compatibility does not defer to SMC ownership.'
+    false === strpos( $contentTypes, 'OrganizationFields' )
+    && false === strpos( $contentTypes, 'group_sfpf_organization' )
+    && false !== strpos( $organizationShortcode, 'SfpfOrganizationAdapter' )
+    && false !== strpos( $organizationShortcode, 'OrganizationShortcode' ),
+    'Person still owns Organization fields or its compatibility callbacks do not delegate to SMC.'
 );
 $assert(
     false !== strpos( $organizationShortcode, 'function sfpf_resolve_organization_id' )
-    && false !== strpos( $organizationShortcode, "is_singular('organization')" )
-    && false !== strpos( $organizationShortcode, "'display_profile'" ),
-    'Organization shortcodes do not resolve the current CPT or expose the reusable profile renderer.'
+    && false !== strpos( $organizationShortcode, 'SfpfOrganizationAdapter::resolve_id' )
+    && false !== strpos( $organizationShortcode, "'display_profile'" )
+    && false === strpos( $organizationShortcode, 'add_shortcode(' ),
+    'Historical Organization callbacks are not thin, non-registering SMC adapters.'
 );
 $assert(
-    false !== strpos( $helperFunctions, "\$post->post_type === 'organization'" ),
-    'Primary organization resolution accepts a published post from the wrong post type.'
+    false !== strpos( $helperFunctions, 'SfpfOrganizationAdapter::primary_post()' )
+    && false === strpos( $helperFunctions, "get_option('sfpf_primary_organization'" )
+    && false === strpos( $helperFunctions, '// Fallback to first organization' ),
+    'Primary organization compatibility still selects its own option or inventory fallback.'
 );
 $assert(
     false !== strpos( $schemaBuilder, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' )
-    && false !== strpos( $schemaProvider, 'OrganizationSchema' ),
-    'Person organization schema compatibility does not delegate to SMC.'
+    && false === strpos( $schemaProvider, "is_singular( 'organization' )" )
+    && false === strpos( $read( $root . '/schema/schema-manager.php' ), "case 'organization':" ),
+    'Person still generates or injects Organization schema instead of leaving ownership with SMC.'
 );
 $assert(
     false === strpos( $schemaBuilder, "elseif (\$th = get_the_post_thumbnail_url(\$post_id, 'full')) {\n        \$s['logo']" ),
@@ -415,9 +430,62 @@ $assert(
     'Person FAQ source, renderer, and schema paths do not use Hexa WP Core.'
 );
 $assert(
-    false !== strpos( $founderShortcodes, 'function register_founder_shortcode()' )
-    && false !== strpos( $founderShortcodes, "add_action('init', __NAMESPACE__ . '\\\\register_founder_shortcode', 100)" ),
-    'SFPF does not reassert ownership of the founder shortcode after generic fallbacks register.'
+    false === strpos( $founderShortcodes, 'function register_founder_shortcode()' )
+    && false !== strpos( $shortcodeRegistrar, "add_action( 'init', [ self::class, 'register_shortcodes' ], 100 )" )
+    && false !== strpos( $shortcodeRegistrar, "'founder'" ),
+    'Founder registration is not centralized in the late Core-backed shortcode registrar.'
+);
+
+// Architecture regressions: generic mechanics stay in Core and Organization stays in SMC.
+$assert(
+    false !== strpos( $plugin, 'Autoloader' ) || false !== strpos( $initialization, 'Autoloader::register' ),
+    'The namespaced SFPF composition root is not loaded through the plugin autoloader.'
+);
+$assert(
+    false !== strpos( $requirements, 'PluginRecommendationRegistry' )
+    && false !== strpos( $requirements, 'PluginCheckService' )
+    && false !== strpos( $requirements, "'smc-organization-profile-integration'" )
+    && false !== strpos( $requirements, "'checks'      => [ 'installed' => true, 'active' => true ]" ),
+    'SFPF dependency discovery does not use Core or recommend its canonical Organization owner.'
+);
+$assert(
+    false !== strpos( $shortcodeRegistrar, 'ShortcodeRegistry' )
+    && false !== strpos( $shortcodeRegistrar, 'ShortcodeDefinition' ),
+    'SFPF shortcode registration and documentation do not use the Core registry.'
+);
+$assert(
+    false !== strpos( $activityLog, 'ActivityLogger' )
+    && false !== strpos( $activityLog, 'ActivityLogConfig::STORAGE_PERMANENT' )
+    && false !== strpos( $logging, 'ActivityLogAdapter::add' )
+    && false !== strpos( $logging, 'ActivityLogAdapter::legacy_entries' ),
+    'SFPF activity logging does not delegate persistence to Core.'
+);
+$assert(
+    ! is_file( $root . '/snippets/register-acf-organization.php' )
+    && ! is_file( $root . '/assets/frontend/organization-profile.css' )
+    && false === strpos( $helperFunctions, "'sfpf_enable_organization_acf'" ),
+    'Legacy SFPF Organization field or presentation ownership remains.'
+);
+$assert(
+    false === strpos( $all_source = implode( "\n", array_map( $read, $sourceFiles ) ), "add_shortcode('organization'" )
+    && false === strpos( $all_source, 'add_shortcode( \'organization\'' ),
+    'SFPF still registers the Organization shortcode alias.'
+);
+$assert(
+    false !== strpos( $helperFunctions, 'ValueNormalizer::url_values' )
+    && false !== strpos( $helperFunctions, 'FieldReader::acf_value' )
+    && false !== strpos( $helperFunctions, 'MediaNormalizer::attachment_image_record' )
+    && false !== strpos( $helperFunctions, 'MediaNormalizer::gallery_records' )
+    && false === strpos( $helperFunctions, 'wp_get_attachment_image_src($attachment_id' )
+    && false === strpos( $helperFunctions, 'preg_match_all(\'#https?://[^\\s,<>]+#\'' ),
+    'Legacy URL, ACF, or media callbacks still own generic normalization mechanics.'
+);
+$assert(
+    false !== strpos( $schemaBuilder, 'FieldReader::acf_value' )
+    && false !== strpos( $schemaBuilder, 'ValueNormalizer::url_values' )
+    && false !== strpos( $schemaBuilder, 'ValueNormalizer::row_values' )
+    && false !== strpos( $schemaBuilder, 'ValueNormalizer::single_or_array' ),
+    'Schema compatibility helpers do not delegate generic ACF, URL, row, and cardinality normalization to Core.'
 );
 
 
@@ -489,6 +557,14 @@ $assert( 0 === $wikimediaStatus, 'Wikimedia Commons Person-schema regression tes
 $queryBoundsTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/frontend-query-bounds.php' );
 passthru( $queryBoundsTest, $queryBoundsStatus );
 $assert( 0 === $queryBoundsStatus, 'Frontend query bounds regression test failed.' );
+
+$activityLogTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/activity-log.php' );
+passthru( $activityLogTest, $activityLogStatus );
+$assert( 0 === $activityLogStatus, 'Core-backed activity-log compatibility regression test failed.' );
+
+$dataNormalizationTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/data-normalization-compatibility.php' );
+passthru( $dataNormalizationTest, $dataNormalizationStatus );
+$assert( 0 === $dataNormalizationStatus, 'Core-backed data-normalization compatibility regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

@@ -85,4 +85,3 @@ function book_shortcode($atts) {
 
     return $value;
 }
-add_shortcode('book', __NAMESPACE__ . '\\book_shortcode');

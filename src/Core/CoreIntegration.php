@@ -13,6 +13,7 @@ use Hexa\PluginCore\SchemaTools\SchemaInjector as CoreSchemaInjector;
 use Hexa\PluginCore\WpAdminTabs\CoreTabConfig;
 use Hexa\PluginCore\WpAdminTabs\CoreTabModule;
 use SFPF\PersonProfile\ContentTypes\PersonContentTypes;
+use SFPF\PersonProfile\Dependencies\PluginRequirements;
 use SFPF\PersonProfile\Schema\SchemaProvider;
 
 defined( 'ABSPATH' ) || exit;
@@ -23,9 +24,6 @@ final class CoreIntegration {
     private static ?UpdaterConfig $updaterConfig = null;
 
     public static function boot(): void {
-        require_once dirname( __DIR__ ) . '/ContentTypes/PersonContentTypes.php';
-        require_once dirname( __DIR__ ) . '/Schema/SchemaProvider.php';
-
         if ( self::$bootstrap instanceof CoreBootstrap || ! self::classesAvailable() ) {
             return;
         }
@@ -49,8 +47,8 @@ final class CoreIntegration {
         $bootstrap
             ->add_module( new GitHubPluginUpdater( $updater ) )
             ->add_module( new UpdaterAjaxController( $updater ) )
-            ->add_module( PersonContentTypes::content_types() )
-            ->add_module( PersonContentTypes::acf_groups() )
+            ->add_module( PersonContentTypes::content_types( $context ) )
+            ->add_module( PersonContentTypes::acf_groups( $context ) )
             ->add_module(
                 new CoreSchemaInjector(
                     [ SchemaProvider::class, 'current' ],
@@ -76,6 +74,8 @@ final class CoreIntegration {
         }
 
         $bootstrap->boot();
+
+        PluginRequirements::register();
 
         self::$context   = $context;
         self::$bootstrap = $bootstrap;

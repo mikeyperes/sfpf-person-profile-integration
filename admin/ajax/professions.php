@@ -16,8 +16,6 @@ defined( 'ABSPATH' ) || exit;
  * Create profession page
  */
 function ajax_create_profession_page() {
-    verify_ajax_nonce();
-
     $profession = sanitize_text_field($_POST['profession'] ?? '');
     $index = intval($_POST['index'] ?? 0);
 
@@ -76,14 +74,11 @@ function ajax_create_profession_page() {
         'edit_url' => get_edit_post_link($page_id, 'raw'),
     ]);
 }
-add_action('wp_ajax_sfpf_create_profession_page', __NAMESPACE__ . '\\ajax_create_profession_page');
 
 /**
  * Delete profession page and unlink from ACF
  */
 function ajax_delete_profession_page() {
-    verify_ajax_nonce();
-
     $page_id = intval($_POST['page_id'] ?? 0);
     $index = intval($_POST['index'] ?? 0);
 
@@ -110,4 +105,3 @@ function ajax_delete_profession_page() {
     write_log("Profession page deleted (ID: {$page_id})");
     wp_send_json_success(['page_id' => $page_id]);
 }
-add_action('wp_ajax_sfpf_delete_profession_page', __NAMESPACE__ . '\\ajax_delete_profession_page');

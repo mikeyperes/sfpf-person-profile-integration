@@ -1,0 +1,23 @@
+[06-Aug-2026 03:32:51 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\DataNormalization\ValueNormalizer" not found in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php:23
+Stack trace:
+#0 /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php(50): sfpf_person_website\sfpf_normalize_url_values('https://www.wik...')
+#1 /srv/t3-workspaces/sfpf-person-profile-integration/tests/additional-urls.php(104): sfpf_person_website\sfpf_filter_public_urls('https://www.wik...')
+#2 {main}
+  thrown in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php on line 23
+[06-Aug-2026 03:32:56 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\DataNormalization\ValueNormalizer" not found in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php:23
+Stack trace:
+#0 /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php(50): sfpf_person_website\sfpf_normalize_url_values('https://www.wik...')
+#1 /srv/t3-workspaces/sfpf-person-profile-integration/tests/additional-urls.php(104): sfpf_person_website\sfpf_filter_public_urls('https://www.wik...')
+#2 {main}
+  thrown in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php on line 23
+[06-Aug-2026 03:39:20 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\DataNormalization\FieldReader" not found in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php:164
+Stack trace:
+#0 /srv/t3-workspaces/sfpf-person-profile-integration/tests/canonical-entity.php(36): sfpf_person_website\get_founder_user_id()
+#1 {main}
+  thrown in /srv/t3-workspaces/sfpf-person-profile-integration/includes/helper-functions.php on line 164
+[06-Aug-2026 03:39:20 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\DataNormalization\FieldReader" not found in /srv/t3-workspaces/sfpf-person-profile-integration/schema/schema-builder.php:18
+Stack trace:
+#0 /srv/t3-workspaces/sfpf-person-profile-integration/schema/schema-builder.php(79): sfpf_person_website\_sf('additional_name', 'user_9')
+#1 /srv/t3-workspaces/sfpf-person-profile-integration/tests/frontend-query-bounds.php(228): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /srv/t3-workspaces/sfpf-person-profile-integration/schema/schema-builder.php on line 18

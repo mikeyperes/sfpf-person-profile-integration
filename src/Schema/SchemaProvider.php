@@ -20,11 +20,6 @@ final class SchemaProvider {
         if ( is_singular( 'book' ) ) {
             return (array) \sfpf_person_website\build_book_schema( get_queried_object_id() );
         }
-        if ( is_singular( 'organization' ) ) {
-            return class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' )
-                ? []
-                : (array) \sfpf_person_website\build_organization_schema( get_queried_object_id() );
-        }
         if ( is_page() ) {
             $page_id = get_queried_object_id();
             $biography_id = (int) get_option( 'sfpf_page_biography', 0 );

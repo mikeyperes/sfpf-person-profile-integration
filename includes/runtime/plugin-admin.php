@@ -4,6 +4,8 @@ declare( strict_types=1 );
 
 namespace sfpf_person_website;
 
+use SFPF\PersonProfile\Dependencies\PluginRequirements;
+
 /**
  * Plugin action links, requirements, and one-time profile migrations.
  *
@@ -26,16 +28,7 @@ add_filter('plugin_action_links_' . SFPF_PLUGIN_BASENAME, __NAMESPACE__ . '\\add
  * Check for required plugins
  */
 function check_requirements() {
-    if (!is_admin()) {
-        return;
-    }
-
-    // Check for ACF
-    if (!class_exists('ACF') && !function_exists('get_field')) {
-        add_action('admin_notices', function() {
-            echo '<div class="notice notice-warning"><p><strong>SFPF Person Profile Integration:</strong> Advanced Custom Fields (ACF) plugin is recommended for full functionality.</p></div>';
-        });
-    }
+    PluginRequirements::register();
 }
 add_action('admin_init', __NAMESPACE__ . '\\check_requirements');
 

@@ -115,49 +115,6 @@ function get_book_schema_template() {
 }
 
 /**
- * Get Organization schema template (skeleton)
- * 
- * @return array Schema template
- */
-function get_organization_schema_template() {
-    return [
-        '@context' => 'https://schema.org',
-        '@type' => 'Organization',
-        '@id' => '{permalink}/#organization',
-        'name' => '{name}',
-        'legalName' => '{legal_name}',
-        'url' => '{url}',
-        'description' => '{description}',
-        'email' => '{email}',
-        'logo' => [
-            '@type' => 'ImageObject',
-            'url' => '{logo_url}',
-        ],
-        'founder' => [
-            '@id' => '{founder_id}',
-        ],
-        'foundingDate' => '{founding_date}',
-        'numberOfEmployees' => '{num_employees}',
-        'address' => [
-            '@type' => 'PostalAddress',
-            'streetAddress' => '{street_address}',
-            'addressLocality' => '{locality}',
-            'addressRegion' => '{region}',
-            'postalCode' => '{postal_code}',
-            'addressCountry' => '{country}',
-        ],
-        'contactPoint' => [
-            '@type' => 'ContactPoint',
-            'contactType' => '{contact_type}',
-            'email' => '{contact_email}',
-            'telephone' => '{contact_telephone}',
-            'url' => '{contact_url}',
-        ],
-        'sameAs' => '{same_as}',
-    ];
-}
-
-/**
  * Get all available schema templates
  * 
  * @return array Array of template info
@@ -178,11 +135,6 @@ function get_all_schema_templates() {
             'name' => 'Book',
             'description' => 'Schema for a book entry',
             'template' => get_book_schema_template(),
-        ],
-        'organization' => [
-            'name' => 'Organization',
-            'description' => 'Schema for a company or organization',
-            'template' => get_organization_schema_template(),
         ],
     ];
 }

@@ -20,6 +20,7 @@ namespace {
         return null;
     }
 
+    require __DIR__ . '/load-core-data-normalization.php';
     require dirname( __DIR__ ) . '/includes/helper-functions.php';
 
     use Hexa\PluginCore\EntitySources\CanonicalEntityResolver;

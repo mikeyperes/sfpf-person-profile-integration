@@ -32,8 +32,8 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '2.0.8' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
-$assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '1.0.0', '>=' ), 'Selected Core version is older than 1.0.0.' );
+$assert( '3.0.0' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '3.0.0', '>=' ), 'Selected Core version is older than the bundled release.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_core_updater_force_update_check' ), 'Core updater AJAX action is missing.' );
@@ -125,12 +125,15 @@ $requiredShortcodes = [
     'sfpf_person_faq',
     'sfpf_elementor_faq',
     'sfpf_loop',
-    'organization',
     'book',
     'founder',
 ];
 foreach ( $requiredShortcodes as $shortcode ) {
     $assert( shortcode_exists( $shortcode ), 'Shortcode is missing: ' . $shortcode );
+}
+
+if ( ! defined( 'SMC_VERSION' ) ) {
+    $assert( ! shortcode_exists( 'organization' ), 'SFPF registered the SMC-owned Organization shortcode alias.' );
 }
 
 $profileFieldGroup = function_exists( 'sfpf_person_website\\user_schema_acf_field_group' )
@@ -210,4 +213,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 2.0.8 with bounded founder-organization and loop queries.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 3.0.0 with bounded founder-organization and loop queries.' . PHP_EOL;

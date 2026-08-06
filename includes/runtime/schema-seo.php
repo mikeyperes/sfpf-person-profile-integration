@@ -64,14 +64,6 @@ function disable_rankmath_schema($data) {
         return [];
     }
 
-    if (is_singular('organization') && get_option('sfpf_rankmath_disable_organizations', false)) {
-        return [];
-    }
-
-    if (is_singular('testimonial') && get_option('sfpf_rankmath_disable_testimonials', false)) {
-        return [];
-    }
-
     return $data;
 }
 add_filter('rank_math/json_ld', __NAMESPACE__ . '\\disable_rankmath_schema', 999);

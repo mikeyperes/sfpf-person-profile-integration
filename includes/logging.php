@@ -1,6 +1,8 @@
 <?php
 namespace sfpf_person_website;
 
+use SFPF\PersonProfile\Support\ActivityLogAdapter;
+
 /**
  * Logging Functions
  * 
@@ -19,25 +21,17 @@ defined('ABSPATH') || exit;
  * @param string $type Log type (info, warning, error)
  */
 function write_log($message, $type = 'info') {
-    if (!is_string($type) || $type === '') {
-        $type = 'info';
+    if ( is_scalar( $message ) || $message instanceof \Stringable ) {
+        $normalized_message = (string) $message;
+    } else {
+        $encoded = wp_json_encode( $message );
+        $normalized_message = is_string( $encoded ) ? $encoded : '[Unserializable log value]';
     }
 
-    $log = get_option('sfpf_activity_log', []);
-    
-    // Keep only last 100 entries
-    if (count($log) >= 100) {
-        $log = array_slice($log, -99);
-    }
-    
-    $log[] = [
-        'timestamp' => current_time('mysql'),
-        'message' => $message,
-        'type' => $type,
-        'user' => get_current_user_id(),
-    ];
-    
-    update_option('sfpf_activity_log', $log);
+    ActivityLogAdapter::add(
+        $normalized_message,
+        is_string( $type ) ? $type : 'info'
+    );
 }
 
 /**
@@ -47,15 +41,14 @@ function write_log($message, $type = 'info') {
  * @return array Log entries
  */
 function get_activity_log($limit = 50) {
-    $log = get_option('sfpf_activity_log', []);
-    return array_slice(array_reverse($log), 0, $limit);
+    return ActivityLogAdapter::legacy_entries( max( 0, (int) $limit ) );
 }
 
 /**
  * Clear activity log
  */
 function clear_activity_log() {
-    delete_option('sfpf_activity_log');
+    ActivityLogAdapter::clear();
 }
 
 /**

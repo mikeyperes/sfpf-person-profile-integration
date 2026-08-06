@@ -135,4 +135,3 @@ function sfpf_loop_shortcode($atts) {
 
     return $html;
 }
-add_shortcode('sfpf_loop', __NAMESPACE__ . '\\sfpf_loop_shortcode');

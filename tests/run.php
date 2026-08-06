@@ -122,8 +122,8 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '3.1.0' === $headerVersion, 'Plugin version is not 3.1.0.' );
-$assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.0.3', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.0.3 baseline.' );
+$assert( '3.1.1' === $headerVersion, 'Plugin version is not 3.1.1.' );
+$assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.0.4', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.0.4 baseline.' );
 
 $sourceFiles = [];
 $scanDirectories = [ 'admin', 'includes', 'schema', 'snippets', 'src' ];

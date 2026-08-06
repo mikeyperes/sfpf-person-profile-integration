@@ -13,24 +13,49 @@ namespace sfpf_person_website;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Transfer previously enabled shared CPT options to their HWS-owned options.
+ * Preserve saved settings while Organization ownership moves from HWS to SFPF.
  */
 function migrate_shared_content_type_ownership(): void {
-    $migration_version = '1.8.0';
+    $migration_version = '3.1.0';
 
     if ( $migration_version === get_option( 'sfpf_shared_content_type_ownership_migration', '' ) ) {
         return;
     }
 
-    $option_map = [
-        'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization',
-        'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial',
-    ];
+    // Testimonial remains HWS-owned.
+    if ( get_option( 'sfpf_enable_testimonial_cpt', false ) ) {
+        update_option( 'enable_cpt_testimonial', 1, false );
+    }
 
-    foreach ( $option_map as $legacy_option => $hws_option ) {
-        if ( get_option( $legacy_option, false ) ) {
-            update_option( $hws_option, 1, false );
+    $sfpf_settings = get_option( 'sfpf_content_type_settings', [] );
+    $sfpf_settings = is_array( $sfpf_settings ) ? $sfpf_settings : [];
+
+    if ( ! isset( $sfpf_settings['organization'] ) || ! is_array( $sfpf_settings['organization'] ) ) {
+        $hws_settings = get_option( 'hws_content_type_settings', [] );
+        $hws_settings = is_array( $hws_settings ) ? $hws_settings : [];
+        $organization = is_array( $hws_settings['organization'] ?? null ) ? $hws_settings['organization'] : [];
+
+        $standalone_acf = get_option( 'sfpf_acf_structure_settings', [] );
+        $standalone_acf = is_array( $standalone_acf ) ? $standalone_acf : [];
+        $legacy_acf = get_option( 'sfpf_enable_organization_acf', null );
+        if ( null === $legacy_acf ) {
+            $legacy_acf = get_option( 'smp_enable_acf_organization', false );
         }
+        $acf_enabled = array_key_exists( 'legacy-organization-profile', $standalone_acf )
+            ? (bool) $standalone_acf['legacy-organization-profile']
+            : (bool) $legacy_acf;
+
+        $sfpf_settings['organization'] = [
+            'enabled' => array_key_exists( 'enabled', $organization )
+                ? ( ! empty( $organization['enabled'] ) ? 1 : 0 )
+                : ( get_option( 'smp_enable_cpt_organization', get_option( 'sfpf_enable_organization_cpt', false ) ) ? 1 : 0 ),
+            'singular' => sanitize_text_field( (string) ( $organization['singular'] ?? 'Organization' ) ) ?: 'Organization',
+            'plural' => sanitize_text_field( (string) ( $organization['plural'] ?? 'Organizations' ) ) ?: 'Organizations',
+            'rewrite_slug' => sanitize_title( (string) ( $organization['rewrite_slug'] ?? 'organization' ) ) ?: 'organization',
+            'field_groups' => [ 'organization-details' => $acf_enabled ? 1 : 0 ],
+        ];
+
+        update_option( 'sfpf_content_type_settings', $sfpf_settings, false );
     }
 
     update_option( 'sfpf_shared_content_type_ownership_migration', $migration_version, false );

@@ -30,6 +30,36 @@ final class PersonContentTypes {
         self::$content_types
             ->add(
                 [
+                    'id' => 'organization', 'owner' => 'SFPF Person Profile Integration',
+                    'description' => 'Canonical Organization records used by Person profiles and Organization websites.',
+                    'enabled_default' => false, 'legacy_enabled_option' => 'smp_enable_cpt_organization',
+                    'post_type' => [
+                        'key' => 'organization', 'singular' => 'Organization', 'plural' => 'Organizations', 'rewrite_slug' => 'organization',
+                        'args' => [
+                            'public' => true, 'publicly_queryable' => true, 'show_ui' => true,
+                            'show_in_menu' => true, 'show_in_nav_menus' => true, 'show_in_admin_bar' => true,
+                            'show_in_rest' => true, 'menu_position' => 21, 'menu_icon' => 'dashicons-building',
+                            'capability_type' => 'post', 'hierarchical' => false,
+                            'supports' => [ 'title', 'author', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields' ],
+                            'has_archive' => 'organizations', 'rewrite' => [ 'with_front' => false ],
+                            'query_var' => true, 'taxonomies' => [ 'category' ], 'delete_with_user' => false,
+                        ],
+                    ],
+                    'field_groups' => [
+                        [
+                            'id' => 'organization-details', 'label' => 'Organization Details',
+                            'description' => 'Organization identity, media, contact, people, and schema fields.',
+                            'group_key' => 'group_sfpf_organization', 'enabled_default' => false,
+                            'legacy_option' => 'sfpf_enable_organization_acf',
+                            'definition' => 'sfpf_person_website\\organization_acf_field_group',
+                            'fields' => [ 'Organization identity', 'Logo and gallery', 'Contact details', 'Founders and leadership', 'Schema data' ],
+                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                        ],
+                    ],
+                ]
+            )
+            ->add(
+                [
                     'id' => 'book', 'owner' => 'SFPF Person Profile Integration',
                     'description' => 'Books published by or associated with the primary Person profile.',
                     'enabled_default' => false, 'legacy_enabled_option' => 'sfpf_enable_book_cpt',
@@ -160,18 +190,6 @@ final class PersonContentTypes {
                     'enabled_default' => false, 'definition' => 'sfpf_person_website\\homepage_acf_field_group',
                     'location' => 'WordPress front page', 'fields' => [ 'Schema Type', 'Generated Schema', 'Schema Status' ],
                     'dependencies' => [ 'Advanced Custom Fields Pro' ],
-                ]
-            )
-            ->add(
-                [
-                    'id' => 'legacy-organization-profile', 'label' => 'Legacy Organization Compatibility Fields',
-                    'description' => 'Compatibility only for sites that enabled the former SFPF Organization fields before SMC became the canonical owner.',
-                    'group_key' => 'group_sfpf_organization', 'legacy_option' => 'sfpf_enable_organization_acf',
-                    'enabled_default' => false, 'definition' => 'sfpf_person_website\\organization_acf_field_group',
-                    'available_when' => static fn(): bool => ! class_exists( '\\SMC\\OrganizationProfile\\Acf\\OrganizationFields' ),
-                    'location' => 'Organization posts when SMC is unavailable',
-                    'fields' => [ 'Organization identity, media, contact, people, and schema compatibility fields' ],
-                    'dependencies' => [ 'HWS Base Tools Organization CPT', 'Advanced Custom Fields Pro' ],
                 ]
             );
         return self::$acf_groups;

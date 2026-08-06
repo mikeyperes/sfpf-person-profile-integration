@@ -201,6 +201,7 @@ $books = get_posts([
                     <tr><td><code>[organization field="headquarters_location"]</code></td><td>HQ location</td></tr>
                     <tr><td><code>[organization field="url"]</code></td><td>Website URL</td></tr>
                     <tr><td><code>[organization field="logo"]</code></td><td>Logo URL</td></tr>
+                    <tr><td><code>[organization field="featured_image_url" id="123"]</code></td><td>Featured image URL for a selected Organization</td></tr>
                 </tbody>
             </table>
             

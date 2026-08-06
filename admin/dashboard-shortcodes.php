@@ -845,6 +845,7 @@ defined('ABSPATH') || exit;
             <tr><td><code class="sfpf-copy-code">[organization field="headquarters_location"]</code></td><td>HQ location</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="headquarters_wikipedia"]</code></td><td>HQ Wikipedia URL</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="logo"]</code></td><td>Logo image URL</td></tr>
+            <tr><td><code class="sfpf-copy-code">[organization field="featured_image_url"]</code></td><td>WordPress featured image URL</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="company_info"]</code></td><td>Company information</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization id="123" field="name"]</code></td><td>Specific organization by ID</td></tr>
         </tbody>
@@ -913,6 +914,7 @@ defined('ABSPATH') || exit;
             <tr><td><code class="sfpf-copy-code">[organization field="url_github"]</code></td><td>GitHub</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="url_wikipedia"]</code></td><td>Wikipedia</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="url_crunchbase"]</code></td><td>Crunchbase</td></tr>
+            <tr><td><code class="sfpf-copy-code">[organization field="featured_image_url" id="123"]</code></td><td>Featured image for an explicitly selected Organization</td></tr>
             <tr><td><code class="sfpf-copy-code">[organization field="url_linkedin" link="true" target="_blank"]</code></td><td>As clickable link</td></tr>
         </tbody>
     </table>

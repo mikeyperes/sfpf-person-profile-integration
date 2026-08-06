@@ -8,14 +8,11 @@ SFPF owns:
 
 - Person fields stored on WordPress users.
 - Person, ProfilePage, and person-related FAQ schema construction.
-- The optional `book`, `press-release`, `interview`, and `contributing-profile` custom post types and their ACF structures.
+- The optional `organization`, `book`, `press-release`, `interview`, and `contributing-profile` custom post types and their ACF structures.
+- The canonical `[organization]` shortcode and Organization field output.
 - Person/profile shortcodes, page structures, and presentation templates.
 
-SFPF does not own Organization or Testimonial registration:
-
-- HWS Base Tools owns the `organization` and `testimonial` post types.
-- SMC Organization Profile Integration owns canonical Organization fields and Organization schema.
-- SFPF consumes those external records only where person-profile output needs them.
+HWS Base Tools continues to own the `testimonial` post type. Existing HWS Organization enablement, labels, rewrite slug, and SFPF field toggle are migrated non-destructively into SFPF settings; the historical options remain readable for compatibility.
 
 ## Canonical Entity
 
@@ -43,6 +40,7 @@ The plugin bundles Core 3.0.3 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGI
 - Person and ProfilePage schema graphs with stable IDs and Rank Math coexistence.
 - Person FAQ sets and reusable FAQ output.
 - Book CPT, fields, schema, and shortcodes.
+- Organization CPT, ACF fields, and deterministic shortcode registration.
 - Optional Press Release, Interview, and Contributing Profile CPTs with independently controlled ACF groups.
 - Biography, education, profession, organization-founded, and related page structures.
 - Person/profile galleries, social identities, additional URLs, awards, credentials, press, and Knowledge Graph identifiers.
@@ -57,6 +55,7 @@ The plugin bundles Core 3.0.3 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGI
 | `[website_content id="..."]` | Render an assigned website/profile value. |
 | `[faq slug="primary"]` | Render a configured FAQ set. |
 | `[book id="..."]` | Render a Book field or display value. |
+| `[organization field="url" id="123"]` | Render a field from the current, primary, or selected Organization. |
 
 The dashboard Shortcodes tab is the canonical source for the complete current list and parameter documentation.
 
@@ -89,6 +88,11 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.1.0
+
+- Makes SFPF the canonical registrar for the Organization CPT and its existing ACF field group, with a non-destructive migration from HWS settings.
+- Registers `[organization]` after legacy snippets, supports canonical `field=` and legacy `id=` field syntax, and normalizes cropped-logo and featured-image URLs.
 
 ### 3.0.3
 

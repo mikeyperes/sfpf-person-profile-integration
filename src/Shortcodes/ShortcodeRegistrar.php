@@ -24,6 +24,7 @@ final class ShortcodeRegistrar {
 
     public static function register_shortcodes(): void {
         $callbacks = [
+            'organization'       => 'sfpf_person_website\\organization_shortcode',
             'sfpf_loop'          => 'sfpf_person_website\\sfpf_loop_shortcode',
             'founder'            => 'sfpf_person_website\\founder_shortcode',
             'book'               => 'sfpf_person_website\\book_shortcode',
@@ -35,6 +36,9 @@ final class ShortcodeRegistrar {
 
         foreach ( $callbacks as $tag => $callback ) {
             if ( is_callable( $callback ) ) {
+                if ( 'organization' === $tag && shortcode_exists( $tag ) ) {
+                    remove_shortcode( $tag );
+                }
                 add_shortcode( $tag, $callback );
             }
         }
@@ -46,6 +50,7 @@ final class ShortcodeRegistrar {
         }
 
         $definitions = [
+            [ 'organization', 'Organization field', '[organization field="{input}" id=""]', 'Renders a field from the current, primary, or explicitly selected Organization.', 'name' ],
             [ 'founder', 'Founder field or section', '[founder id="{input}"]', 'Renders canonical Person profile data.', 'name' ],
             [ 'book', 'Book field', '[book field="{input}"]', 'Renders a field from the primary or selected Book.', 'name' ],
             [ 'sfpf-loop', 'Bounded content loop', '[sfpf_loop cpt="{input}"]', 'Renders a bounded Elementor-aware content loop.', 'book' ],

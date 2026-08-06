@@ -1221,17 +1221,31 @@ function sanitize_schema($schema) {
  * @return WP_Post|null Primary organization post or null
  */
 function get_primary_organization() {
-    if ( class_exists( '\\SMC\\OrganizationProfile\\Compatibility\\SfpfOrganizationAdapter' ) ) {
-        return \SMC\OrganizationProfile\Compatibility\SfpfOrganizationAdapter::primary_post();
-    }
-
     $entity = get_hws_primary_entity( [ 'organization' ] );
-    if ( ! $entity || 'post' !== ( $entity['kind'] ?? '' ) || 'organization' !== ( $entity['post_type'] ?? '' ) ) {
-        return null;
+    if ( $entity && 'post' === ( $entity['kind'] ?? '' ) && 'organization' === ( $entity['post_type'] ?? '' ) ) {
+        $post = get_post( (int) $entity['id'] );
+        if ( $post && 'publish' === $post->post_status ) {
+            return $post;
+        }
     }
 
-    $post = get_post( (int) $entity['id'] );
-    return $post && 'publish' === $post->post_status ? $post : null;
+    $legacy_id = absint( get_option( 'sfpf_primary_organization', 0 ) );
+    if ( $legacy_id > 0 ) {
+        $post = get_post( $legacy_id );
+        if ( $post && 'organization' === $post->post_type && 'publish' === $post->post_status ) {
+            return $post;
+        }
+    }
+
+    $organizations = get_posts(
+        [
+            'post_type' => 'organization', 'post_status' => 'publish',
+            'posts_per_page' => 1, 'orderby' => 'date', 'order' => 'ASC',
+            'no_found_rows' => true,
+        ]
+    );
+
+    return $organizations[0] ?? null;
 }
 
 /**
@@ -1268,9 +1282,26 @@ function get_primary_book() {
  * @return array|null Organization data or null
  */
 function get_primary_organization_info() {
-    return class_exists( '\\SMC\\OrganizationProfile\\Compatibility\\SfpfOrganizationAdapter' )
-        ? \SMC\OrganizationProfile\Compatibility\SfpfOrganizationAdapter::primary_info()
-        : null;
+    $organization = get_primary_organization();
+    if ( ! $organization ) {
+        return null;
+    }
+
+    $headquarters = sfpf_get_organization_field( 'headquarters', $organization->ID );
+    $headquarters = is_array( $headquarters ) ? $headquarters : [];
+
+    return [
+        'ID' => $organization->ID,
+        'title' => $organization->post_title,
+        'url' => sfpf_get_organization_field( 'url', $organization->ID ),
+        'logo_url' => sfpf_organization_image_url( sfpf_get_organization_field( 'image_cropped', $organization->ID ) ),
+        'short_summary' => sfpf_get_organization_field( 'short_summary', $organization->ID ),
+        'headquarters_location' => $headquarters['location'] ?? '',
+        'headquarters_wikipedia' => $headquarters['wikipedia_url'] ?? '',
+        'founding_date' => sfpf_get_organization_field( 'founding_date', $organization->ID ),
+        'edit_url' => get_edit_post_link( $organization->ID ),
+        'view_url' => get_permalink( $organization->ID ),
+    ];
 }
 
 /**

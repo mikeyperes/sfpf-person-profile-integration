@@ -25,7 +25,7 @@ final class PluginRequirements {
                 'github_repo' => 'mikeyperes/hws-base-tools',
                 'required'    => true,
                 'checks'      => [ 'installed' => true, 'active' => true ],
-                'notes'       => 'Supplies the canonical Person/entity and shared content-type contracts.',
+                'notes'       => 'Supplies the canonical website and primary-entity contracts.',
             ],
             [
                 'id'          => 'advanced-custom-fields-pro',
@@ -36,19 +36,7 @@ final class PluginRequirements {
                 'required'    => false,
                 'recommended' => true,
                 'checks'      => [ 'installed' => true, 'active' => true ],
-                'notes'       => 'Required for the optional Person and Book field structures.',
-            ],
-            [
-                'id'          => 'smc-organization-profile-integration',
-                'name'        => 'SMC Organization Profile Integration',
-                'plugin_file' => 'smc-organization-profile-integration/initialization.php',
-                'slug'        => 'smc-organization-profile-integration',
-                'source'      => 'github',
-                'github_repo' => 'mikeyperes/smc-organization-profile-integration',
-                'required'    => false,
-                'recommended' => true,
-                'checks'      => [ 'installed' => true, 'active' => true ],
-                'notes'       => 'Canonical owner of Organization fields, output, and schema.',
+                'notes'       => 'Required for optional Person, Organization, and Book field structures.',
             ],
         ];
     }
@@ -87,7 +75,7 @@ final class PluginRequirements {
         }
 
         echo '<div class="notice notice-warning"><p><strong>SFPF Person Profile Integration:</strong> '
-            . 'Advanced Custom Fields Pro is recommended for the optional Person and Book field structures.'
+            . 'Advanced Custom Fields Pro is recommended for the optional Person, Organization, and Book field structures.'
             . '</p></div>';
     }
 }

@@ -556,7 +556,7 @@ function organization_acf_field_group(): array {
                 'label' => 'Logo (Cropped)',
                 'name' => 'image_cropped',
                 'type' => 'image',
-                'instructions' => 'Square or cropped logo for listings.<br><code>[organization field="logo"]</code>',
+                'instructions' => 'Square or cropped logo for listings.<br><code>[organization field="logo"]</code>. The WordPress featured image remains separate and is available through <code>[organization field="featured_image_url"]</code>.',
                 'required' => 0,
                 'return_format' => 'array',
                 'library' => 'all',

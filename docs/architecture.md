@@ -15,11 +15,11 @@
 
 SFPF owns Person profile behavior, the Book content type, Person/Book field structures, FAQ sets, bounded Person-to-Organization relationship views, and its page/template orchestration.
 
-SMC Organization Profile Integration is the canonical owner of Organization fields, profile presentation, shortcode registration, schema generation, and canonical Organization selection. The historical functions in `includes/shortcodes/organization.php`, the schema-builder callback, and the primary-organization helpers are read-only compatibility adapters. They delegate when SMC is active and do not register an alias, choose an SFPF option or inventory fallback, define fields, or emit independent schema.
+SFPF is the canonical owner of Organization CPT registration, the `group_sfpf_organization` ACF structure, primary Organization resolution, and the `[organization]` shortcode. Existing HWS content-type settings and legacy SFPF field toggles are migrated into SFPF's Core-backed content-type store without deleting their source options. Organization schema may still delegate to a dedicated integration when one is installed.
 
 ## Compatibility Policy
 
-Public Person/Book/FAQ shortcode tags, action names, filters, and procedural callback names remain in `sfpf_person_website` until a versioned deprecation path exists. New orchestration code uses the `SFPF\PersonProfile` namespace. Historical Organization callback names remain callable only as thin SMC adapters.
+Public Person/Organization/Book/FAQ shortcode tags, action names, filters, and procedural callback names remain in `sfpf_person_website` until a versioned deprecation path exists. New orchestration code uses the `SFPF\PersonProfile` namespace.
 
 ## Shared Core Policy
 
@@ -29,4 +29,4 @@ The procedural AJAX, logging, ACF getter, URL collection, and gallery functions 
 
 ## Regression Limits
 
-The standalone suite enforces thin bootstrap files, bounded ownership modules, synchronized Core vendors, no arbitrary PHP evaluation, no unauthenticated SFPF AJAX actions, centralized Core-backed registries and logging, the SMC Organization boundary, gallery schema mapping, and server-side social-icon filtering.
+The standalone suite enforces thin bootstrap files, bounded ownership modules, synchronized Core vendors, no arbitrary PHP evaluation, no unauthenticated SFPF AJAX actions, centralized Core-backed registries and logging, Organization ownership, gallery schema mapping, and server-side social-icon filtering.

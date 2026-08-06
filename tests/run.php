@@ -60,6 +60,8 @@ $requiredFiles = [
     'tests/wikimedia-commons.php',
     'tests/frontend-query-bounds.php',
     'tests/profile-content-types.php',
+    'tests/organization-shortcode.php',
+    'tests/organization-ownership.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -120,8 +122,8 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '3.0.3' === $headerVersion, 'Plugin version is not 3.0.3.' );
-$assert( '3.0.3' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core is not synchronized to canonical 3.0.3.' );
+$assert( '3.1.0' === $headerVersion, 'Plugin version is not 3.1.0.' );
+$assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.0.3', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.0.3 baseline.' );
 
 $sourceFiles = [];
 $scanDirectories = [ 'admin', 'includes', 'schema', 'snippets', 'src' ];
@@ -358,15 +360,16 @@ $assert(
 $assert(
     ! is_file( $root . '/snippets/register-cpt-organization.php' )
     && ! is_file( $root . '/snippets/register-cpt-testimonial.php' ),
-    'Person plugin still ships Organization or Testimonial CPT registration.'
+    'Organization or Testimonial registration bypasses the Core content-type registry.'
 );
 $assert(
     false === strpos( $lifecycle, 'register-cpt-organization.php' )
     && false === strpos( $lifecycle, 'register-cpt-testimonial.php' )
     && false === strpos( $lifecycle, 'register-cpt-book.php' )
+    && false !== strpos( $contentTypes, "'key' => 'organization'" )
     && false !== strpos( $contentTypes, "'key' => 'book'" )
     && false !== strpos( $coreIntegration, 'PersonContentTypes::content_types( $context )' ),
-    'Book registration does not run exclusively through the Core content-type registry.'
+    'Organization and Book registration do not run exclusively through the Core content-type registry.'
 );
 $assert(
     false !== strpos( $contentTypes, "'key' => 'press-release'" )
@@ -378,35 +381,38 @@ $assert(
     'Profile content types and their ACF toggles are missing from the Core content-type registry.'
 );
 $assert(
-    false !== strpos( $lifecycle, "'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization'" )
-    && false !== strpos( $lifecycle, "'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial'" ),
-    'Legacy Person CPT options are not migrated to HWS Base Tools.'
+    false !== strpos( $lifecycle, "get_option( 'hws_content_type_settings'" )
+    && false !== strpos( $lifecycle, "\$sfpf_settings['organization']" )
+    && false !== strpos( $lifecycle, "'organization-details' => \$acf_enabled ? 1 : 0" )
+    && false !== strpos( $lifecycle, "get_option( 'sfpf_enable_testimonial_cpt'" ),
+    'Organization settings are not migrated from HWS while Testimonial remains HWS-owned.'
 );
 $assert(
-    false === strpos( $initialization, "'organization_cpt'" )
+    false !== strpos( $initialization, "'organization_cpt'" )
     && false === strpos( $initialization, "'testimonial_cpt'" ),
-    'Person Config still advertises shared CPT ownership.'
+    'Person Config does not advertise its Organization CPT ownership cleanly.'
 );
 $assert(
-    false !== strpos( $contentTypes, "'id' => 'legacy-organization-profile'" )
-    && false !== strpos( $contentTypes, "'available_when' => static fn(): bool" )
-    && false !== strpos( $contentTypes, "class_exists( '\\\\SMC\\\\OrganizationProfile\\\\Acf\\\\OrganizationFields' )" )
-    && false !== strpos( $organizationShortcode, 'SfpfOrganizationAdapter' )
-    && false !== strpos( $organizationShortcode, 'OrganizationShortcode' ),
-    'Person still owns Organization fields or its compatibility callbacks do not delegate to SMC.'
+    false !== strpos( $contentTypes, "'id' => 'organization'" )
+    && false !== strpos( $contentTypes, "'group_key' => 'group_sfpf_organization'" )
+    && false !== strpos( $contentTypes, "'legacy_enabled_option' => 'smp_enable_cpt_organization'" )
+    && false === strpos( $contentTypes, "'id' => 'legacy-organization-profile'" ),
+    'SFPF is not the single Core-backed owner of the Organization CPT and fields.'
 );
 $assert(
     false !== strpos( $organizationShortcode, 'function sfpf_resolve_organization_id' )
-    && false !== strpos( $organizationShortcode, 'SfpfOrganizationAdapter::resolve_id' )
+    && false !== strpos( $organizationShortcode, "case 'logo':" )
+    && false !== strpos( $organizationShortcode, "case 'featured_image_url':" )
+    && false !== strpos( $organizationShortcode, "'post_id' => ''" )
     && false !== strpos( $organizationShortcode, "'display_profile'" )
     && false === strpos( $organizationShortcode, 'add_shortcode(' ),
-    'Historical Organization callbacks are not thin, non-registering SMC adapters.'
+    'Organization shortcode callbacks do not expose the canonical and compatibility field contracts.'
 );
 $assert(
-    false !== strpos( $helperFunctions, 'SfpfOrganizationAdapter::primary_post()' )
-    && false === strpos( $helperFunctions, "get_option('sfpf_primary_organization'" )
-    && false === strpos( $helperFunctions, '// Fallback to first organization' ),
-    'Primary organization compatibility still selects its own option or inventory fallback.'
+    false === strpos( $helperFunctions, 'SfpfOrganizationAdapter::primary_post()' )
+    && false !== strpos( $helperFunctions, "get_option( 'sfpf_primary_organization'" )
+    && false !== strpos( $helperFunctions, "'posts_per_page' => 1" ),
+    'Primary Organization resolution is not owned and bounded by SFPF.'
 );
 $assert(
     false !== strpos( $schemaBuilder, 'SMC\\\\OrganizationProfile\\\\Schema\\\\OrganizationSchema' )
@@ -449,7 +455,7 @@ $assert(
     'Founder registration is not centralized in the late Core-backed shortcode registrar.'
 );
 
-// Architecture regressions: generic mechanics stay in Core and Organization stays in SMC.
+// Architecture regressions: generic mechanics stay in Core and Organization stays in SFPF.
 $assert(
     false !== strpos( $plugin, 'Autoloader' ) || false !== strpos( $initialization, 'Autoloader::register' ),
     'The namespaced SFPF composition root is not loaded through the plugin autoloader.'
@@ -457,9 +463,9 @@ $assert(
 $assert(
     false !== strpos( $requirements, 'PluginRecommendationRegistry' )
     && false !== strpos( $requirements, 'PluginCheckService' )
-    && false !== strpos( $requirements, "'smc-organization-profile-integration'" )
+    && false === strpos( $requirements, "'smc-organization-profile-integration'" )
     && false !== strpos( $requirements, "'checks'      => [ 'installed' => true, 'active' => true ]" ),
-    'SFPF dependency discovery does not use Core or recommend its canonical Organization owner.'
+    'SFPF dependency discovery does not use Core or still recommends a competing Organization owner.'
 );
 $assert(
     false !== strpos( $shortcodeRegistrar, 'ShortcodeRegistry' )
@@ -475,16 +481,17 @@ $assert(
 );
 $assert(
     is_file( $root . '/snippets/register-acf-organization.php' )
-    && false !== strpos( $contentTypes, "'id' => 'legacy-organization-profile'" )
-    && false !== strpos( $contentTypes, "'location' => 'Organization posts when SMC is unavailable'" )
+    && false !== strpos( $contentTypes, "'id' => 'organization-details'" )
+    && false !== strpos( $contentTypes, "'definition' => 'sfpf_person_website\\\\organization_acf_field_group'" )
     && ! is_file( $root . '/assets/frontend/organization-profile.css' )
-    && false === strpos( $helperFunctions, "'sfpf_enable_organization_acf'" ),
-    'Legacy SFPF Organization compatibility fields are not guarded while SMC is unavailable.'
+    && false === strpos( $contentTypes, "available_when" ),
+    'Organization fields are not owned directly by the Organization content-type definition.'
 );
 $assert(
-    false === strpos( $all_source = implode( "\n", array_map( $read, $sourceFiles ) ), "add_shortcode('organization'" )
-    && false === strpos( $all_source, 'add_shortcode( \'organization\'' ),
-    'SFPF still registers the Organization shortcode alias.'
+    false !== strpos( $shortcodeRegistrar, "'organization'       => 'sfpf_person_website\\\\organization_shortcode'" )
+    && false !== strpos( $shortcodeRegistrar, "remove_shortcode( \$tag )" )
+    && false !== strpos( $shortcodeRegistrar, "add_shortcode( \$tag, \$callback )" ),
+    'SFPF does not deterministically replace competing Organization shortcode callbacks.'
 );
 $assert(
     false !== strpos( $helperFunctions, 'ValueNormalizer::url_values' )
@@ -584,6 +591,14 @@ $assert( 0 === $dataNormalizationStatus, 'Core-backed data-normalization compati
 $profileContentTypesTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/profile-content-types.php' );
 passthru( $profileContentTypesTest, $profileContentTypesStatus );
 $assert( 0 === $profileContentTypesStatus, 'Profile content-type ACF structure regression test failed.' );
+
+$organizationShortcodeTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/organization-shortcode.php' );
+passthru( $organizationShortcodeTest, $organizationShortcodeStatus );
+$assert( 0 === $organizationShortcodeStatus, 'Organization shortcode regression test failed.' );
+
+$organizationOwnershipTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/organization-ownership.php' );
+passthru( $organizationOwnershipTest, $organizationOwnershipStatus );
+$assert( 0 === $organizationOwnershipStatus, 'Organization ownership migration regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

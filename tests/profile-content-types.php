@@ -4,7 +4,12 @@ declare( strict_types=1 );
 
 define( 'ABSPATH', dirname( __DIR__ ) . '/' );
 
+function add_action( string $hook, callable|string $callback, int $priority = 10 ): void {
+    unset( $hook, $callback, $priority );
+}
+
 require dirname( __DIR__ ) . '/snippets/register-acf-profile-content-types.php';
+require dirname( __DIR__ ) . '/snippets/register-acf-organization.php';
 
 $groups = [
     'press-release' => sfpf_person_website\press_release_acf_field_group(),
@@ -36,4 +41,22 @@ foreach ( $expected as $post_type => [ $group_key, $field_names ] ) {
     }
 }
 
-echo 'PASS: Profile content-type ACF structures preserve the migrated field contracts.' . PHP_EOL;
+$organization = sfpf_person_website\organization_acf_field_group();
+$organization_names = array_values(
+    array_filter(
+        array_map(
+            static fn( array $field ): string => (string) ( $field['name'] ?? '' ),
+            (array) ( $organization['fields'] ?? [] )
+        )
+    )
+);
+if (
+    'group_sfpf_organization' !== ( $organization['key'] ?? '' )
+    || 'organization' !== ( $organization['location'][0][0]['value'] ?? '' )
+    || ! in_array( 'image_cropped', $organization_names, true )
+) {
+    fwrite( STDERR, 'Invalid canonical Organization ACF structure.' . PHP_EOL );
+    exit( 1 );
+}
+
+echo 'PASS: Profile and Organization ACF structures preserve the migrated field contracts.' . PHP_EOL;

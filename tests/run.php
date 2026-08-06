@@ -37,6 +37,7 @@ $requiredFiles = [
     'assets/admin/dashboard.css',
     'includes/elementor-social-icons.php',
     'snippets/register-acf-user-schema.php',
+    'snippets/register-acf-profile-content-types.php',
     'schema/schema-builder.php',
     'lib/hexa-wordpress-plugin-core/VERSION',
     'includes/runtime/lifecycle.php',
@@ -58,6 +59,7 @@ $requiredFiles = [
     'tests/additional-urls.php',
     'tests/wikimedia-commons.php',
     'tests/frontend-query-bounds.php',
+    'tests/profile-content-types.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -114,10 +116,11 @@ preg_match( "/define\\(\\s*['\"]SFPF_PLUGIN_VERSION['\"]\\s*,\\s*['\"]([^'\"]+)[
 
 $headerVersion = $headerMatch[1] ?? '';
 $constantVersion = $constantMatch[1] ?? '';
+$configVersion = false !== strpos( $initialization, 'public static $version = "' . $headerVersion . '"' ) ? $headerVersion : '';
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
+$assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
 $assert( '3.0.0' === $headerVersion, 'Plugin version is not 3.0.0.' );
-$assert( false === strpos( $initialization, 'class Config' ), 'Legacy bootstrap Config implementation remains.' );
 $assert( '3.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core is not synchronized to canonical 3.0.0.' );
 
 $sourceFiles = [];
@@ -366,6 +369,15 @@ $assert(
     'Book registration does not run exclusively through the Core content-type registry.'
 );
 $assert(
+    false !== strpos( $contentTypes, "'key' => 'press-release'" )
+    && false !== strpos( $contentTypes, "'key' => 'interview'" )
+    && false !== strpos( $contentTypes, "'key' => 'contributing-profile'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_press_release_acf'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_interview_acf'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_contributing_profile_acf'" ),
+    'Profile content types and their ACF toggles are missing from the Core content-type registry.'
+);
+$assert(
     false !== strpos( $lifecycle, "'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization'" )
     && false !== strpos( $lifecycle, "'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial'" ),
     'Legacy Person CPT options are not migrated to HWS Base Tools.'
@@ -376,8 +388,9 @@ $assert(
     'Person Config still advertises shared CPT ownership.'
 );
 $assert(
-    false === strpos( $contentTypes, 'OrganizationFields' )
-    && false === strpos( $contentTypes, 'group_sfpf_organization' )
+    false !== strpos( $contentTypes, "'id' => 'legacy-organization-profile'" )
+    && false !== strpos( $contentTypes, "'available_when' => static fn(): bool" )
+    && false !== strpos( $contentTypes, "class_exists( '\\\\SMC\\\\OrganizationProfile\\\\Acf\\\\OrganizationFields' )" )
     && false !== strpos( $organizationShortcode, 'SfpfOrganizationAdapter' )
     && false !== strpos( $organizationShortcode, 'OrganizationShortcode' ),
     'Person still owns Organization fields or its compatibility callbacks do not delegate to SMC.'
@@ -461,10 +474,12 @@ $assert(
     'SFPF activity logging does not delegate persistence to Core.'
 );
 $assert(
-    ! is_file( $root . '/snippets/register-acf-organization.php' )
+    is_file( $root . '/snippets/register-acf-organization.php' )
+    && false !== strpos( $contentTypes, "'id' => 'legacy-organization-profile'" )
+    && false !== strpos( $contentTypes, "'location' => 'Organization posts when SMC is unavailable'" )
     && ! is_file( $root . '/assets/frontend/organization-profile.css' )
     && false === strpos( $helperFunctions, "'sfpf_enable_organization_acf'" ),
-    'Legacy SFPF Organization field or presentation ownership remains.'
+    'Legacy SFPF Organization compatibility fields are not guarded while SMC is unavailable.'
 );
 $assert(
     false === strpos( $all_source = implode( "\n", array_map( $read, $sourceFiles ) ), "add_shortcode('organization'" )
@@ -565,6 +580,10 @@ $assert( 0 === $activityLogStatus, 'Core-backed activity-log compatibility regre
 $dataNormalizationTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/data-normalization-compatibility.php' );
 passthru( $dataNormalizationTest, $dataNormalizationStatus );
 $assert( 0 === $dataNormalizationStatus, 'Core-backed data-normalization compatibility regression test failed.' );
+
+$profileContentTypesTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/profile-content-types.php' );
+passthru( $profileContentTypesTest, $profileContentTypesStatus );
+$assert( 0 === $profileContentTypesStatus, 'Profile content-type ACF structure regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

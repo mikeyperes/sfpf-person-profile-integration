@@ -8,7 +8,7 @@ SFPF owns:
 
 - Person fields stored on WordPress users.
 - Person, ProfilePage, and person-related FAQ schema construction.
-- The optional `book` custom post type and its ACF fields/schema.
+- The optional `book`, `press-release`, `interview`, and `contributing-profile` custom post types and their ACF structures.
 - Person/profile shortcodes, page structures, and presentation templates.
 
 SFPF does not own Organization or Testimonial registration:
@@ -43,6 +43,7 @@ The plugin bundles Core 3.0.0 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGI
 - Person and ProfilePage schema graphs with stable IDs and Rank Math coexistence.
 - Person FAQ sets and reusable FAQ output.
 - Book CPT, fields, schema, and shortcodes.
+- Optional Press Release, Interview, and Contributing Profile CPTs with independently controlled ACF groups.
 - Biography, education, profession, organization-founded, and related page structures.
 - Person/profile galleries, social identities, additional URLs, awards, credentials, press, and Knowledge Graph identifiers.
 - Shortcode catalog and Elementor-compatible output helpers.
@@ -92,6 +93,12 @@ semantics, and truncation signaling are documented in
 ### 3.0.0
 
 - Coordinated major release for the consolidated person-profile, schema, query, lifecycle, and admin infrastructure, synchronized with Hexa WordPress Plugin Core 3.0.0.
+
+### 2.0.9
+
+- Adds Core-managed Press Release, Interview, and Contributing Profile CPT controls.
+- Adds an independent ACF structure toggle to each new CPT while preserving established field keys.
+- Keeps all new structures disabled by default so sites opt in explicitly.
 
 ### 2.0.8
 

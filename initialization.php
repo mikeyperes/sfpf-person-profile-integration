@@ -30,6 +30,37 @@ define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SFPF_PLUGIN_BASENAME', plugin_basename(__FILE__));
 define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
 
+/**
+ * Config Class
+ */
+class Config {
+    public static $version = "3.0.0";
+    public static $slug = 'sfpf-person-profile-integration';
+    public static $text_domain = 'sfpf-person-profile-integration';
+    public static $menu_slug = 'sfpf-person-profile';
+    public static $plugin_folder_name = 'sfpf-person-profile-integration';
+    public static $plugin_starter_file = 'initialization.php';
+    public static $github_repo = 'mikeyperes/sfpf-person-profile-integration';
+    public static $github_branch = 'main';
+
+    public static function get_plugin_basename() {
+        return self::$plugin_folder_name . '/' . self::$plugin_starter_file;
+    }
+
+    public static $snippets = [
+        'book_cpt' => 'sfpf_enable_book_cpt',
+        'book_acf' => 'sfpf_enable_book_acf',
+        'press_release_cpt' => 'sfpf_enable_press_release_cpt',
+        'press_release_acf' => 'sfpf_enable_press_release_acf',
+        'interview_cpt' => 'sfpf_enable_interview_cpt',
+        'interview_acf' => 'sfpf_enable_interview_acf',
+        'contributing_profile_cpt' => 'sfpf_enable_contributing_profile_cpt',
+        'contributing_profile_acf' => 'sfpf_enable_contributing_profile_acf',
+        'organization_acf' => 'sfpf_enable_organization_acf',
+        'user_schema_acf' => 'sfpf_enable_user_schema_acf',
+        'homepage_acf' => 'sfpf_enable_homepage_acf',
+    ];
+}
 /** Register this plugin's vendored Core package with the shared resolver. */
 $hexa_plugin_core_root = SFPF_PLUGIN_DIR . 'lib/hexa-wordpress-plugin-core';
 require_once $hexa_plugin_core_root . '/bootstrap.php';

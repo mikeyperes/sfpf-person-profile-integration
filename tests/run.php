@@ -33,6 +33,7 @@ $requiredFiles = [
     'assets/admin/dashboard.css',
     'includes/elementor-social-icons.php',
     'snippets/register-acf-user-schema.php',
+    'snippets/register-acf-profile-content-types.php',
     'schema/schema-builder.php',
     'lib/hexa-wordpress-plugin-core/VERSION',
     'includes/runtime/lifecycle.php',
@@ -54,6 +55,7 @@ $requiredFiles = [
     'tests/additional-urls.php',
     'tests/wikimedia-commons.php',
     'tests/frontend-query-bounds.php',
+    'tests/profile-content-types.php',
     'admin/ajax/support.php',
     'admin/ajax/settings.php',
     'admin/ajax/schema-detection.php',
@@ -110,7 +112,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '2.0.8' === $headerVersion, 'Plugin version is not 2.0.8.' );
+$assert( '2.0.9' === $headerVersion, 'Plugin version is not 2.0.9.' );
 $assert( '1.0.0' === trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), 'Bundled Hexa Plugin Core version is not 1.0.0.' );
 
 $sourceFiles = [];
@@ -356,6 +358,15 @@ $assert(
     'Book registration does not run exclusively through the Core content-type registry.'
 );
 $assert(
+    false !== strpos( $contentTypes, "'key' => 'press-release'" )
+    && false !== strpos( $contentTypes, "'key' => 'interview'" )
+    && false !== strpos( $contentTypes, "'key' => 'contributing-profile'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_press_release_acf'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_interview_acf'" )
+    && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_contributing_profile_acf'" ),
+    'Profile content types and their ACF toggles are missing from the Core content-type registry.'
+);
+$assert(
     false !== strpos( $lifecycle, "'sfpf_enable_organization_cpt' => 'smp_enable_cpt_organization'" )
     && false !== strpos( $lifecycle, "'sfpf_enable_testimonial_cpt'  => 'enable_cpt_testimonial'" ),
     'Legacy Person CPT options are not migrated to HWS Base Tools.'
@@ -489,6 +500,10 @@ $assert( 0 === $wikimediaStatus, 'Wikimedia Commons Person-schema regression tes
 $queryBoundsTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/frontend-query-bounds.php' );
 passthru( $queryBoundsTest, $queryBoundsStatus );
 $assert( 0 === $queryBoundsStatus, 'Frontend query bounds regression test failed.' );
+
+$profileContentTypesTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/profile-content-types.php' );
+passthru( $profileContentTypesTest, $profileContentTypesStatus );
+$assert( 0 === $profileContentTypesStatus, 'Profile content-type ACF structure regression test failed.' );
 
 if ( [] !== $failures ) {
     foreach ( $failures as $failure ) {

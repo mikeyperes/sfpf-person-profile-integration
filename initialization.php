@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://seoforpublicfigures.com
  * Description: Personal website schema management, page structures, and content templates. Integrates with HWS Base Tools for website settings.
- * Version: 2.0.8
+ * Version: 2.0.9
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
 /**
  * Plugin Constants
  */
-define("SFPF_PLUGIN_VERSION", "2.0.8");
+define("SFPF_PLUGIN_VERSION", "2.0.9");
 define('SFPF_PLUGIN_FILE', __FILE__);
 define('SFPF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SFPF_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,7 @@ define('SFPF_PROFILE_DEBUG_ROUTE', 'sfpf-profile-debug');
  * Config Class
  */
 class Config {
-    public static $version = "2.0.8";
+    public static $version = "2.0.9";
     public static $slug = 'sfpf-person-profile-integration';
     public static $text_domain = 'sfpf-person-profile-integration';
     public static $menu_slug = 'sfpf-person-profile';
@@ -48,6 +48,12 @@ class Config {
     public static $snippets = [
         'book_cpt' => 'sfpf_enable_book_cpt',
         'book_acf' => 'sfpf_enable_book_acf',
+        'press_release_cpt' => 'sfpf_enable_press_release_cpt',
+        'press_release_acf' => 'sfpf_enable_press_release_acf',
+        'interview_cpt' => 'sfpf_enable_interview_cpt',
+        'interview_acf' => 'sfpf_enable_interview_acf',
+        'contributing_profile_cpt' => 'sfpf_enable_contributing_profile_cpt',
+        'contributing_profile_acf' => 'sfpf_enable_contributing_profile_acf',
         'organization_acf' => 'sfpf_enable_organization_acf',
         'user_schema_acf' => 'sfpf_enable_user_schema_acf',
         'homepage_acf' => 'sfpf_enable_homepage_acf',

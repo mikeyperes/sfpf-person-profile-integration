@@ -14,7 +14,7 @@ echo ( new ContentTypeRenderer() )->render(
     PersonContentTypes::content_types(),
     [
         'title' => 'Person Website Custom Post Types',
-        'description' => 'SFPF owns Book content. The post-type key is fixed; its public slug and labels can be edited safely.',
+        'description' => 'SFPF owns Book, Press Release, Interview, and Contributing Profile content. Post-type keys stay fixed while public slugs, labels, and related ACF structures remain independently configurable.',
         'persist_prefix' => 'sfpf-content-types',
     ]
 );

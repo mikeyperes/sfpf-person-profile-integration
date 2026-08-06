@@ -70,12 +70,12 @@ final class PersonContentTypes {
                     'field_groups' => [
                         [
                             'id' => 'press-release-fields', 'label' => 'Press Release Fields',
-                            'description' => 'Article authors and summary fields used by press-release editors.',
-                            'group_key' => 'group_64a7290b61191', 'enabled_default' => false,
+                            'description' => 'Source, original URL, release date, and featured controls for press releases.',
+                            'group_key' => 'group_sfpf_press_release', 'enabled_default' => false,
                             'legacy_option' => 'sfpf_enable_press_release_acf',
                             'definition' => 'sfpf_person_website\\press_release_acf_field_group',
-                            'fields' => [ 'Article Authors', 'Post Summary' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro', 'SMP Publication Integration for multi-author output (optional)' ],
+                            'fields' => [ 'Source Name', 'Original URL', 'Release Date', 'Featured' ],
+                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
                         ],
                     ],
                 ]

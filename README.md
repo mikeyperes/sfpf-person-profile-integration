@@ -94,6 +94,10 @@ semantics, and truncation signaling are documented in
 
 - Coordinated major release for the consolidated person-profile, schema, query, lifecycle, and admin infrastructure, synchronized with Hexa WordPress Plugin Core 3.0.0.
 
+### 2.0.10
+
+- Gives Press Release fields their own SFPF group and field keys so SMP Article Fields remain independently registered.
+
 ### 2.0.9
 
 - Adds Core-managed Press Release, Interview, and Contributing Profile CPT controls.

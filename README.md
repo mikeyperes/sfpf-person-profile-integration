@@ -33,7 +33,7 @@ Reusable behavior is delegated to Hexa WordPress Plugin Core:
 - Schema document encoding and injection.
 - Plugin and Core update panels.
 
-The plugin bundles Core 3.0.4 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
+The plugin bundles Core 3.0.5 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
 
 ## Features
 
@@ -65,7 +65,7 @@ The dashboard Shortcodes tab is the canonical source for the complete current li
 | --- | --- |
 | WordPress | 5.8 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.0.4 |
+| Hexa WP Core bundle | 3.0.5 |
 
 HWS Base Tools is recommended for canonical website/entity settings. ACF Pro is required for ACF-backed profile and Book field structures.
 
@@ -88,6 +88,11 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.1.2
+
+- Synchronizes the bundled Hexa WordPress Plugin Core to 3.0.5.
+- Shows structured ACF field label, name, and type with a collapsed JSON breakdown while keeping legacy text-only inventories compatible.
 
 ### 3.1.1
 

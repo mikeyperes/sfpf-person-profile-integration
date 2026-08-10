@@ -8,7 +8,8 @@ SFPF owns:
 
 - Person fields stored on WordPress users.
 - Person, ProfilePage, and person-related FAQ schema construction.
-- The optional `organization`, `book`, `press-release`, `interview`, and `contributing-profile` custom post types and their ACF structures.
+- The optional `organization`, `book`, `press-release`, `interview`, `contributing-profile`, and `quote` custom post types and their ACF structures.
+- Quote records store clean `quote`, `assigned_name`, `url`, `logos`, `publication_name`, and `publication_info` fields. The Logos gallery supports multiple WordPress attachments and explicitly accepts sanitized SVG plus common raster formats.
 - The canonical `[organization]` shortcode and Organization field output.
 - Person/profile shortcodes, page structures, and presentation templates.
 
@@ -88,6 +89,12 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.1.3
+
+- Adds an optional Quote custom post type with an independently enabled Quote Fields ACF group.
+- Registers clean quote, attribution, source URL, logo gallery, and publication metadata fields; logos support sanitized SVG and common raster MIME types.
+- Surfaces the Quote CPT and field-group controls through the generic Hexa WordPress Plugin Core settings UI.
 
 ### 3.1.2
 

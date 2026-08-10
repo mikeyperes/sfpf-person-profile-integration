@@ -36,7 +36,18 @@ final class PluginRequirements {
                 'required'    => false,
                 'recommended' => true,
                 'checks'      => [ 'installed' => true, 'active' => true ],
-                'notes'       => 'Required for optional Person, Organization, and Book field structures.',
+                'notes'       => 'Required for optional Person, Organization, Book, and Quote field structures.',
+            ],
+            [
+                'id'          => 'svg-support',
+                'name'        => 'SVG Support',
+                'plugin_file' => 'svg-support/svg-support.php',
+                'slug'        => 'svg-support',
+                'source'      => 'wordpress_org',
+                'required'    => false,
+                'recommended' => true,
+                'checks'      => [ 'installed' => true, 'active' => true ],
+                'notes'       => 'Sanitizes SVG files selected in optional Quote logo galleries; raster logos do not require it.',
             ],
         ];
     }

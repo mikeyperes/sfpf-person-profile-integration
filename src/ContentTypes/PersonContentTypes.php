@@ -153,6 +153,27 @@ final class PersonContentTypes {
                         ],
                     ],
                 ]
+            )
+            ->add(
+                [
+                    'id' => 'quote', 'owner' => 'SFPF Person Profile Integration',
+                    'description' => 'Attributed quotes and their original publication details.',
+                    'enabled_default' => false,
+                    'post_type' => [
+                        'key' => 'quote', 'singular' => 'Quote', 'plural' => 'Quotes', 'rewrite_slug' => 'quote',
+                        'args' => self::profile_content_type_args( 'dashicons-format-quote', 24 ),
+                    ],
+                    'field_groups' => [
+                        [
+                            'id' => 'quote-fields', 'label' => 'Quote Fields',
+                            'description' => 'Quote text, attribution, source URL, publication details, and one or more raster or SVG logos.',
+                            'group_key' => 'group_sfpf_quote', 'enabled_default' => false,
+                            'definition' => 'sfpf_person_website\\quote_acf_field_group',
+                            'fields' => [ 'Quote', 'Assigned Name', 'URL', 'Logos', 'Publication Name', 'Publication Info' ],
+                            'dependencies' => [ 'Advanced Custom Fields Pro', 'SVG Support for sanitized SVG uploads' ],
+                        ],
+                    ],
+                ]
             );
         return self::$content_types;
     }
@@ -196,7 +217,7 @@ final class PersonContentTypes {
     }
 
     private static function load_definitions(): void {
-        foreach ( [ 'register-acf-book.php', 'register-acf-profile-content-types.php', 'register-acf-user-schema.php', 'register-acf-homepage.php', 'register-acf-organization.php' ] as $file ) {
+        foreach ( [ 'register-acf-book.php', 'register-acf-profile-content-types.php', 'register-acf-quote.php', 'register-acf-user-schema.php', 'register-acf-homepage.php', 'register-acf-organization.php' ] as $file ) {
             require_once SFPF_PLUGIN_DIR . 'snippets/' . $file;
         }
     }

@@ -9,18 +9,21 @@ function add_action( string $hook, callable|string $callback, int $priority = 10
 }
 
 require dirname( __DIR__ ) . '/snippets/register-acf-profile-content-types.php';
+require dirname( __DIR__ ) . '/snippets/register-acf-quote.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-organization.php';
 
 $groups = [
     'press-release' => sfpf_person_website\press_release_acf_field_group(),
     'interview' => sfpf_person_website\interview_acf_field_group(),
     'contributing-profile' => sfpf_person_website\contributing_profile_acf_field_group(),
+    'quote' => sfpf_person_website\quote_acf_field_group(),
 ];
 
 $expected = [
     'press-release' => [ 'group_sfpf_press_release', [ 'sfpf_press_release_source_name', 'sfpf_press_release_original_url', 'sfpf_press_release_date', 'sfpf_press_release_featured' ] ],
     'interview' => [ 'group_64b623fb36208', [ 'podcast_name', 'guest_name', 'host_name', 'primary_url', 'additional_links', 'press' ] ],
     'contributing-profile' => [ 'group_64bb58d10c008', [ 'url', 'secondary_logo', 'featured_item', 'primary_featured_item' ] ],
+    'quote' => [ 'group_sfpf_quote', [ 'quote', 'assigned_name', 'url', 'logos', 'publication_name', 'publication_info' ] ],
 ];
 
 foreach ( $expected as $post_type => [ $group_key, $field_names ] ) {
@@ -41,6 +44,17 @@ foreach ( $expected as $post_type => [ $group_key, $field_names ] ) {
     }
 }
 
+$quote_fields = array_column( (array) ( $groups['quote']['fields'] ?? [] ), null, 'name' );
+$logos = is_array( $quote_fields['logos'] ?? null ) ? $quote_fields['logos'] : [];
+if (
+    'gallery' !== ( $logos['type'] ?? '' )
+    || 'id' !== ( $logos['return_format'] ?? '' )
+    || 'svg,png,jpg,jpeg,webp' !== ( $logos['mime_types'] ?? '' )
+) {
+    fwrite( STDERR, 'Quote logos must be a multi-image attachment gallery with explicit SVG and raster types.' . PHP_EOL );
+    exit( 1 );
+}
+
 $organization = sfpf_person_website\organization_acf_field_group();
 $organization_names = array_values(
     array_filter(
@@ -59,4 +73,4 @@ if (
     exit( 1 );
 }
 
-echo 'PASS: Profile and Organization ACF structures preserve the migrated field contracts.' . PHP_EOL;
+echo 'PASS: Profile, Organization, and Quote ACF structures preserve their field contracts.' . PHP_EOL;

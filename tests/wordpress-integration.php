@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '3.1.2' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '3.1.3' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '3.0.5', '>=' ), 'Selected Core version is older than the bundled release.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -216,4 +216,4 @@ if ( [] !== $failures ) {
     exit( 1 );
 }
 
-echo 'PASS: WordPress loaded SFPF 3.1.2 with canonical Organization ownership and bounded queries.' . PHP_EOL;
+echo 'PASS: WordPress loaded SFPF 3.1.3 with canonical Organization ownership and bounded queries.' . PHP_EOL;

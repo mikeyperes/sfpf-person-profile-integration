@@ -38,6 +38,7 @@ $requiredFiles = [
     'includes/elementor-social-icons.php',
     'snippets/register-acf-user-schema.php',
     'snippets/register-acf-profile-content-types.php',
+    'snippets/register-acf-quote.php',
     'schema/schema-builder.php',
     'lib/hexa-wordpress-plugin-core/VERSION',
     'includes/runtime/lifecycle.php',
@@ -60,6 +61,7 @@ $requiredFiles = [
     'tests/wikimedia-commons.php',
     'tests/frontend-query-bounds.php',
     'tests/profile-content-types.php',
+    'tests/quote-content-type.php',
     'tests/organization-shortcode.php',
     'tests/organization-ownership.php',
     'admin/ajax/support.php',
@@ -122,7 +124,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '3.1.2' === $headerVersion, 'Plugin version is not 3.1.2.' );
+$assert( '3.1.3' === $headerVersion, 'Plugin version is not 3.1.3.' );
 $assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.0.5', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.0.5 baseline.' );
 
 $sourceFiles = [];
@@ -375,10 +377,13 @@ $assert(
     false !== strpos( $contentTypes, "'key' => 'press-release'" )
     && false !== strpos( $contentTypes, "'key' => 'interview'" )
     && false !== strpos( $contentTypes, "'key' => 'contributing-profile'" )
+    && false !== strpos( $contentTypes, "'key' => 'quote'" )
+    && false !== strpos( $contentTypes, "'group_key' => 'group_sfpf_quote'" )
+    && false !== strpos( $contentTypes, "'definition' => 'sfpf_person_website\\\\quote_acf_field_group'" )
     && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_press_release_acf'" )
     && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_interview_acf'" )
     && false !== strpos( $contentTypes, "'legacy_option' => 'sfpf_enable_contributing_profile_acf'" ),
-    'Profile content types and their ACF toggles are missing from the Core content-type registry.'
+    'Profile content types, Quote, and their ACF toggles are missing from the Core content-type registry.'
 );
 $assert(
     false !== strpos( $lifecycle, "get_option( 'hws_content_type_settings'" )
@@ -591,6 +596,10 @@ $assert( 0 === $dataNormalizationStatus, 'Core-backed data-normalization compati
 $profileContentTypesTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/profile-content-types.php' );
 passthru( $profileContentTypesTest, $profileContentTypesStatus );
 $assert( 0 === $profileContentTypesStatus, 'Profile content-type ACF structure regression test failed.' );
+
+$quoteContentTypeTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/quote-content-type.php' );
+passthru( $quoteContentTypeTest, $quoteContentTypeStatus );
+$assert( 0 === $quoteContentTypeStatus, 'Quote Core content-type UI regression test failed.' );
 
 $organizationShortcodeTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/organization-shortcode.php' );
 passthru( $organizationShortcodeTest, $organizationShortcodeStatus );

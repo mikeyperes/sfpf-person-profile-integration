@@ -40,7 +40,7 @@ The plugin bundles Core 3.0.5 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGI
 
 - Person and ProfilePage schema graphs with stable IDs and Rank Math coexistence.
 - Person FAQ sets and reusable FAQ output.
-- Book CPT, fields, schema, and shortcodes.
+- Book CPT, fields, schema, and shortcodes, including a `quotes` repeater with quote text, source URL, and attribution/tagline values.
 - Organization CPT, ACF fields, and deterministic shortcode registration.
 - Optional Press Release, Interview, and Contributing Profile CPTs with independently controlled ACF groups.
 - Biography, education, profession, organization-founded, and related page structures.
@@ -72,7 +72,7 @@ HWS Base Tools is recommended for canonical website/entity settings. ACF Pro is 
 
 ## Installation
 
-Install the repository as `wp-content/plugins/sfpf-person-profile-integration`, activate it, and open its settings page. Existing legacy person settings are read as migration fallbacks and are not destructively rewritten.
+Install the repository as `wp-content/plugins/sfpf-person-profile-integration`, activate it, and open its settings page. Existing legacy person settings and Book quote metadata are retained as migration fallbacks and are not destructively rewritten.
 
 ## Development
 
@@ -89,6 +89,11 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.1.4
+
+- Adds a canonical `quotes` repeater with quote text, source URL, and attribution/tagline fields to Book.
+- Migrates Book and legacy `hbs-book` quote values from known repeater and singular fields without deleting source metadata.
 
 ### 3.1.3
 

@@ -32,6 +32,7 @@ $requiredFiles = [
     'src/Support/ActivityLogAdapter.php',
     'src/Admin/Dashboard.php',
     'src/ContentTypes/PersonContentTypes.php',
+    'src/Migrations/BookQuoteRepeaterMigration.php',
     'src/Schema/SchemaProvider.php',
     'admin/dashboard-content-types.php',
     'assets/admin/dashboard.css',
@@ -62,6 +63,7 @@ $requiredFiles = [
     'tests/frontend-query-bounds.php',
     'tests/profile-content-types.php',
     'tests/quote-content-type.php',
+    'tests/book-quote-migration.php',
     'tests/organization-shortcode.php',
     'tests/organization-ownership.php',
     'admin/ajax/support.php',
@@ -124,7 +126,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '3.1.3' === $headerVersion, 'Plugin version is not 3.1.3.' );
+$assert( '3.1.4' === $headerVersion, 'Plugin version is not 3.1.4.' );
 $assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.0.5', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.0.5 baseline.' );
 
 $sourceFiles = [];
@@ -596,6 +598,10 @@ $assert( 0 === $dataNormalizationStatus, 'Core-backed data-normalization compati
 $profileContentTypesTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/profile-content-types.php' );
 passthru( $profileContentTypesTest, $profileContentTypesStatus );
 $assert( 0 === $profileContentTypesStatus, 'Profile content-type ACF structure regression test failed.' );
+
+$bookQuoteMigrationTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/book-quote-migration.php' );
+passthru( $bookQuoteMigrationTest, $bookQuoteMigrationStatus );
+$assert( 0 === $bookQuoteMigrationStatus, 'Book quote migration regression test failed.' );
 
 $quoteContentTypeTest = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __DIR__ . '/quote-content-type.php' );
 passthru( $quoteContentTypeTest, $quoteContentTypeStatus );

@@ -982,6 +982,9 @@ function get_acf_field_structure($snippet_id) {
                     ['label' => 'Author Bio', 'name' => 'author_bio', 'key' => 'field_sfpf_book_author_bio', 'type' => 'wysiwyg'],
                     ['label' => 'Featured', 'name' => 'featured', 'key' => 'field_sfpf_book_featured', 'type' => 'true_false'],
                 ],
+                'Quotes' => [
+                    ['label' => 'Quotes', 'name' => 'quotes', 'key' => 'field_sfpf_book_quotes', 'type' => 'repeater'],
+                ],
                 'Media' => [
                     ['label' => 'Featured Image', 'name' => '_thumbnail_id', 'key' => 'core_post_thumbnail', 'type' => 'core'],
                     ['label' => 'Featured Content', 'name' => 'featured_content', 'key' => 'field_sfpf_book_featured_content', 'type' => 'wysiwyg'],

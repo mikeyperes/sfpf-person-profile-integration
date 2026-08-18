@@ -82,7 +82,7 @@ final class PersonContentTypes {
                             'group_key' => 'group_sfpf_book', 'enabled_default' => false,
                             'legacy_option' => 'sfpf_enable_book_acf',
                             'definition' => 'sfpf_person_website\\book_acf_field_group',
-                            'fields' => [ 'Schema Markup', 'Featured', 'Subtitle', 'Description', 'Author Bio', 'Alternate Names', 'Featured Content', 'Retail URLs', 'Knowledge Graph ID', 'SameAs URLs', 'ISBN', 'Page Count', 'Publication Date', 'Edition', 'Format', 'Language', 'Genre' ],
+                            'fields' => [ 'Schema Markup', 'Featured', 'Subtitle', 'Description', 'Author Bio', 'Alternate Names', 'Quotes repeater', 'Featured Content', 'Retail URLs', 'Knowledge Graph ID', 'SameAs URLs', 'ISBN', 'Page Count', 'Publication Date', 'Edition', 'Format', 'Language', 'Genre' ],
                             'dependencies' => [ 'Advanced Custom Fields Pro' ],
                         ],
                     ],

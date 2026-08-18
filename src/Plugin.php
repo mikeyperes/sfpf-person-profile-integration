@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace SFPF\PersonProfile;
 
 use SFPF\PersonProfile\Core\CoreIntegration;
+use SFPF\PersonProfile\Migrations\BookQuoteRepeaterMigration;
 use SFPF\PersonProfile\Runtime\LegacyModuleLoader;
 use SFPF\PersonProfile\Shortcodes\ShortcodeRegistrar;
 
@@ -21,6 +22,7 @@ final class Plugin {
 
         self::$registered = true;
         self::load_compatibility_surface();
+        BookQuoteRepeaterMigration::register();
         ShortcodeRegistrar::register();
 
         if ( did_action( 'plugins_loaded' ) ) {

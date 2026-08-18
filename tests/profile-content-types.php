@@ -11,8 +11,10 @@ function add_action( string $hook, callable|string $callback, int $priority = 10
 require dirname( __DIR__ ) . '/snippets/register-acf-profile-content-types.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-quote.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-organization.php';
+require dirname( __DIR__ ) . '/snippets/register-acf-book.php';
 
 $groups = [
+    'book' => sfpf_person_website\book_acf_field_group(),
     'press-release' => sfpf_person_website\press_release_acf_field_group(),
     'interview' => sfpf_person_website\interview_acf_field_group(),
     'contributing-profile' => sfpf_person_website\contributing_profile_acf_field_group(),
@@ -20,6 +22,7 @@ $groups = [
 ];
 
 $expected = [
+    'book' => [ 'group_sfpf_book', 'book' ],
     'press-release' => [ 'group_sfpf_press_release', [ 'sfpf_press_release_source_name', 'sfpf_press_release_original_url', 'sfpf_press_release_date', 'sfpf_press_release_featured' ] ],
     'interview' => [ 'group_64b623fb36208', [ 'podcast_name', 'guest_name', 'host_name', 'primary_url', 'additional_links', 'press' ] ],
     'contributing-profile' => [ 'group_64bb58d10c008', [ 'url', 'secondary_logo', 'featured_item', 'primary_featured_item' ] ],
@@ -37,6 +40,25 @@ foreach ( $expected as $post_type => [ $group_key, $field_names ] ) {
         )
     );
     $location = (string) ( $group['location'][0][0]['value'] ?? '' );
+
+    if ( 'book' === $post_type ) {
+        $book_fields = array_column( (array) ( $group['fields'] ?? [] ), null, 'name' );
+        $quotes = is_array( $book_fields['quotes'] ?? null ) ? $book_fields['quotes'] : [];
+        $quote_fields = array_column( (array) ( $quotes['sub_fields'] ?? [] ), null, 'name' );
+        if (
+            $group_key !== ( $group['key'] ?? '' )
+            || 'book' !== $location
+            || 'repeater' !== ( $quotes['type'] ?? '' )
+            || [ 'quote', 'url', 'tagline' ] !== array_keys( $quote_fields )
+            || 'textarea' !== ( $quote_fields['quote']['type'] ?? '' )
+            || 'url' !== ( $quote_fields['url']['type'] ?? '' )
+            || 'text' !== ( $quote_fields['tagline']['type'] ?? '' )
+        ) {
+            fwrite( STDERR, 'Invalid canonical Book Quotes repeater structure.' . PHP_EOL );
+            exit( 1 );
+        }
+        continue;
+    }
 
     if ( $group_key !== ( $group['key'] ?? '' ) || $field_names !== $names || '@post_type' !== $location ) {
         fwrite( STDERR, 'Invalid ACF structure for ' . $post_type . PHP_EOL );
@@ -73,4 +95,4 @@ if (
     exit( 1 );
 }
 
-echo 'PASS: Profile, Organization, and Quote ACF structures preserve their field contracts.' . PHP_EOL;
+echo 'PASS: Profile, Organization, Quote, and Book ACF structures preserve their field contracts.' . PHP_EOL;

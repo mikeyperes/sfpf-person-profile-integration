@@ -107,6 +107,68 @@ function book_acf_field_group(): array {
                 'required' => 0,
                 'rows' => 3,
             ],
+
+            // ═══════════════════════════════════════════════════════════
+            // QUOTES
+            // ═══════════════════════════════════════════════════════════
+            [
+                'key' => 'field_sfpf_book_header_quotes',
+                'label' => '💬 Quotes',
+                'name' => '',
+                'type' => 'accordion',
+                'open' => 1,
+                'multi_expand' => 1,
+                'endpoint' => 0,
+            ],
+            [
+                'key' => 'field_sfpf_book_quotes',
+                'label' => 'Quotes',
+                'name' => 'quotes',
+                'type' => 'repeater',
+                'instructions' => 'Store reusable quotes with an optional source URL and attribution or supporting tagline.',
+                'required' => 0,
+                'layout' => 'row',
+                'pagination' => 0,
+                'min' => 0,
+                'max' => 0,
+                'collapsed' => 'field_sfpf_book_quote_text',
+                'button_label' => 'Add Quote',
+                'rows_per_page' => 20,
+                'sub_fields' => [
+                    [
+                        'key' => 'field_sfpf_book_quote_text',
+                        'label' => 'Quote',
+                        'name' => 'quote',
+                        'type' => 'textarea',
+                        'instructions' => 'Enter the complete quote text.',
+                        'required' => 0,
+                        'rows' => 4,
+                        'placeholder' => 'Enter the quote',
+                        'new_lines' => '',
+                        'parent_repeater' => 'field_sfpf_book_quotes',
+                    ],
+                    [
+                        'key' => 'field_sfpf_book_quote_url',
+                        'label' => 'URL',
+                        'name' => 'url',
+                        'type' => 'url',
+                        'instructions' => 'Optional link to the original quote, publication, interview, or source.',
+                        'required' => 0,
+                        'placeholder' => 'https://example.com/source',
+                        'parent_repeater' => 'field_sfpf_book_quotes',
+                    ],
+                    [
+                        'key' => 'field_sfpf_book_quote_tagline',
+                        'label' => 'Attribution / Tagline',
+                        'name' => 'tagline',
+                        'type' => 'text',
+                        'instructions' => 'Optional name, title, organization, publication, or short supporting line displayed with the quote.',
+                        'required' => 0,
+                        'placeholder' => 'Name, title, organization, or publication',
+                        'parent_repeater' => 'field_sfpf_book_quotes',
+                    ],
+                ],
+            ],
             
             // ═══════════════════════════════════════════════════════════
             // MEDIA

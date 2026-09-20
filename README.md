@@ -90,6 +90,11 @@ semantics, and truncation signaling are documented in
 
 ## Changelog
 
+### 3.1.5
+
+- Makes `[founder id="gallery"]` render the canonical HWS user-profile Photos field, retaining the former SFPF Gallery field only as a non-destructive fallback.
+- Uses the same canonical HWS gallery for Person schema images and profile diagnostics.
+
 ### 3.1.4
 
 - Adds a canonical `quotes` repeater with quote text, source URL, and attribution/tagline fields to Book.

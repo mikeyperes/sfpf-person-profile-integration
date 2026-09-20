@@ -140,7 +140,7 @@ function build_person_schema() {
     // ── images: public gallery + KG gallery + avatar, deduplicated ──
     $img_urls = [];
     if (function_exists(__NAMESPACE__ . '\\sfpf_normalize_gallery_images')) {
-        foreach (sfpf_normalize_gallery_images(_sf('gallery', $uk, []), 'full') as $image) {
+        foreach (sfpf_normalize_gallery_images(sfpf_get_person_gallery($uid), 'full') as $image) {
             if (!empty($image['url'])) $img_urls[] = $image['url'];
         }
     }

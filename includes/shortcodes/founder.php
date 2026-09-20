@@ -197,6 +197,13 @@ function founder_shortcode($atts) {
             return $output;
 
         case 'gallery':
+            $gallery = sfpf_get_person_gallery($user_id);
+            $images = sfpf_normalize_gallery_images($gallery, $atts['size'] ?? 'large');
+            if (($atts['format'] ?? '') === 'json') return wp_json_encode($images);
+            if (($atts['format'] ?? '') === 'urls') return esc_html(implode("\n", array_map(function($image) { return $image['url'] ?? ''; }, $images)));
+            if (($atts['format'] ?? '') === 'count') return (string) count($images);
+            return sfpf_render_gallery_html($images, 'sfpf-founder-gallery', (int) ($atts['columns'] ?? 3));
+
         case 'knowledge_graph_images':
             $gallery = get_field($field_name, 'user_' . $user_id);
             $images = sfpf_normalize_gallery_images($gallery, $atts['size'] ?? 'large');
@@ -311,7 +318,7 @@ function founder_shortcode($atts) {
  * Display founder gallery in formatted HTML.
  */
 function founder_display_gallery($user_id, $atts = []) {
-    $gallery = function_exists('get_field') ? get_field('gallery', 'user_' . $user_id) : [];
+    $gallery = sfpf_get_person_gallery($user_id);
     $images = sfpf_normalize_gallery_images($gallery, $atts['size'] ?? 'large');
     if (($atts['format'] ?? '') === 'json') return wp_json_encode($images);
     if (($atts['format'] ?? '') === 'urls') return esc_html(implode("\n", array_map(function($image) { return $image['url'] ?? ''; }, $images)));

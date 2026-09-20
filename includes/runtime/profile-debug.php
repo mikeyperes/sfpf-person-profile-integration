@@ -62,11 +62,11 @@ function sfpf_profile_debug_data() {
     $founder_id = get_founder_user_id();
     $user_key = $founder_id ? 'user_' . $founder_id : '';
     $org = get_primary_organization();
-    $person_gallery = $user_key && function_exists('get_field') ? get_field('gallery', $user_key) : [];
+    $person_gallery = $founder_id ? sfpf_get_person_gallery($founder_id) : [];
     $org_gallery = ($org && function_exists('get_field')) ? get_field('gallery', $org->ID) : [];
     $shortcodes = [
         'education' => '[founder action="display_education"]',
-        'gallery' => '[founder action="display_gallery"]',
+        'gallery' => '[founder id="gallery"]',
         'gallery_urls' => '[founder id="gallery" format="urls"]',
         'additional_urls' => '[founder action="display_additional_urls"]',
         'additional_urls_json' => '[founder id="additional_urls" format="json"]',
@@ -84,7 +84,7 @@ function sfpf_profile_debug_data() {
         'founder' => ['user_id' => $founder_id, 'name' => $founder_id ? get_the_author_meta('display_name', $founder_id) : '', 'gallery_count' => count(sfpf_normalize_gallery_images($person_gallery)), 'gallery' => sfpf_normalize_gallery_images($person_gallery)],
         'organization' => ['post_id' => $org ? $org->ID : 0, 'name' => $org ? get_the_title($org) : '', 'gallery_count' => count(sfpf_normalize_gallery_images($org_gallery)), 'gallery' => sfpf_normalize_gallery_images($org_gallery)],
         'mappings' => [
-            ['scope' => 'person', 'notion_field' => 'Gallery', 'wordpress_field' => 'gallery', 'type' => 'ACF Gallery', 'shortcode' => '[founder action="display_gallery"]'],
+            ['scope' => 'person', 'notion_field' => 'Gallery', 'wordpress_field' => 'field_hws_user_profile_2025_photos', 'type' => 'HWS ACF Gallery', 'shortcode' => '[founder id="gallery"]'],
             ['scope' => 'person', 'notion_field' => 'Additional URLs', 'wordpress_field' => 'additional_urls', 'type' => 'ACF Repeater', 'shortcode' => '[founder action="display_additional_urls"]'],
             ['scope' => 'company', 'notion_field' => 'Gallery', 'wordpress_field' => 'gallery', 'type' => 'Organization ACF Gallery', 'shortcode' => '[organization field="gallery"]'],
         ],

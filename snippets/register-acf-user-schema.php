@@ -401,13 +401,13 @@ function user_schema_acf_field_group(): array {
 
             [
                 'key'               => 'field_sfpf_gallery',
-                'label'             => 'Gallery',
+                'label'             => 'Gallery (Legacy Fallback)',
                 'name'              => 'gallery',
                 'type'              => 'gallery',
-                'instructions'      => 'Public, indexable image gallery imported from the Notion <code>Gallery</code> Google Drive URL.<br>
-<code>[founder action="display_gallery"]</code> - Pretty gallery<br>
-<code>[founder id="gallery" format="json"]</code> - Full image data<br>
-<code>[founder id="gallery" format="urls"]</code> - Image URLs',
+                'instructions'      => 'Legacy fallback only. The canonical public gallery is HWS Base Tools &gt; user-profile <code>Photos</code>.<br>
+<code>[founder id="gallery"]</code> - Pretty canonical gallery<br>
+<code>[founder id="gallery" format="json"]</code> - Full canonical image data<br>
+<code>[founder id="gallery" format="urls"]</code> - Canonical image URLs',
                 'required'          => 0,
                 'conditional_logic' => 0,
                 'wrapper'           => ['class' => 'sfpf-entity-person', 'width' => '100'],

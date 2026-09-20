@@ -547,6 +547,24 @@ function sfpf_normalize_gallery_images($raw, $size = 'large') {
     return \Hexa\PluginCore\DataNormalization\MediaNormalizer::gallery_records($raw, $size ?: 'large');
 }
 
+/**
+ * Return the canonical person gallery stored by HWS Base Tools.
+ *
+ * The historical SFPF `gallery` field remains a non-destructive fallback for
+ * sites that have not migrated to the HWS user-profile Photos field yet.
+ */
+function sfpf_get_person_gallery($user_id) {
+    if (!function_exists('get_field')) return [];
+
+    $user_key = 'user_' . absint($user_id);
+    $gallery = get_field('field_hws_user_profile_2025_photos', $user_key);
+
+    if (!empty($gallery)) return $gallery;
+
+    $legacy = get_field('gallery', $user_key);
+    return !empty($legacy) ? $legacy : [];
+}
+
 function sfpf_render_gallery_html($images, $context = 'sfpf-gallery', $columns = 3) {
     $images = sfpf_normalize_gallery_images($images);
     if (empty($images)) return '';

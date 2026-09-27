@@ -26,7 +26,7 @@ final class BookQuoteRepeaterMigration {
     private const LEGACY_SINGLE_FIELDS = [ 'quote', 'book_quote' ];
 
     public static function register(): void {
-        \Hexa\PluginCore\Fields\Hooks::on( 'init', [ self::class, 'run' ], 20 );
+        \hexa_fields_on( 'init', [ self::class, 'run' ], 20 );
     }
 
     /** @return array<string,mixed> */

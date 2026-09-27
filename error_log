@@ -191,3 +191,27 @@ Stack trace:
 #1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
 #2 {main}
   thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 17:46:10 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 17:46:11 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 17:46:22 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 17:46:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559

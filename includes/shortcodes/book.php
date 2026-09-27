@@ -70,7 +70,7 @@ function book_shortcode($atts) {
             break;
 
         default:
-            $value = get_field($field, $book_id);
+            $value = \Hexa\PluginCore\Fields\Field::get($field, $book_id);
             break;
     }
 

@@ -26,7 +26,7 @@ final class BookQuoteRepeaterMigration {
     private const LEGACY_SINGLE_FIELDS = [ 'quote', 'book_quote' ];
 
     public static function register(): void {
-        add_action( 'acf/init', [ self::class, 'run' ], 20 );
+        \Hexa\PluginCore\Fields\Hooks::on( 'init', [ self::class, 'run' ], 20 );
     }
 
     /** @return array<string,mixed> */
@@ -46,7 +46,7 @@ final class BookQuoteRepeaterMigration {
             'errors'          => [],
         ];
 
-        if ( ! function_exists( 'get_posts' ) || ! function_exists( 'get_post_meta' ) || ! function_exists( 'update_field' ) ) {
+        if ( ! function_exists( 'get_posts' ) || ! function_exists( 'get_post_meta' ) || ! \Hexa\PluginCore\Fields\Field::available() ) {
             $report['errors'][] = 'The WordPress and ACF field APIs required for Book quote migration are unavailable.';
             return $report;
         }
@@ -139,7 +139,7 @@ final class BookQuoteRepeaterMigration {
             $merged
         );
 
-        update_field( self::DESTINATION_FIELD_KEY, $field_rows, $post_id );
+        \Hexa\PluginCore\Fields\Field::update( self::DESTINATION_FIELD_KEY, $field_rows, $post_id );
         $verified = self::read_rows_from_meta( $post_id, 'quotes' );
         if ( $verified !== $merged ) {
             $result['errors'][] = 'The canonical quotes rows did not verify after writing.';
@@ -153,8 +153,8 @@ final class BookQuoteRepeaterMigration {
 
     /** @return list<array{quote:string,url:string,tagline:string}> */
     private static function read_rows( int $post_id, string $field_name ): array {
-        if ( function_exists( 'get_field' ) ) {
-            $value = get_field( $field_name, $post_id );
+        if ( \Hexa\PluginCore\Fields\Field::available() ) {
+            $value = \Hexa\PluginCore\Fields\Field::get( $field_name, $post_id );
             if ( is_array( $value ) ) {
                 return self::normalize_rows( $value );
             }

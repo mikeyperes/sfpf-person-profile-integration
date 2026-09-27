@@ -247,15 +247,15 @@ function debug_founder_data() {
     $output .= "  - last_name: " . get_user_meta($founder_id, 'last_name', true) . "\n\n";
 
     // Check entity type
-    $entity_type = get_field('entity_type', 'user_' . $founder_id);
+    $entity_type = \Hexa\PluginCore\Fields\Field::get('entity_type', 'user_' . $founder_id);
     $output .= "Entity Type: " . ($entity_type ?: 'NOT SET') . "\n";
 
     // Check title
-    $title = get_field('title', 'user_' . $founder_id);
+    $title = \Hexa\PluginCore\Fields\Field::get('title', 'user_' . $founder_id);
     $output .= "Title: " . ($title ?: 'NOT SET') . "\n";
 
     // Check biography
-    $bio = get_field('biography', 'user_' . $founder_id);
+    $bio = \Hexa\PluginCore\Fields\Field::get('biography', 'user_' . $founder_id);
     $output .= "Biography: " . ($bio ? strlen($bio) . ' chars' : 'NOT SET') . "\n";
 
     return $output;
@@ -501,7 +501,7 @@ function debug_professions() {
     $output .= "Founder User ID: {$founder_id}\n\n";
 
     // Get professions using get_field
-    $profs = get_field('professions', 'user_' . $founder_id);
+    $profs = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $founder_id);
 
     $output .= "get_field('professions', 'user_{$founder_id}'):\n";
     $output .= "Type: " . gettype($profs) . "\n";
@@ -585,7 +585,7 @@ function debug_acf_fields() {
     ];
 
     foreach ($fields as $field) {
-        $value = get_field($field, 'user_' . $founder_id);
+        $value = \Hexa\PluginCore\Fields\Field::get($field, 'user_' . $founder_id);
         $type = gettype($value);
 
         if ($value === null || $value === false) {

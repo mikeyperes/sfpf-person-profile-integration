@@ -4,8 +4,6 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\Dependencies;
 
-use Hexa\PluginCore\PluginChecks\PluginCheckDefinition;
-use Hexa\PluginCore\PluginChecks\PluginCheckService;
 use Hexa\PluginCore\PluginChecks\PluginRecommendationRegistry;
 
 defined( 'ABSPATH' ) || exit;
@@ -26,17 +24,6 @@ final class PluginRequirements {
                 'required'    => true,
                 'checks'      => [ 'installed' => true, 'active' => true ],
                 'notes'       => 'Supplies the canonical website and primary-entity contracts.',
-            ],
-            [
-                'id'          => 'advanced-custom-fields-pro',
-                'name'        => 'Advanced Custom Fields Pro',
-                'plugin_file' => 'advanced-custom-fields-pro/acf.php',
-                'slug'        => 'advanced-custom-fields-pro',
-                'source'      => 'pro',
-                'required'    => false,
-                'recommended' => true,
-                'checks'      => [ 'installed' => true, 'active' => true ],
-                'notes'       => 'Required for optional Person, Organization, Book, and Quote field structures.',
             ],
             [
                 'id'          => 'svg-support',
@@ -67,26 +54,6 @@ final class PluginRequirements {
             ]
         );
 
-        if ( is_admin() ) {
-            add_action( 'admin_notices', [ self::class, 'render_notice' ] );
-        }
-
         self::$registered = true;
-    }
-
-    public static function render_notice(): void {
-        if ( class_exists( 'ACF' ) || function_exists( 'get_field' ) ) {
-            return;
-        }
-
-        $definition = new PluginCheckDefinition( self::definitions()[1] );
-        $status     = PluginCheckService::status( $definition );
-        if ( ! empty( $status['active'] ) ) {
-            return;
-        }
-
-        echo '<div class="notice notice-warning"><p><strong>SFPF Person Profile Integration:</strong> '
-            . 'Advanced Custom Fields Pro is recommended for the optional Person, Organization, and Book field structures.'
-            . '</p></div>';
     }
 }

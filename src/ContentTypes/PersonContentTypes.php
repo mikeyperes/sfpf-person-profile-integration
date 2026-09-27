@@ -53,7 +53,7 @@ final class PersonContentTypes {
                             'legacy_option' => 'sfpf_enable_organization_acf',
                             'definition' => 'sfpf_person_website\\organization_acf_field_group',
                             'fields' => [ 'Organization identity', 'Logo and gallery', 'Contact details', 'Founders and leadership', 'Schema data' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                            'dependencies' => [],
                         ],
                     ],
                 ]
@@ -83,7 +83,7 @@ final class PersonContentTypes {
                             'legacy_option' => 'sfpf_enable_book_acf',
                             'definition' => 'sfpf_person_website\\book_acf_field_group',
                             'fields' => [ 'Schema Markup', 'Featured', 'Subtitle', 'Description', 'Author Bio', 'Alternate Names', 'Quotes repeater', 'Featured Content', 'Retail URLs', 'Knowledge Graph ID', 'SameAs URLs', 'ISBN', 'Page Count', 'Publication Date', 'Edition', 'Format', 'Language', 'Genre' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                            'dependencies' => [],
                         ],
                     ],
                 ]
@@ -105,7 +105,7 @@ final class PersonContentTypes {
                             'legacy_option' => 'sfpf_enable_press_release_acf',
                             'definition' => 'sfpf_person_website\\press_release_acf_field_group',
                             'fields' => [ 'Source Name', 'Original URL', 'Release Date', 'Featured' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                            'dependencies' => [],
                         ],
                     ],
                 ]
@@ -127,7 +127,7 @@ final class PersonContentTypes {
                             'legacy_option' => 'sfpf_enable_interview_acf',
                             'definition' => 'sfpf_person_website\\interview_acf_field_group',
                             'fields' => [ 'Podcast Name', 'Guest Name', 'Host Name', 'Primary URL', 'Additional Links', 'Press' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                            'dependencies' => [],
                         ],
                     ],
                 ]
@@ -149,7 +149,7 @@ final class PersonContentTypes {
                             'legacy_option' => 'sfpf_enable_contributing_profile_acf',
                             'definition' => 'sfpf_person_website\\contributing_profile_acf_field_group',
                             'fields' => [ 'URL', 'Secondary Logo', 'Featured Item', 'Primary Featured Item' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                            'dependencies' => [],
                         ],
                     ],
                 ]
@@ -170,7 +170,7 @@ final class PersonContentTypes {
                             'group_key' => 'group_sfpf_quote', 'enabled_default' => false,
                             'definition' => 'sfpf_person_website\\quote_acf_field_group',
                             'fields' => [ 'Quote', 'Assigned Name', 'URL', 'Logos', 'Publication Name', 'Publication Info' ],
-                            'dependencies' => [ 'Advanced Custom Fields Pro', 'SVG Support for sanitized SVG uploads' ],
+                            'dependencies' => [ 'SVG Support for sanitized SVG uploads' ],
                         ],
                     ],
                 ]
@@ -200,7 +200,7 @@ final class PersonContentTypes {
                     'enabled_default' => false, 'definition' => 'sfpf_person_website\\user_schema_acf_field_group',
                     'location' => 'All WordPress user profile forms',
                     'fields' => [ 'Entity Type', 'Biography', 'Short Biography', 'Mission Statement', 'Professions', 'Education', 'Awards', 'Languages', 'Birth Details', 'Contact Details', 'SameAs URLs', 'Additional URLs', 'Knowledge Graph ID', 'Wikimedia Commons URLs (Photos)', 'Gallery', 'FAQ', 'Articles' ],
-                    'dependencies' => [ 'Advanced Custom Fields Pro', 'HWS Base Tools primary entity (optional)' ],
+                    'dependencies' => [ 'HWS Base Tools primary entity (optional)' ],
                 ]
             )
             ->add(
@@ -210,7 +210,7 @@ final class PersonContentTypes {
                     'group_key' => 'group_sfpf_homepage', 'legacy_option' => 'sfpf_enable_homepage_acf',
                     'enabled_default' => false, 'definition' => 'sfpf_person_website\\homepage_acf_field_group',
                     'location' => 'WordPress front page', 'fields' => [ 'Schema Type', 'Generated Schema', 'Schema Status' ],
-                    'dependencies' => [ 'Advanced Custom Fields Pro' ],
+                    'dependencies' => [],
                 ]
             );
         return self::$acf_groups;

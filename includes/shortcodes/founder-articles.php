@@ -116,7 +116,7 @@ function sfpf_normalize_link_repeater($links_raw) {
  * @return string
  */
 function sfpf_display_link_repeater($user_id, $field_name, $format = 'titled', $context_class = '') {
-    $articles_raw = get_field($field_name, 'user_' . $user_id);
+    $articles_raw = \Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id);
 
     $articles = sfpf_normalize_link_repeater($articles_raw);
 

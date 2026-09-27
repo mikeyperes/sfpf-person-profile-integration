@@ -58,10 +58,10 @@ function ajax_create_profession_page() {
     // Update the founder's professions ACF field to link to this page
     $founder_user_id = get_founder_user_id();
     if ($founder_user_id) {
-        $professions = get_field('professions', 'user_' . $founder_user_id) ?: [];
+        $professions = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $founder_user_id) ?: [];
         if (isset($professions[$index])) {
             $professions[$index]['page'] = $page_id;
-            update_field('professions', $professions, 'user_' . $founder_user_id);
+            \Hexa\PluginCore\Fields\Field::update('professions', $professions, 'user_' . $founder_user_id);
         }
     }
 
@@ -89,10 +89,10 @@ function ajax_delete_profession_page() {
     // Unlink from ACF professions field
     $founder_user_id = get_founder_user_id();
     if ($founder_user_id) {
-        $professions = get_field('professions', 'user_' . $founder_user_id) ?: [];
+        $professions = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $founder_user_id) ?: [];
         if (isset($professions[$index])) {
             $professions[$index]['page'] = null;
-            update_field('professions', $professions, 'user_' . $founder_user_id);
+            \Hexa\PluginCore\Fields\Field::update('professions', $professions, 'user_' . $founder_user_id);
         }
     }
 

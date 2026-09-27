@@ -52,6 +52,7 @@ function sanitize_text_field( mixed $value ): string {
 }
 
 $core_root = dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core';
+require_once dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core/tests/support/fields.php';
 require $core_root . '/bootstrap.php';
 hexa_plugin_core_register_package( 'sfpf-quote-test', $core_root );
 HexaPluginCorePackageRegistry::resolve();

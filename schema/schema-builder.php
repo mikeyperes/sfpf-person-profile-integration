@@ -219,7 +219,7 @@ function build_person_schema() {
         sfpf_collect_wikidata_urls(_sf('urls_wikidata', $uk))
     );
     // Social media from website options
-    if (function_exists('get_field')) {
+    if (\Hexa\PluginCore\Fields\Field::available()) {
         $wo = \Hexa\PluginCore\DataNormalization\FieldReader::acf_value('website', 'option', []);
         $sm = is_array($wo) ? ($wo['social_media'] ?? []) : [];
         $sa = array_merge($sa, _collect_urls($sm));

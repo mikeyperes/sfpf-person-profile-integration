@@ -154,7 +154,7 @@ function sfpf_founder_has_public_education() {
         return false;
     }
 
-    $education = function_exists('get_field') ? get_field('education', 'user_' . $user_id) : [];
+    $education = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('education', 'user_' . $user_id) : [];
     if (empty($education)) {
         $education = get_user_meta($user_id, 'education', true);
     }
@@ -197,7 +197,7 @@ function sfpf_founder_has_public_link_repeater($field_name) {
         return false;
     }
 
-    $links = function_exists('get_field') ? get_field($field_name, 'user_' . $user_id) : [];
+    $links = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id) : [];
     if (empty($links)) {
         $links = get_user_meta($user_id, $field_name, true);
     }
@@ -248,7 +248,7 @@ function sfpf_founder_has_public_faq() {
         return [] !== sfpf_faq_source_resolver()->acf('user_' . $user_id, 'faq');
     }
 
-    $faqs = function_exists('get_field') ? get_field('faq', 'user_' . $user_id) : [];
+    $faqs = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('faq', 'user_' . $user_id) : [];
     if (empty($faqs)) {
         $faqs = get_user_meta($user_id, 'faq', true);
     }

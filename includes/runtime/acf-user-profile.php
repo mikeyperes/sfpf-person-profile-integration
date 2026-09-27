@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Runtime ACF field filter: enrich Education History with LinkedIn/Crunchbase links
  */
-add_filter('acf/prepare_field', function($field) {
+\hexa_fields_on('prepare_field', function($field) {
     if (!$field || !is_array($field)) return $field;
 
     // Enrich Education History with LinkedIn/Crunchbase links
@@ -24,7 +24,7 @@ add_filter('acf/prepare_field', function($field) {
         if ($screen && ($screen->id === 'profile' || $screen->id === 'user-edit')) {
             $user_id = defined('IS_PROFILE_PAGE') && IS_PROFILE_PAGE ? get_current_user_id() : (isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0);
             if ($user_id) {
-                $urls = get_field('urls', 'user_' . $user_id);
+                $urls = \Hexa\PluginCore\Fields\Field::get('urls', 'user_' . $user_id);
                 $links = [];
                 if (!empty($urls['linkedin'])) {
                     $links[] = '<a href="' . esc_url($urls['linkedin']) . '" target="_blank" style="color:#0a66c2;">LinkedIn ↗</a>';
@@ -286,7 +286,7 @@ foreach ($sfpf_repeater_keys as $rk) {
  * Block duplicate ACF field groups from loading.
  * Prevents DB-stored copies from overriding code-registered groups.
  */
-add_filter('acf/load_field_groups', function($field_groups) {
+\hexa_fields_on('load_field_groups', function($field_groups) {
     if (!is_array($field_groups)) return $field_groups;
 
     $blocked_prefixes = ['group_hws_', 'group_sfpf_'];

@@ -70,8 +70,8 @@ function sfpf_author_archive_template() {
 }
 
 function sfpf_author_archive_field($user_id, $field, $default = "") {
-    if (function_exists("get_field")) {
-        $value = get_field($field, "user_" . $user_id);
+    if (\Hexa\PluginCore\Fields\Field::available()) {
+        $value = \Hexa\PluginCore\Fields\Field::get($field, "user_" . $user_id);
         if ($value !== null && $value !== false && $value !== "") return $value;
     }
     $value = get_user_meta($user_id, $field, true);

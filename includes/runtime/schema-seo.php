@@ -41,7 +41,7 @@ function sanitize_kgid_on_save($value, $post_id, $field) {
 
     return $value;
 }
-add_filter('acf/update_value/name=knowledge_graph_id', __NAMESPACE__ . '\\sanitize_kgid_on_save', 10, 3);
+\hexa_fields_on('update_value/name=knowledge_graph_id', __NAMESPACE__ . '\\sanitize_kgid_on_save', 10, 3);
 
 // ============================================================================
 // RANKMATH SCHEMA CONTROL

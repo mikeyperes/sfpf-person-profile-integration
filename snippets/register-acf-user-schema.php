@@ -1044,7 +1044,7 @@ function sfpf_render_education_shortcode($atts, $user_key) {
     $index  = isset($atts['index']) ? (int)$atts['index'] : null;
     $field  = isset($atts['field']) ? sanitize_key($atts['field']) : null;
 
-    $education = get_field('education', $user_key);
+    $education = \Hexa\PluginCore\Fields\Field::get('education', $user_key);
 
     if (empty($education) || !is_array($education)) {
         return '';
@@ -1159,7 +1159,7 @@ function sfpf_format_education_entry_html($entry, $index = 0) {
 function sfpf_render_sameas_shortcode($atts, $user_key) {
     $format = isset($atts['format']) ? strtolower(trim($atts['format'])) : 'text';
 
-    $sameas = get_field('sameas', $user_key);
+    $sameas = \Hexa\PluginCore\Fields\Field::get('sameas', $user_key);
 
     if (empty($sameas) || !is_string($sameas)) {
         return '';

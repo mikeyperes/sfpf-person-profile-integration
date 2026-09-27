@@ -1,0 +1,193 @@
+[27-Sep-2026 08:01:55 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php:119
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php(63): sfpf_person_website\sfpf_display_link_repeater(7, 'additional_urls', 'titled', 'founder-additio...')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/additional-urls.php(79): sfpf_person_website\founder_display_additional_urls(7, 'titled')
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php on line 119
+[27-Sep-2026 08:01:56 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php:49
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/book-quote-migration.php(72): SFPF\PersonProfile\Migrations\BookQuoteRepeaterMigration::run()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php on line 49
+[27-Sep-2026 08:01:56 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(164): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', Array)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/canonical-entity.php(37): sfpf_person_website\get_founder_user_id()
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:01:56 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(441): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('zero', false, 'fallback')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/data-normalization-compatibility.php(77): sfpf_person_website\get_acf_field('zero', false, 'fallback')
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:01:56 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php:69
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/frontend-query-bounds.php(206): sfpf_person_website\founder_display_organizations_founded('compact', 9)
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php on line 69
+[27-Sep-2026 08:01:57 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php:47
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php(220): sfpf_person_website\sfpf_get_organization_field('url', 102)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/organization-shortcode.php(130): sfpf_person_website\organization_shortcode(Array)
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php on line 47
+[27-Sep-2026 08:01:57 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function hexa_fields_on() in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php:613
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/profile-content-types.php(13): require()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php on line 613
+[27-Sep-2026 08:01:57 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function Hexa\PluginCore\Fields\add_filter() in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php:19
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(385): Hexa\PluginCore\Fields\Hooks::on('save_post', 'sfpf_person_web...', 20, 1)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(388): {closure:hexa_fields_on():384}()
+#2 /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-book.php(466): hexa_fields_on('save_post', 'sfpf_person_web...', 20)
+#3 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(221): require_once('/Users/mp/Proje...')
+#4 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(18): SFPF\PersonProfile\ContentTypes\PersonContentTypes::load_definitions()
+#5 /Users/mp/Projects/sfpf-person-profile-integration/tests/quote-content-type.php(62): SFPF\PersonProfile\ContentTypes\PersonContentTypes::content_types()
+#6 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php on line 19
+[27-Sep-2026 08:01:57 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(164): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', Array)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/canonical-entity.php(37): sfpf_person_website\get_founder_user_id()
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:01:57 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php:119
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php(63): sfpf_person_website\sfpf_display_link_repeater(7, 'additional_urls', 'titled', 'founder-additio...')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/additional-urls.php(79): sfpf_person_website\founder_display_additional_urls(7, 'titled')
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php on line 119
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(164): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', Array)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(225): sfpf_person_website\get_founder_user_id()
+#2 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(60): sfpf_person_website\get_founder_full_info()
+#3 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#4 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php:69
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/frontend-query-bounds.php(206): sfpf_person_website\founder_display_organizations_founded('compact', 9)
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php on line 69
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(441): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('zero', false, 'fallback')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/data-normalization-compatibility.php(77): sfpf_person_website\get_acf_field('zero', false, 'fallback')
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function hexa_fields_on() in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php:613
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/profile-content-types.php(13): require()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php on line 613
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php:49
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/book-quote-migration.php(72): SFPF\PersonProfile\Migrations\BookQuoteRepeaterMigration::run()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php on line 49
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function Hexa\PluginCore\Fields\add_filter() in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php:19
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(385): Hexa\PluginCore\Fields\Hooks::on('save_post', 'sfpf_person_web...', 20, 1)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(388): {closure:hexa_fields_on():384}()
+#2 /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-book.php(466): hexa_fields_on('save_post', 'sfpf_person_web...', 20)
+#3 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(221): require_once('/Users/mp/Proje...')
+#4 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(18): SFPF\PersonProfile\ContentTypes\PersonContentTypes::load_definitions()
+#5 /Users/mp/Projects/sfpf-person-profile-integration/tests/quote-content-type.php(62): SFPF\PersonProfile\ContentTypes\PersonContentTypes::content_types()
+#6 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php on line 19
+[27-Sep-2026 08:01:58 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php:47
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php(220): sfpf_person_website\sfpf_get_organization_field('url', 102)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/organization-shortcode.php(130): sfpf_person_website\organization_shortcode(Array)
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php on line 47
+[27-Sep-2026 08:01:59 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(164): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', Array)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(225): sfpf_person_website\get_founder_user_id()
+#2 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(60): sfpf_person_website\get_founder_full_info()
+#3 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#4 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:02:09 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php:119
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php(63): sfpf_person_website\sfpf_display_link_repeater(7, 'additional_urls', 'titled', 'founder-additio...')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/additional-urls.php(79): sfpf_person_website\founder_display_additional_urls(7, 'titled')
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-articles.php on line 119
+[27-Sep-2026 08:02:09 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php:49
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/book-quote-migration.php(72): SFPF\PersonProfile\Migrations\BookQuoteRepeaterMigration::run()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/src/Migrations/BookQuoteRepeaterMigration.php on line 49
+[27-Sep-2026 08:02:10 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(164): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('founder', 'option', Array)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/canonical-entity.php(37): sfpf_person_website\get_founder_user_id()
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:02:10 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php:43
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php(441): Hexa\PluginCore\DataNormalization\FieldReader::acf_value('zero', false, 'fallback')
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/data-normalization-compatibility.php(77): sfpf_person_website\get_acf_field('zero', false, 'fallback')
+#2 {main}
+  thrown in /Users/mp/Projects/hexa-wordpress-plugin-core/src/DataNormalization/FieldReader.php on line 43
+[27-Sep-2026 08:02:10 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php:69
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/frontend-query-bounds.php(206): sfpf_person_website\founder_display_organizations_founded('compact', 9)
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/founder-sections.php on line 69
+[27-Sep-2026 08:02:11 UTC] PHP Fatal error:  Uncaught Error: Class "Hexa\PluginCore\Fields\Field" not found in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php:47
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php(220): sfpf_person_website\sfpf_get_organization_field('url', 102)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/organization-shortcode.php(130): sfpf_person_website\organization_shortcode(Array)
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/shortcodes/organization.php on line 47
+[27-Sep-2026 08:02:11 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function hexa_fields_on() in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php:613
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/tests/profile-content-types.php(13): require()
+#1 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-organization.php on line 613
+[27-Sep-2026 08:02:11 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function Hexa\PluginCore\Fields\add_filter() in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php:19
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(385): Hexa\PluginCore\Fields\Hooks::on('save_post', 'sfpf_person_web...', 20, 1)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/bootstrap.php(388): {closure:hexa_fields_on():384}()
+#2 /Users/mp/Projects/sfpf-person-profile-integration/snippets/register-acf-book.php(466): hexa_fields_on('save_post', 'sfpf_person_web...', 20)
+#3 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(221): require_once('/Users/mp/Proje...')
+#4 /Users/mp/Projects/sfpf-person-profile-integration/src/ContentTypes/PersonContentTypes.php(18): SFPF\PersonProfile\ContentTypes\PersonContentTypes::load_definitions()
+#5 /Users/mp/Projects/sfpf-person-profile-integration/tests/quote-content-type.php(62): SFPF\PersonProfile\ContentTypes\PersonContentTypes::content_types()
+#6 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/lib/hexa-wordpress-plugin-core/src/Fields/Hooks.php on line 19
+[27-Sep-2026 08:03:08 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 08:03:09 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 08:03:10 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 08:03:44 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559
+[27-Sep-2026 08:03:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sfpf_person_website\absint() in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php:559
+Stack trace:
+#0 /Users/mp/Projects/sfpf-person-profile-integration/schema/schema-builder.php(143): sfpf_person_website\sfpf_get_person_gallery(9)
+#1 /Users/mp/Projects/sfpf-person-profile-integration/tests/wikimedia-commons.php(111): sfpf_person_website\build_person_schema()
+#2 {main}
+  thrown in /Users/mp/Projects/sfpf-person-profile-integration/includes/helper-functions.php on line 559

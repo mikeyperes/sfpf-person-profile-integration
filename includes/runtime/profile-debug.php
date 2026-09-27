@@ -63,7 +63,7 @@ function sfpf_profile_debug_data() {
     $user_key = $founder_id ? 'user_' . $founder_id : '';
     $org = get_primary_organization();
     $person_gallery = $founder_id ? sfpf_get_person_gallery($founder_id) : [];
-    $org_gallery = ($org && function_exists('get_field')) ? get_field('gallery', $org->ID) : [];
+    $org_gallery = ($org && \Hexa\PluginCore\Fields\Field::available()) ? \Hexa\PluginCore\Fields\Field::get('gallery', $org->ID) : [];
     $shortcodes = [
         'education' => '[founder action="display_education"]',
         'gallery' => '[founder id="gallery"]',

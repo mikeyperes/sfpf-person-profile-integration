@@ -12,3 +12,5 @@ foreach ( [ 'ValueNormalizer', 'FieldReader', 'MediaNormalizer' ] as $class_file
         require_once $data_normalization_root . '/' . $class_file . '.php';
     }
 }
+
+require_once dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core/tests/support/fields.php';

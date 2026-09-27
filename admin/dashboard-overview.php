@@ -90,8 +90,8 @@ $sc_add('Plugins', 'HWS Base Tools', $hws_info['active'] ? 'pass' : 'fail',
     $hws_info['active'] ? 'v' . $hws_info['version'] : 'Required plugin not active',
     admin_url('plugins.php'), 'Plugins');
 
-$sc_add('Plugins', 'ACF Pro', class_exists('ACF') ? 'pass' : 'fail',
-    class_exists('ACF') ? 'Active' : 'Required for all data fields',
+$sc_add('Plugins', 'Custom fields', 'pass',
+    'Ready (' . \Hexa\PluginCore\Fields\Acf::mode() . ')',
     admin_url('plugins.php'), 'Plugins');
 
 $sc_add('Plugins', 'Elementor', defined('ELEMENTOR_VERSION') ? 'pass' : 'warn',
@@ -157,33 +157,33 @@ $sc_add('Person', 'Founder User Assigned', !empty($founder) ? 'pass' : 'fail',
     !empty($founder) ? esc_html($founder['display_name']) : 'No founder user set — this is critical',
     get_website_settings_url(), 'Website Settings');
 
-if ($founder && function_exists('get_field')) {
+if ($founder && \Hexa\PluginCore\Fields\Field::available()) {
     $profile_url = get_edit_user_link($uid);
     
     // Profile photo (avatar or KG images)
     $avatar = get_avatar_url($uid, ['size' => 200]);
     $has_custom_avatar = !empty($avatar) && strpos($avatar, 'gravatar.com/avatar') === false;
-    $kg_images = get_field('knowledge_graph_images', $user_key);
+    $kg_images = \Hexa\PluginCore\Fields\Field::get('knowledge_graph_images', $user_key);
     $has_kg_images = !empty($kg_images) && is_array($kg_images) && count($kg_images) > 0;
     $sc_add('Person', 'Profile Photo', ($has_custom_avatar || $has_kg_images) ? 'pass' : 'fail',
         $has_kg_images ? count($kg_images) . ' Knowledge Graph image(s)' : ($has_custom_avatar ? 'Custom avatar set' : 'No profile photo — uses default Gravatar'),
         $profile_url, 'Edit Profile');
     
     // Public email
-    $pub_email = get_field('additional', $user_key);
+    $pub_email = \Hexa\PluginCore\Fields\Field::get('additional', $user_key);
     $has_pub_email = is_array($pub_email) && !empty($pub_email['public_email']);
     $sc_add('Person', 'Public Email', $has_pub_email ? 'pass' : 'fail',
         $has_pub_email ? esc_html($pub_email['public_email']) : 'Not set — needed for schema & contact pages',
         $profile_url, 'Edit Profile');
     
     // Title
-    $title_val = get_field('title', $user_key);
+    $title_val = \Hexa\PluginCore\Fields\Field::get('title', $user_key);
     $sc_add('Person', 'Title / Job Role', !empty($title_val) ? 'pass' : 'fail',
         !empty($title_val) ? esc_html(wp_strip_all_tags($title_val)) : 'Not set',
         $profile_url, 'Edit Profile');
     
     // Socials
-    $urls_val = get_field('urls', $user_key);
+    $urls_val = \Hexa\PluginCore\Fields\Field::get('urls', $user_key);
     $socials = ['facebook' => 'Facebook', 'instagram' => 'Instagram', 'linkedin' => 'LinkedIn', 'crunchbase' => 'Crunchbase'];
     foreach ($socials as $key => $label) {
         $has_social = is_array($urls_val) && !empty($urls_val[$key]);
@@ -193,20 +193,20 @@ if ($founder && function_exists('get_field')) {
     }
     
     // Knowledge Graph ID
-    $kgid = get_field('knowledge_graph_id', $user_key);
+    $kgid = \Hexa\PluginCore\Fields\Field::get('knowledge_graph_id', $user_key);
     $sc_add('Person', 'Google Knowledge Graph ID', !empty($kgid) ? 'pass' : 'fail',
         !empty($kgid) ? esc_html($kgid) : 'Not set — important for Knowledge Panel',
         $profile_url, 'Edit Profile');
     
     // Location Born
-    $loc_born = get_field('location_born', $user_key);
+    $loc_born = \Hexa\PluginCore\Fields\Field::get('location_born', $user_key);
     $has_loc = is_array($loc_born) && !empty($loc_born['location']);
     $sc_add('Person', 'Location Born', $has_loc ? 'pass' : 'fail',
         $has_loc ? esc_html($loc_born['location']) : 'Not set',
         $profile_url, 'Edit Profile');
     
     // Language (at least one)
-    $languages = get_field('knows_language', $user_key);
+    $languages = \Hexa\PluginCore\Fields\Field::get('knows_language', $user_key);
     $lang_count = is_array($languages) ? count(array_filter($languages, function($l) { return !empty($l['value']); })) : 0;
     $sc_add('Person', 'Languages', $lang_count > 0 ? 'pass' : 'fail',
         $lang_count > 0 ? $lang_count . ' language(s)' : 'None set — add at least one',
@@ -218,39 +218,39 @@ if ($founder && function_exists('get_field')) {
         $profile_url, 'Edit Profile');
     
     // Biography
-    $bio = get_field('biography', $user_key);
+    $bio = \Hexa\PluginCore\Fields\Field::get('biography', $user_key);
     $sc_add('Person', 'Biography', !empty($bio) ? 'pass' : 'fail',
         !empty($bio) ? wp_trim_words(wp_strip_all_tags($bio), 8, '...') : 'Not set',
         $profile_url, 'Edit Profile');
     
     // Biography Short
-    $bio_short = get_field('biography_short', $user_key);
+    $bio_short = \Hexa\PluginCore\Fields\Field::get('biography_short', $user_key);
     $sc_add('Person', 'Short Biography', !empty($bio_short) ? 'pass' : 'fail',
         !empty($bio_short) ? wp_trim_words(wp_strip_all_tags($bio_short), 8, '...') : 'Not set',
         $profile_url, 'Edit Profile');
     
     // Mission Statement
-    $mission = get_field('mission_statement', $user_key);
+    $mission = \Hexa\PluginCore\Fields\Field::get('mission_statement', $user_key);
     $sc_add('Person', 'Mission Statement', !empty($mission) ? 'pass' : 'fail',
         !empty($mission) ? wp_trim_words(wp_strip_all_tags($mission), 8, '...') : 'Not set',
         $profile_url, 'Edit Profile');
     
     // Education (at least one)
-    $education = get_field('education', $user_key);
+    $education = \Hexa\PluginCore\Fields\Field::get('education', $user_key);
     $edu_count = is_array($education) ? count(array_filter($education, function($e) { return !empty($e['college']); })) : 0;
     $sc_add('Person', 'Education', $edu_count > 0 ? 'pass' : 'fail',
         $edu_count > 0 ? $edu_count . ' institution(s)' : 'None set — add at least one',
         $profile_url, 'Edit Profile');
     
     // Articles (at least one)
-    $articles = get_field('articles', $user_key);
+    $articles = \Hexa\PluginCore\Fields\Field::get('articles', $user_key);
     $article_count = is_array($articles) ? count(array_filter($articles, function($a) { return !empty($a['url']); })) : 0;
     $sc_add('Person', 'Articles / Press', $article_count > 0 ? 'pass' : 'fail',
         $article_count > 0 ? $article_count . ' article(s)' : 'None set — add at least one for sameAs links',
         $profile_url, 'Edit Profile');
 
     // Additional URLs (at least one)
-    $additional_urls = get_field('additional_urls', $user_key);
+    $additional_urls = \Hexa\PluginCore\Fields\Field::get('additional_urls', $user_key);
     $additional_url_count = is_array($additional_urls) ? count(array_filter($additional_urls, function($link) { return !empty($link['url']); })) : 0;
     $sc_add('Person', 'Additional URLs', $additional_url_count > 0 ? 'pass' : 'warn',
         $additional_url_count > 0 ? $additional_url_count . ' additional URL(s)' : 'None set — optional sameAs links',
@@ -335,11 +335,11 @@ echo ( new \Hexa\PluginCore\SystemChecks\SystemChecksRenderer() )->render(
         <?php if ($founder): 
             $uid = $founder['id'];
             $user_key = 'user_' . $uid;
-            $title_val = function_exists('get_field') ? get_field('title', $user_key) : '';
-            $bio_val = function_exists('get_field') ? get_field('biography', $user_key) : '';
-            $bio_short_val = function_exists('get_field') ? get_field('biography_short', $user_key) : '';
-            $professions_val = function_exists('get_field') ? get_field('professions', $user_key) : [];
-            $urls_val = function_exists('get_field') ? get_field('urls', $user_key) : [];
+            $title_val = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('title', $user_key) : '';
+            $bio_val = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('biography', $user_key) : '';
+            $bio_short_val = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('biography_short', $user_key) : '';
+            $professions_val = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('professions', $user_key) : [];
+            $urls_val = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('urls', $user_key) : [];
         ?>
             <div class="sfpf-profile-card">
                 <div class="sfpf-profile-avatar">
@@ -446,9 +446,9 @@ echo ( new \Hexa\PluginCore\SystemChecks\SystemChecksRenderer() )->render(
         <?php 
         $primary_org = get_primary_organization();
         if ($primary_org): 
-            $org_logo = get_field('image_cropped', $primary_org->ID);
-            $org_url = get_field('url', $primary_org->ID);
-            $org_hq = get_field('headquarters', $primary_org->ID);
+            $org_logo = \Hexa\PluginCore\Fields\Field::get('image_cropped', $primary_org->ID);
+            $org_url = \Hexa\PluginCore\Fields\Field::get('url', $primary_org->ID);
+            $org_hq = \Hexa\PluginCore\Fields\Field::get('headquarters', $primary_org->ID);
         ?>
             <div class="sfpf-profile-card">
                 <div class="sfpf-profile-avatar">
@@ -484,14 +484,14 @@ echo ( new \Hexa\PluginCore\SystemChecks\SystemChecksRenderer() )->render(
             
             <!-- Extended Organization Info -->
             <?php
-            $org_summary = get_field('short_summary', $primary_org->ID);
-            $org_mission = get_field('mission_statement', $primary_org->ID);
-            $org_founding = get_field('founding_date', $primary_org->ID);
-            $org_fb = get_field('url_facebook', $primary_org->ID);
-            $org_ig = get_field('url_instagram', $primary_org->ID);
-            $org_li = get_field('url_linkedin', $primary_org->ID);
-            $org_x = get_field('url_x', $primary_org->ID);
-            $org_yt = get_field('url_youtube', $primary_org->ID);
+            $org_summary = \Hexa\PluginCore\Fields\Field::get('short_summary', $primary_org->ID);
+            $org_mission = \Hexa\PluginCore\Fields\Field::get('mission_statement', $primary_org->ID);
+            $org_founding = \Hexa\PluginCore\Fields\Field::get('founding_date', $primary_org->ID);
+            $org_fb = \Hexa\PluginCore\Fields\Field::get('url_facebook', $primary_org->ID);
+            $org_ig = \Hexa\PluginCore\Fields\Field::get('url_instagram', $primary_org->ID);
+            $org_li = \Hexa\PluginCore\Fields\Field::get('url_linkedin', $primary_org->ID);
+            $org_x = \Hexa\PluginCore\Fields\Field::get('url_x', $primary_org->ID);
+            $org_yt = \Hexa\PluginCore\Fields\Field::get('url_youtube', $primary_org->ID);
             ?>
             <div style="margin-top:15px;display:grid;gap:8px;">
                 <?php if ($org_founding): ?>
@@ -569,7 +569,7 @@ if (!empty($all_orgs)):
     
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:15px;">
         <?php foreach ($all_orgs as $org): 
-            $org_logo = get_field('image_cropped', $org->ID);
+            $org_logo = \Hexa\PluginCore\Fields\Field::get('image_cropped', $org->ID);
             $org_permalink = get_permalink($org->ID);
         ?>
         <div style="background:#f9fafb;border-radius:8px;padding:15px;border:1px solid #e5e7eb;">

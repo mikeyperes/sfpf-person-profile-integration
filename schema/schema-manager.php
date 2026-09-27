@@ -20,7 +20,7 @@ defined('ABSPATH') || exit;
  * @return string|null Schema JSON string or null
  */
 function get_post_schema($post_id) {
-    $schema = function_exists('get_field') ? get_field('schema_markup', $post_id) : '';
+    $schema = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('schema_markup', $post_id) : '';
 
     if (empty($schema)) {
         $schema = get_post_meta($post_id, 'schema_markup', true);
@@ -40,7 +40,7 @@ function get_post_schema($post_id) {
  * @return string|null
  */
 function get_post_schema_source($post_id) {
-    $acf_schema = function_exists('get_field') ? get_field('schema_markup', $post_id) : '';
+    $acf_schema = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('schema_markup', $post_id) : '';
     if (!empty($acf_schema)) {
         return 'acf: schema_markup';
     }
@@ -98,8 +98,8 @@ function save_post_schema($post_id, $schema) {
 
     $schema_to_store = wp_slash($schema);
 
-    if (function_exists('update_field')) {
-        update_field('schema_markup', $schema_to_store, $post_id);
+    if (\Hexa\PluginCore\Fields\Field::available()) {
+        \Hexa\PluginCore\Fields\Field::update('schema_markup', $schema_to_store, $post_id);
     }
 
     update_post_meta($post_id, 'schema_markup', $schema_to_store);

@@ -89,6 +89,7 @@ function wp_json_encode( mixed $value ): string {
     return (string) json_encode( $value );
 }
 
+require_once dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core/tests/support/fields.php';
 require dirname( __DIR__ ) . '/includes/shortcodes/organization.php';
 
 $cases = [

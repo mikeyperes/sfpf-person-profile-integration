@@ -8,6 +8,7 @@ function add_action( string $hook, callable|string $callback, int $priority = 10
     unset( $hook, $callback, $priority );
 }
 
+require_once dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core/tests/support/fields.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-profile-content-types.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-quote.php';
 require dirname( __DIR__ ) . '/snippets/register-acf-organization.php';

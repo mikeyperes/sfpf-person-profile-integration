@@ -34,7 +34,7 @@ Reusable behavior is delegated to Hexa WordPress Plugin Core:
 - Schema document encoding and injection.
 - Plugin and Core update panels.
 
-The plugin bundles Core 3.0.5 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
+The plugin bundles Core 3.4.7 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
 
 ## Features
 
@@ -66,9 +66,9 @@ The dashboard Shortcodes tab is the canonical source for the complete current li
 | --- | --- |
 | WordPress | 5.8 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.0.5 |
+| Hexa WP Core bundle | 3.4.7 |
 
-HWS Base Tools is recommended for canonical website/entity settings. ACF Pro is required for ACF-backed profile and Book field structures.
+HWS Base Tools is recommended for canonical website/entity settings. ACF Pro is not required: the profile, Organization, Book and Quote field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not.
 
 ## Installation
 
@@ -89,6 +89,12 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.2.0
+
+- Removes the ACF Pro requirement: every field structure, field read/write, row loop and ACF hook runs on Hexa WP Core 3.4.7 `Fields` (ACF when active, native otherwise). Hooks registered while the plugin loads use Core's load-safe `hexa_fields_on()`.
+- Removes the ACF Pro recommendation notice, plugin-check entry and structure dependency labels; the overview reports the active field mode.
+- Synchronizes the bundled Hexa WordPress Plugin Core to 3.4.7; tests use Core's shared Fields test support.
 
 ### 3.1.5
 

@@ -463,13 +463,13 @@ function book_acf_field_group(): array {
 /**
  * Build Book schema on save — delegates to unified schema-builder.php
  */
-add_action('acf/save_post', __NAMESPACE__ . '\\build_book_schema_on_save', 20);
+\hexa_fields_on('save_post', __NAMESPACE__ . '\\build_book_schema_on_save', 20);
 function build_book_schema_on_save($post_id) {
     if (get_post_type($post_id) !== 'book') return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     
     $schema = build_book_schema($post_id);
     if (!empty($schema)) {
-        update_field('schema_markup', schema_json($schema), $post_id);
+        \Hexa\PluginCore\Fields\Field::update('schema_markup', schema_json($schema), $post_id);
     }
 }

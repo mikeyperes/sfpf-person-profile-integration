@@ -44,8 +44,8 @@ function sfpf_get_organization_field( $field, $org_id ): mixed {
         return null;
     }
 
-    if ( function_exists( 'get_field' ) ) {
-        return get_field( $field, $org_id );
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
+        return \Hexa\PluginCore\Fields\Field::get( $field, $org_id );
     }
 
     return get_post_meta( $org_id, $field, true );

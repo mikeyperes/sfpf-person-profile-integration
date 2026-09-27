@@ -106,7 +106,7 @@ function ajax_process_articles() {
     }
 
     // ── Step 4: Check against existing repeater ──
-    $existing = get_field('articles', 'user_' . $user_id);
+    $existing = \Hexa\PluginCore\Fields\Field::get('articles', 'user_' . $user_id);
     $existing_urls = [];
     if (is_array($existing)) {
         foreach ($existing as $item) {

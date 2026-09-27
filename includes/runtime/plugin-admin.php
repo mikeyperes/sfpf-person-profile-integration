@@ -46,7 +46,7 @@ function migrate_articles_textarea_to_repeater() {
         return;
     }
 
-    $articles = get_field('articles', 'user_' . $founder_id);
+    $articles = \Hexa\PluginCore\Fields\Field::get('articles', 'user_' . $founder_id);
 
     // Only migrate if it's a string (old textarea format)
     if (!is_string($articles) || empty(trim($articles))) {
@@ -73,7 +73,7 @@ function migrate_articles_textarea_to_repeater() {
     }
 
     if (!empty($repeater)) {
-        update_field('articles', $repeater, 'user_' . $founder_id);
+        \Hexa\PluginCore\Fields\Field::update('articles', $repeater, 'user_' . $founder_id);
         write_log("Migrated " . count($repeater) . " articles from textarea to repeater for user {$founder_id}");
     }
 

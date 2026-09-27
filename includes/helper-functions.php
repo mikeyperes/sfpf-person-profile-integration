@@ -554,14 +554,14 @@ function sfpf_normalize_gallery_images($raw, $size = 'large') {
  * sites that have not migrated to the HWS user-profile Photos field yet.
  */
 function sfpf_get_person_gallery($user_id) {
-    if (!function_exists('get_field')) return [];
+    if (!\Hexa\PluginCore\Fields\Field::available()) return [];
 
     $user_key = 'user_' . absint($user_id);
-    $gallery = get_field('field_hws_user_profile_2025_photos', $user_key);
+    $gallery = \Hexa\PluginCore\Fields\Field::get('field_hws_user_profile_2025_photos', $user_key);
 
     if (!empty($gallery)) return $gallery;
 
-    $legacy = get_field('gallery', $user_key);
+    $legacy = \Hexa\PluginCore\Fields\Field::get('gallery', $user_key);
     return !empty($legacy) ? $legacy : [];
 }
 

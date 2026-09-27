@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * format: link (default), text, inline
  */
 function founder_display_location_born($user_id, $format = 'link') {
-    $lb = get_field('location_born', 'user_' . $user_id);
+    $lb = \Hexa\PluginCore\Fields\Field::get('location_born', 'user_' . $user_id);
     if (empty($lb) || empty($lb['location'])) {
         return '';
     }
@@ -66,12 +66,12 @@ function founder_display_organizations_founded($format = 'cards', $user_id = 0) 
 
     foreach ($orgs as $org_id) {
         $name      = esc_html(get_the_title($org_id));
-        $url       = get_field('url', $org_id);
-        $summary   = get_field('short_summary', $org_id);
-        $founding   = get_field('founding_date', $org_id);
-        $hq         = get_field('headquarters', $org_id);
+        $url       = \Hexa\PluginCore\Fields\Field::get('url', $org_id);
+        $summary   = \Hexa\PluginCore\Fields\Field::get('short_summary', $org_id);
+        $founding   = \Hexa\PluginCore\Fields\Field::get('founding_date', $org_id);
+        $hq         = \Hexa\PluginCore\Fields\Field::get('headquarters', $org_id);
         $hq_loc     = $hq['location'] ?? '';
-        $logo_field = get_field('image_cropped', $org_id);
+        $logo_field = \Hexa\PluginCore\Fields\Field::get('image_cropped', $org_id);
         $logo_url   = $logo_field['url'] ?? '';
         $permalink  = get_permalink($org_id);
 
@@ -158,7 +158,7 @@ function founder_display_bio_full($user_id) {
     $output = '<div class="founder-bio-full">';
 
     // Biography
-    $bio = get_field('biography', $user_key);
+    $bio = \Hexa\PluginCore\Fields\Field::get('biography', $user_key);
     if (!empty($bio)) {
         $output .= '<div class="bio-section bio-section-biography">';
         $output .= '<h3>Biography</h3>';
@@ -167,7 +167,7 @@ function founder_display_bio_full($user_id) {
     }
 
     // Alternate Names
-    $alt_names = get_field('alternate_names', $user_key);
+    $alt_names = \Hexa\PluginCore\Fields\Field::get('alternate_names', $user_key);
     if (!empty($alt_names) && is_array($alt_names)) {
         $names = array_filter(array_map(function($n) { return $n['name'] ?? ''; }, $alt_names));
         if (!empty($names)) {

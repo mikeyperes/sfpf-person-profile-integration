@@ -61,12 +61,12 @@ function founder_shortcode($atts) {
             case 'display_location_born':
                 return founder_display_location_born($user_id, $atts['format'] ?? 'link');
             case 'display_knowledge_panel':
-                $kgid = get_field('knowledge_graph_id', 'user_' . $user_id);
+                $kgid = \Hexa\PluginCore\Fields\Field::get('knowledge_graph_id', 'user_' . $user_id);
                 $full_url = sfpf_knowledge_panel_url($kgid);
                 if ($full_url === '') return '';
                 return '<a href="' . esc_url($full_url) . '" target="_blank" rel="noopener" title="' . esc_attr($full_url) . '">' . esc_html($full_url) . '</a>';
             case 'display_nationality':
-                $nationality = get_field('nationality', 'user_' . $user_id);
+                $nationality = \Hexa\PluginCore\Fields\Field::get('nationality', 'user_' . $user_id);
                 if (empty($nationality)) return '';
                 // Handle repeater
                 if (is_array($nationality)) {
@@ -124,7 +124,7 @@ function founder_shortcode($atts) {
             return $user ? esc_url($user->user_url) : '';
 
         case 'knowledge_graph_url':
-            return esc_url(sfpf_knowledge_panel_url(get_field('knowledge_graph_id', 'user_' . $user_id)));
+            return esc_url(sfpf_knowledge_panel_url(\Hexa\PluginCore\Fields\Field::get('knowledge_graph_id', 'user_' . $user_id)));
 
         case 'avatar':
             $size_map = [
@@ -147,7 +147,7 @@ function founder_shortcode($atts) {
             return esc_url(get_avatar_url($user_id));
 
         case 'professions':
-            $professions = get_field('professions', 'user_' . $user_id);
+            $professions = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $user_id);
             if (empty($professions)) return '';
             $names = [];
             foreach ($professions as $p) {
@@ -158,7 +158,7 @@ function founder_shortcode($atts) {
             return $atts['format'] === 'json' ? json_encode($names) : implode(', ', $names);
 
         case 'education':
-            $education = get_field('education', 'user_' . $user_id);
+            $education = \Hexa\PluginCore\Fields\Field::get('education', 'user_' . $user_id);
             if (empty($education)) return '';
 
             if (!empty($atts['index']) && is_numeric($atts['index'])) {
@@ -205,7 +205,7 @@ function founder_shortcode($atts) {
             return sfpf_render_gallery_html($images, 'sfpf-founder-gallery', (int) ($atts['columns'] ?? 3));
 
         case 'knowledge_graph_images':
-            $gallery = get_field($field_name, 'user_' . $user_id);
+            $gallery = \Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id);
             $images = sfpf_normalize_gallery_images($gallery, $atts['size'] ?? 'large');
             if (($atts['format'] ?? '') === 'json') return wp_json_encode($images);
             if (($atts['format'] ?? '') === 'urls') return esc_html(implode("\n", array_map(function($image) { return $image['url'] ?? ''; }, $images)));
@@ -214,7 +214,7 @@ function founder_shortcode($atts) {
 
         case 'articles':
         case 'additional_urls':
-            $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));
+            $links = sfpf_normalize_link_repeater(\Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id));
             if ($field_name === 'additional_urls') {
                 $links = sfpf_filter_public_link_repeater($links);
             }
@@ -229,7 +229,7 @@ function founder_shortcode($atts) {
             return esc_html(implode("\n", $urls));
 
         case 'sameas':
-            $urls = sfpf_filter_public_urls(get_field('sameas', 'user_' . $user_id));
+            $urls = sfpf_filter_public_urls(\Hexa\PluginCore\Fields\Field::get('sameas', 'user_' . $user_id));
             if (empty($urls)) return '';
             if ($atts['format'] === 'json') return wp_json_encode($urls);
             if ($atts['format'] === 'count') return (string) count($urls);
@@ -239,7 +239,7 @@ function founder_shortcode($atts) {
             return '';
 
         case 'wikimedia_commons_urls':
-            $links = sfpf_normalize_link_repeater(get_field($field_name, 'user_' . $user_id));
+            $links = sfpf_normalize_link_repeater(\Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id));
             $urls = array_values(array_unique(array_column($links, 'url')));
             if (empty($urls)) return '';
             if ($atts['format'] === 'json') return wp_json_encode($urls);
@@ -247,7 +247,7 @@ function founder_shortcode($atts) {
             return esc_html(implode("\n", $urls));
 
         case 'faq':
-            $faq = sfpf_normalize_faq_items(get_field('faq', 'user_' . $user_id));
+            $faq = sfpf_normalize_faq_items(\Hexa\PluginCore\Fields\Field::get('faq', 'user_' . $user_id));
             if ($atts['format'] === 'json') {
                 return wp_json_encode($faq, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             }
@@ -257,15 +257,15 @@ function founder_shortcode($atts) {
             return founder_display_faq($user_id, $atts);
 
         case 'location_born_location':
-            $lb = get_field('location_born', 'user_' . $user_id);
+            $lb = \Hexa\PluginCore\Fields\Field::get('location_born', 'user_' . $user_id);
             return esc_html($lb['location'] ?? '');
 
         case 'location_born_url':
-            $lb = get_field('location_born', 'user_' . $user_id);
+            $lb = \Hexa\PluginCore\Fields\Field::get('location_born', 'user_' . $user_id);
             return esc_url($lb['wikipedia_url'] ?? '');
 
         case 'nationality':
-            $nationality = get_field('nationality', 'user_' . $user_id);
+            $nationality = \Hexa\PluginCore\Fields\Field::get('nationality', 'user_' . $user_id);
             if (empty($nationality) || !is_array($nationality)) {
                 // Backward compat: if it's a string (old text field), return as-is
                 if (is_string($nationality) && !empty($nationality)) {
@@ -279,7 +279,7 @@ function founder_shortcode($atts) {
             return esc_html(implode(', ', $values));
 
         case 'knows_language':
-            $langs = get_field('knows_language', 'user_' . $user_id);
+            $langs = \Hexa\PluginCore\Fields\Field::get('knows_language', 'user_' . $user_id);
             if (empty($langs) || !is_array($langs)) return '';
             $lang_vals = array_filter(array_map(function($l) { return trim($l['value'] ?? ''); }, $langs));
             if (empty($lang_vals)) return '';
@@ -287,7 +287,7 @@ function founder_shortcode($atts) {
             return esc_html(implode(', ', $lang_vals));
 
         case 'awards':
-            $awards = get_field('awards', 'user_' . $user_id);
+            $awards = \Hexa\PluginCore\Fields\Field::get('awards', 'user_' . $user_id);
             if (empty($awards) || !is_array($awards)) return '';
             $award_vals = array_filter(array_map(function($a) { return trim($a['value'] ?? ''); }, $awards));
             if (empty($award_vals)) return '';
@@ -298,7 +298,7 @@ function founder_shortcode($atts) {
             // Handle url_* fields (pull from urls group)
             if (strpos($field_name, 'url_') === 0) {
                 $platform = substr($field_name, 4);
-                $urls = get_field('urls', 'user_' . $user_id);
+                $urls = \Hexa\PluginCore\Fields\Field::get('urls', 'user_' . $user_id);
                 if (is_array($urls) && !empty($urls[$platform])) {
                     return esc_url($urls[$platform]);
                 }
@@ -306,7 +306,7 @@ function founder_shortcode($atts) {
             }
 
             // Try ACF field
-            $value = get_field($field_name, 'user_' . $user_id);
+            $value = \Hexa\PluginCore\Fields\Field::get($field_name, 'user_' . $user_id);
             if ($value !== null && $value !== false && $value !== '') {
                 return is_array($value) ? json_encode($value) : wp_kses_post($value);
             }
@@ -330,7 +330,7 @@ function founder_display_gallery($user_id, $atts = []) {
  * Display founder education in formatted HTML
  */
 function founder_display_education($user_id) {
-    $education = get_field('education', 'user_' . $user_id);
+    $education = \Hexa\PluginCore\Fields\Field::get('education', 'user_' . $user_id);
     $education_keys = ['college', 'designation', 'major', 'year', 'wiki_url'];
     if (empty($education) || !sfpf_repeater_has_public_row($education, $education_keys)) {
         return '';
@@ -387,7 +387,7 @@ function founder_display_education($user_id) {
  * Display founder professions with summaries
  */
 function founder_display_professions($user_id) {
-    $professions = get_field('professions', 'user_' . $user_id);
+    $professions = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $user_id);
     if (empty($professions)) {
         return '';
     }
@@ -429,11 +429,11 @@ function founder_display_professions($user_id) {
  */
 function founder_display_socials($user_id) {
     // Get socials from website settings (HWS Base Tools)
-    if (!function_exists('get_field')) {
+    if (!\Hexa\PluginCore\Fields\Field::available()) {
         return '';
     }
 
-    $website = get_field('website', 'option');
+    $website = \Hexa\PluginCore\Fields\Field::get('website', 'option');
     $socials = $website['social_media'] ?? [];
 
     if (empty($socials)) {

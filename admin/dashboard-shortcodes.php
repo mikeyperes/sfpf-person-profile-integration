@@ -147,7 +147,7 @@ defined('ABSPATH') || exit;
             <tr>
                 <td><code class="sfpf-copy-code">[founder id="title"]</code></td>
                 <td>Professional title (Person entity only)</td>
-                <td><em><?php echo esc_html($user_id ? get_field('title', 'user_' . $user_id) : 'N/A'); ?></em></td>
+                <td><em><?php echo esc_html($user_id ? \Hexa\PluginCore\Fields\Field::get('title', 'user_' . $user_id) : 'N/A'); ?></em></td>
             </tr>
             <tr>
                 <td><code class="sfpf-copy-code">[founder id="email"]</code></td>
@@ -188,7 +188,7 @@ defined('ABSPATH') || exit;
                 <td>List of professions (comma-separated)</td>
                 <td><em><?php 
                     if ($user_id) {
-                        $profs = get_field('professions', 'user_' . $user_id);
+                        $profs = \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $user_id);
                         if (!empty($profs)) {
                             $names = array_map(function($p) { return $p['name'] ?? ''; }, $profs);
                             echo esc_html(implode(', ', array_filter($names)));
@@ -223,7 +223,7 @@ defined('ABSPATH') || exit;
             <tr>
                 <td><code class="sfpf-copy-code">[founder id="entity_type"]</code></td>
                 <td>Entity type (person/organization/none)</td>
-                <td><em><?php echo esc_html($user_id ? get_field('entity_type', 'user_' . $user_id) : 'N/A'); ?></em></td>
+                <td><em><?php echo esc_html($user_id ? \Hexa\PluginCore\Fields\Field::get('entity_type', 'user_' . $user_id) : 'N/A'); ?></em></td>
             </tr>
             <tr>
                 <td><code class="sfpf-copy-code">[founder id="sameas"]</code></td>

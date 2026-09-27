@@ -65,6 +65,7 @@ function update_field( string $field_key, mixed $value, int $post_id ): bool {
     return true;
 }
 
+require_once dirname( __DIR__ ) . '/lib/hexa-wordpress-plugin-core/tests/support/fields.php';
 require_once dirname( __DIR__ ) . '/src/Migrations/BookQuoteRepeaterMigration.php';
 
 use SFPF\PersonProfile\Migrations\BookQuoteRepeaterMigration;

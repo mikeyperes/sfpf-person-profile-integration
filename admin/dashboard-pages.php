@@ -45,8 +45,8 @@ if (class_exists('\\Hexa\\PluginCore\\SiteStructure\\SiteStructureRenderer')) {
 
 // Founder Professions Section
 $founder_user_id = get_founder_user_id();
-$entity_type = $founder_user_id ? get_field('entity_type', 'user_' . $founder_user_id) : '';
-$professions = ($entity_type === 'person' && $founder_user_id) ? get_field('professions', 'user_' . $founder_user_id) : [];
+$entity_type = $founder_user_id ? \Hexa\PluginCore\Fields\Field::get('entity_type', 'user_' . $founder_user_id) : '';
+$professions = ($entity_type === 'person' && $founder_user_id) ? \Hexa\PluginCore\Fields\Field::get('professions', 'user_' . $founder_user_id) : [];
 $professions_page_id = get_option('sfpf_page_professions', 0);
 $professions_page_exists = $professions_page_id && get_post($professions_page_id) && get_post_status($professions_page_id) === 'publish';
 

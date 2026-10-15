@@ -103,6 +103,7 @@ $schemaBuilder = $read( $root . '/schema/schema-builder.php' );
 $lifecycle = $read( $root . '/includes/runtime/lifecycle.php' );
 $organizationShortcode = $read( $root . '/includes/shortcodes/organization.php' );
 $schemaInjector = $read( $root . '/schema/schema-injector.php' );
+$schemaManager = $read( $root . '/schema/schema-manager.php' );
 $ajaxHandlers = $read( $root . '/admin/ajax-handlers.php' );
 $ajaxSupport = $read( $root . '/admin/ajax/support.php' );
 $runtimeLoader = $read( $root . '/src/Runtime/LegacyModuleLoader.php' );
@@ -126,7 +127,7 @@ $configVersion = false !== strpos( $initialization, 'public static $version = "'
 $assert( '' !== $headerVersion, 'Plugin header version was not found.' );
 $assert( $headerVersion === $constantVersion, 'Plugin header and constant versions differ.' );
 $assert( $headerVersion === $configVersion, 'Plugin header and Config versions differ.' );
-$assert( '3.2.1' === $headerVersion, 'Plugin version is not 3.2.1.' );
+$assert( '3.3.0' === $headerVersion, 'Plugin version is not 3.3.0.' );
 $assert( version_compare( trim( $read( $root . '/lib/hexa-wordpress-plugin-core/VERSION' ) ), '3.4.11', '>=' ), 'Bundled Hexa Plugin Core is older than the required 3.4.11 baseline.' );
 
 $sourceFiles = [];
@@ -358,8 +359,8 @@ $assert(
     'Founder gallery is not mapped into the Person schema image property.'
 );
 $assert(
-    false !== strpos( $schemaBuilder, "add_action('save_post', __NAMESPACE__ . '\\\\handle_schema_on_save'" ),
-    'Schema regeneration is not attached to save_post.'
+    false === strpos( $schemaBuilder, "save_post" ) && false === strpos( $schemaManager, "update_post_meta" ),
+    'Schema must be built when the page is viewed, never saved into posts.'
 );
 $assert(
     ! is_file( $root . '/snippets/register-cpt-organization.php' )
@@ -432,11 +433,12 @@ $assert(
     'Organization schema incorrectly treats the featured image as the organization logo.'
 );
 $assert(
-    false !== strpos( $coreIntegration, 'CoreSchemaInjector' )
-    && false !== strpos( $coreIntegration, "[ SchemaProvider::class, 'current' ]" )
-    && false !== strpos( $schemaInjector, 'SchemaDocumentRenderer' )
+    false !== strpos( $coreIntegration, 'SchemaProvider::register()' )
+    && false !== strpos( $read( $root . '/src/Schema/SchemaProvider.php' ), 'SchemaPage::register(' )
+    && false !== strpos( $schemaBuilder, 'SchemaNodes::person(' )
+    && false !== strpos( $schemaBuilder, 'SchemaNodes::book(' )
     && false !== strpos( $schemaBuilder, 'SchemaDocumentRenderer' ),
-    'Person schema injection, rendering, and stored JSON do not use Hexa WP Core.'
+    'Person schema is not built with the Hexa WP Core schema library and shared page block.'
 );
 $assert(
     false !== strpos( $contentTypes, 'AcfFieldGroupRegistry' )

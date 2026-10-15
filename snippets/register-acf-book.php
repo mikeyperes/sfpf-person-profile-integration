@@ -38,7 +38,7 @@ function book_acf_field_group(): array {
                 'label' => 'Schema Markup',
                 'name' => 'schema_markup',
                 'type' => 'textarea',
-                'instructions' => 'Generated JSON-LD schema markup for this book. Auto-generated on save.',
+                'instructions' => 'The JSON-LD schema this book page carries, built live from the fields below.',
                 'required' => 0,
                 'readonly' => 1,
                 'rows' => 10,
@@ -458,18 +458,4 @@ function book_acf_field_group(): array {
         'active' => true,
         'show_in_rest' => 1,
     ];
-}
-
-/**
- * Build Book schema on save — delegates to unified schema-builder.php
- */
-\hexa_fields_on('save_post', __NAMESPACE__ . '\\build_book_schema_on_save', 20);
-function build_book_schema_on_save($post_id) {
-    if (get_post_type($post_id) !== 'book') return;
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    
-    $schema = build_book_schema($post_id);
-    if (!empty($schema)) {
-        \Hexa\PluginCore\Fields\Field::update('schema_markup', schema_json($schema), $post_id);
-    }
 }

@@ -191,16 +191,11 @@ function debug_homepage_schema() {
         return $output;
     }
 
-    // Check if schema is stored
-    $schema = function_exists(__NAMESPACE__ . '\\get_post_schema')
-        ? get_post_schema($page_on_front)
-        : get_post_meta($page_on_front, 'schema_markup', true);
-    $schema_source = function_exists(__NAMESPACE__ . '\\get_post_schema_source')
-        ? get_post_schema_source($page_on_front)
-        : null;
+    // Build the homepage schema as visitors get it
+    $schema = get_post_schema($page_on_front);
 
     if ($schema) {
-        $output .= "✅ Schema is stored in " . ($schema_source ?: 'post meta') . "\n";
+        $output .= "✅ Schema is built live when the page is viewed\n";
         $output .= "Schema length: " . strlen($schema) . " bytes\n\n";
 
         // Validate JSON
@@ -212,8 +207,7 @@ function debug_homepage_schema() {
             $output .= "❌ Schema is invalid JSON: " . json_last_error_msg() . "\n";
         }
     } else {
-        $output .= "❌ No schema stored in canonical or legacy schema storage\n";
-        $output .= "   Click 'Reprocess Homepage Schema' button to generate\n";
+        $output .= "❌ The homepage has no SFPF schema (check the homepage schema type and the founder profile)\n";
     }
 
     return $output;
@@ -267,18 +261,11 @@ function debug_founder_data() {
 function debug_injection_hook() {
     $output = "=== SCHEMA INJECTION HOOK DEBUG ===\n\n";
 
-    $callback = __NAMESPACE__ . '\\inject_schema_markup';
-    $hook_priority = has_action('wp_head', $callback);
-
-    if (is_admin()) {
-        $output .= "ℹ️ This debug action runs in admin/AJAX context.\n";
-        $output .= "   SFPF only attaches schema injection during frontend requests, so a missing wp_head callback here is expected.\n\n";
-    } elseif ($hook_priority !== false) {
-        $output .= "✅ Hook found at priority {$hook_priority}\n";
-        $output .= "   Function: {$callback}\n";
+    $sources = class_exists('\\Hexa\\PluginCore\\SchemaTools\\SchemaPage') ? \Hexa\PluginCore\SchemaTools\SchemaPage::sources() : [];
+    if (in_array(\SFPF\PersonProfile\Schema\SchemaProvider::SOURCE, $sources, true)) {
+        $output .= "✅ SFPF is registered on the shared Hexa schema block (sources: " . implode(', ', $sources) . ")\n\n";
     } else {
-        $output .= "❌ inject_schema_markup hook NOT found in wp_head during a frontend request.\n";
-        $output .= "   This means schema will not be injected.\n\n";
+        $output .= "❌ SFPF is not registered on the shared Hexa schema block.\n\n";
     }
 
     $output .= "Runtime context:\n";
@@ -288,8 +275,7 @@ function debug_injection_hook() {
 
     // Check if function exists
     $output .= "\nFunction exists:\n";
-    $output .= "  - enable_schema_injection: " . (function_exists(__NAMESPACE__ . '\\enable_schema_injection') ? '✅ Yes' : '❌ No') . "\n";
-    $output .= "  - inject_schema_markup: " . (function_exists(__NAMESPACE__ . '\\inject_schema_markup') ? '✅ Yes' : '❌ No') . "\n";
+    $output .= "  - build_profile_page_nodes: " . (function_exists(__NAMESPACE__ . '\\build_profile_page_nodes') ? '✅ Yes' : '❌ No') . "\n";
     $output .= "  - get_post_schema: " . (function_exists(__NAMESPACE__ . '\\get_post_schema') ? '✅ Yes' : '❌ No') . "\n";
 
     return $output;

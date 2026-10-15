@@ -67,14 +67,10 @@ add_action( 'plugins_loaded', __NAMESPACE__ . '\\migrate_shared_content_type_own
 // ============================================================================
 function init_plugin() {
     // Load schema files
-    $schema_files = ['schema-templates.php', 'schema-builder.php', 'schema-manager.php', 'schema-injector.php'];
+    $schema_files = ['schema-builder.php', 'schema-manager.php', 'schema-injector.php'];
     foreach ($schema_files as $file) {
         $path = SFPF_PLUGIN_DIR . 'schema/' . $file;
         if (file_exists($path)) require_once $path;
-    }
-
-    if (function_exists(__NAMESPACE__ . '\\enable_schema_on_save')) {
-        enable_schema_on_save();
     }
 
     $doing_ajax = wp_doing_ajax();
@@ -101,7 +97,6 @@ function activate_plugin() {
     // Set default options — add_option only writes if key doesn't exist yet
     add_option('sfpf_homepage_schema_type', 'person');
     add_option('sfpf_biography_schema_type', 'profile_page_only');
-    add_option('sfpf_rankmath_disable_biography', false);
     add_option(SFPF_HIDE_EMPTY_ELEMENTOR_SOCIAL_ICONS_OPTION, 1);
     add_option(SFPF_ELEMENTOR_DYNAMIC_VISIBILITY_OPTION, 1);
 

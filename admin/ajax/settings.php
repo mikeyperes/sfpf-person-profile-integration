@@ -5,7 +5,7 @@ declare( strict_types=1 );
 namespace sfpf_person_website;
 
 /**
- * Snippet, schema type, Rank Math, and breadcrumb settings actions.
+ * Snippet, schema type, and breadcrumb settings actions.
  *
  * Callback names remain in the legacy namespace for template and hook compatibility.
  */
@@ -62,23 +62,6 @@ function ajax_save_biography_schema_type() {
     write_log("Biography schema type set to: {$schema_type}");
 
     wp_send_json_success(['schema_type' => $schema_type]);
-}
-
-/**
- * Save RankMath settings
- */
-function ajax_save_rankmath_settings() {
-    $disable_homepage = !empty($_POST['disable_homepage']);
-    $disable_biography = !empty($_POST['disable_biography']);
-    $disable_books = !empty($_POST['disable_books']);
-
-    update_option('sfpf_rankmath_disable_homepage', $disable_homepage);
-    update_option('sfpf_rankmath_disable_biography', $disable_biography);
-    update_option('sfpf_rankmath_disable_books', $disable_books);
-
-    write_log("RankMath settings updated");
-
-    wp_send_json_success();
 }
 
 /**

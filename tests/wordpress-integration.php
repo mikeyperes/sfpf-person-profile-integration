@@ -32,7 +32,7 @@ $context = SFPF\PersonProfile\Core\CoreIntegration::context();
 $report  = HexaPluginCorePackageRegistry::report();
 
 $assert( $context instanceof Hexa\PluginCore\CoreRuntime\PluginContext, 'PluginContext was not created.' );
-$assert( '3.2.1' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
+$assert( '3.3.0' === SFPF_PLUGIN_VERSION, 'Unexpected plugin version.' );
 $assert( version_compare( (string) ( $report['selected']['version'] ?? '0' ), '3.4.11', '>=' ), 'Selected Core version is older than the bundled release.' );
 $assert( ! empty( $report['healthy'] ), 'Core package registry is not healthy.' );
 $assert( false !== has_action( 'wp_ajax_sfpf_load_dashboard_tab' ), 'Lazy dashboard AJAX action is missing.' );
@@ -49,7 +49,6 @@ $legacyAjaxActions = [
     'sfpf_toggle_snippet',
     'sfpf_save_schema_type',
     'sfpf_save_biography_schema_type',
-    'sfpf_save_rankmath_settings',
     'sfpf_save_breadcrumb_settings',
     'sfpf_detect_schema',
     'sfpf_reprocess_schema',

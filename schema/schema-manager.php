@@ -3,69 +3,39 @@ namespace sfpf_person_website;
 
 /**
  * Schema Manager
- * 
- * Central management for all schema operations.
- * Coordinates schema building, storage, and retrieval.
- * 
+ *
+ * Previews and checks of the person site's schema for the dashboard. Schema
+ * is never stored: every value here is built live from the same builders the
+ * page uses, so the dashboard always shows what visitors get.
+ *
  * @package sfpf_person_website
- * @since 1.0.0
  */
 
 defined('ABSPATH') || exit;
 
 /**
- * Get schema for a post
- * 
+ * The schema JSON a post's page carries, built now.
+ *
  * @param int $post_id Post ID
  * @return string|null Schema JSON string or null
  */
 function get_post_schema($post_id) {
-    $schema = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('schema_markup', $post_id) : '';
-
-    if (empty($schema)) {
-        $schema = get_post_meta($post_id, 'schema_markup', true);
-    }
-
-    if (empty($schema)) {
-        $schema = get_post_meta($post_id, '_sfpf_schema', true);
-    }
-
-    return !empty($schema) ? $schema : null;
+    $result = generate_post_schema((int) $post_id);
+    return $result['success'] ? $result['schema'] : null;
 }
 
 /**
- * Get the storage source currently holding schema for a post.
+ * Where a post's schema comes from.
  *
  * @param int $post_id Post ID
  * @return string|null
  */
 function get_post_schema_source($post_id) {
-    $acf_schema = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get('schema_markup', $post_id) : '';
-    if (!empty($acf_schema)) {
-        return 'acf: schema_markup';
-    }
-
-    $meta_schema = get_post_meta($post_id, 'schema_markup', true);
-    if (!empty($meta_schema)) {
-        return 'post_meta: schema_markup';
-    }
-
-    $legacy_schema = get_post_meta($post_id, '_sfpf_schema', true);
-    if (!empty($legacy_schema)) {
-        return 'legacy post_meta: _sfpf_schema';
-    }
-
-    return null;
+    return null !== get_post_schema($post_id) ? 'live: built when the page is viewed' : null;
 }
 
 /**
- * Log schema processing activity without hard depending on a missing helper.
- *
- * @param int $post_id Post ID
- * @param string $post_type Post type
- * @param bool $success Whether processing succeeded
- * @param string $message Log message
- * @return void
+ * Log schema activity without hard depending on a missing helper.
  */
 function log_schema_processing($post_id, $post_type, $success, $message) {
     if (!function_exists(__NAMESPACE__ . '\\write_log')) {
@@ -78,109 +48,61 @@ function log_schema_processing($post_id, $post_type, $success, $message) {
 }
 
 /**
- * Save schema for a post
- * 
+ * Build the schema a post's page carries.
+ *
  * @param int $post_id Post ID
- * @param array|string $schema Schema data (array will be JSON encoded)
- * @return bool Success
+ * @return array{success:bool,schema:?string,message:string}
  */
-function save_post_schema($post_id, $schema) {
-    if (is_array($schema)) {
-        // Remove empty values before encoding
-        $schema = sanitize_schema($schema);
-        $schema = schema_json($schema);
-    }
-
-    if (!is_string($schema) || trim($schema) === '') {
-        log_schema_processing($post_id, get_post_type($post_id), false, 'Failed to save schema: empty payload');
-        return false;
-    }
-
-    $schema_to_store = wp_slash($schema);
-
-    if (\Hexa\PluginCore\Fields\Field::available()) {
-        \Hexa\PluginCore\Fields\Field::update('schema_markup', $schema_to_store, $post_id);
-    }
-
-    update_post_meta($post_id, 'schema_markup', $schema_to_store);
-    update_post_meta($post_id, '_sfpf_schema', $schema_to_store);
-
-    $stored_schema = get_post_schema($post_id);
-    $success = ($stored_schema === $schema);
-
-    if ($success) {
-        log_schema_processing($post_id, get_post_type($post_id), true, 'Schema saved');
-    } else {
-        log_schema_processing($post_id, get_post_type($post_id), false, 'Failed to save schema');
-    }
-
-    return $success;
-}
-
-/**
- * Generate and save schema for a post based on its type
- * 
- * @param int $post_id Post ID
- * @return array Result with schema and status
- */
-function generate_and_save_schema($post_id) {
+function generate_post_schema($post_id) {
     $post_type = get_post_type($post_id);
     $result = [
         'success' => false,
         'schema' => null,
         'message' => '',
     ];
-    
-    // Determine which builder to use
+
     switch ($post_type) {
         case 'book':
-            $schema = build_book_schema($post_id);
+            $nodes = build_book_nodes($post_id);
             break;
-            
+
         case 'page':
             if (is_front_page_id($post_id)) {
                 $schema_type = get_option('sfpf_homepage_schema_type', 'person');
-                $schema = build_homepage_schema_for_injection($schema_type, $post_id);
             } elseif (is_biography_page_id($post_id)) {
                 $schema_type = get_option('sfpf_biography_schema_type', 'profile_page_only');
-                $schema = build_homepage_schema_for_injection($schema_type, $post_id);
             } else {
                 $result['message'] = 'Page is not configured for SFPF page schema';
                 return $result;
             }
 
             if ($schema_type === 'none') {
-                $result['message'] = 'Schema generation disabled for this page';
+                $result['message'] = 'Schema output is turned off for this page';
                 return $result;
             }
 
+            $nodes = build_profile_page_nodes($schema_type, $post_id);
             break;
-            
+
         default:
             $result['message'] = "Unknown post type: {$post_type}";
             return $result;
     }
-    
-    if (empty($schema)) {
+
+    if (empty($nodes)) {
         $result['message'] = 'Schema generation returned empty result';
         return $result;
     }
-    
-    // Save the schema
-    if (save_post_schema($post_id, $schema)) {
-        $result['success'] = true;
-        $result['schema'] = is_array($schema) ? schema_json($schema) : $schema;
-        $result['message'] = 'Schema generated successfully';
-    } else {
-        $result['message'] = 'Failed to save schema';
-    }
-    
+
+    $result['success'] = true;
+    $result['schema'] = schema_json(['@context' => 'https://schema.org', '@graph' => $nodes]);
+    $result['message'] = 'Schema built from the current data';
     return $result;
 }
 
 /**
- * Batch reprocess schemas for a post type
- * 
+ * Check the schema of one batch of posts of a type.
+ *
  * @param string $post_type Post type to process
  * @param int $batch_size Number of posts per batch
  * @param int $offset Offset for pagination
@@ -194,12 +116,10 @@ function batch_reprocess_schemas($post_type, $batch_size = 20, $offset = 0) {
         'batch' => 0,
         'offset' => $offset,
     ];
-    
-    // Get total count
+
     $counts = wp_count_posts($post_type);
     $results['total'] = isset($counts->publish) ? $counts->publish : 0;
-    
-    // Query posts
+
     $query = new \WP_Query([
         'post_type' => $post_type,
         'posts_per_page' => $batch_size,
@@ -208,12 +128,12 @@ function batch_reprocess_schemas($post_type, $batch_size = 20, $offset = 0) {
         'fields' => 'ids',
         'no_found_rows' => true,
     ]);
-    
+
     $results['batch'] = count($query->posts);
-    
+
     foreach ($query->posts as $post_id) {
-        $gen_result = generate_and_save_schema($post_id);
-        
+        $gen_result = generate_post_schema($post_id);
+
         $item = [
             'post_id' => $post_id,
             'title' => get_the_title($post_id),
@@ -224,39 +144,35 @@ function batch_reprocess_schemas($post_type, $batch_size = 20, $offset = 0) {
             'view_link' => get_permalink($post_id),
             'validator_link' => get_schema_validator_url(get_permalink($post_id)),
         ];
-        
+
         if ($gen_result['success']) {
             $results['processed'][] = $item;
         } else {
             $results['errors'][] = $item;
         }
     }
-    
+
     return $results;
 }
 
 /**
- * Reprocess all schemas for homepage
- * 
- * @return array Result
+ * The homepage's schema, built now.
  */
 function reprocess_homepage_schema() {
     $front_page_id = get_front_page_id();
-    
+
     if (!$front_page_id) {
         return [
             'success' => false,
             'message' => 'No front page is set',
         ];
     }
-    
-    return generate_and_save_schema($front_page_id);
+
+    return generate_post_schema($front_page_id);
 }
 
 /**
- * Reprocess biography page schema.
- *
- * @return array Result
+ * The biography page's schema, built now.
  */
 function reprocess_biography_schema() {
     $bio_page_id = (int) get_option('sfpf_page_biography', 0);
@@ -268,12 +184,12 @@ function reprocess_biography_schema() {
         ];
     }
 
-    return generate_and_save_schema($bio_page_id);
+    return generate_post_schema($bio_page_id);
 }
 
 /**
- * Get all schema statuses for dashboard
- * 
+ * Schema status for the dashboard.
+ *
  * @return array Schema status summary
  */
 function get_schema_status_summary() {
@@ -295,58 +211,41 @@ function get_schema_status_summary() {
             'with_schema' => 0,
         ],
     ];
-    
-    // Homepage status
+
     $front_page_id = get_front_page_id();
     if ($front_page_id) {
         $status['homepage']['enabled'] = true;
         $status['homepage']['post_id'] = $front_page_id;
         $status['homepage']['schema_type'] = get_option('sfpf_homepage_schema_type', 'person');
-        $schema = get_post_schema($front_page_id);
-        $status['homepage']['has_schema'] = !empty($schema);
+        $status['homepage']['has_schema'] = null !== get_post_schema($front_page_id);
     }
-    
-    // Books status
+
+    // Every published book gets schema when its page is viewed.
     if ($status['books']['enabled']) {
         $counts = wp_count_posts('book');
-        $status['books']['total'] = isset($counts->publish) ? $counts->publish : 0;
-        
-        // Count posts with schema
-        $with_schema = get_posts([
-            'post_type' => 'book',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => 'schema_markup',
-                    'value' => '',
-                    'compare' => '!=',
-                ],
-            ],
-        ]);
-        $status['books']['with_schema'] = count($with_schema);
+        $status['books']['total'] = isset($counts->publish) ? (int) $counts->publish : 0;
+        $status['books']['with_schema'] = $status['books']['total'];
     }
-    
-    // Organizations status
+
+    // Organization pages get schema from SMC when it is active.
     if ($status['organizations']['enabled']) {
         $counts = wp_count_posts('organization');
-        $status['organizations']['total'] = isset($counts->publish) ? $counts->publish : 0;
-        
-        // Count posts with schema
-        $with_schema = get_posts([
-            'post_type' => 'organization',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => 'schema_markup',
-                    'value' => '',
-                    'compare' => '!=',
-                ],
-            ],
-        ]);
-        $status['organizations']['with_schema'] = count($with_schema);
+        $status['organizations']['total'] = isset($counts->publish) ? (int) $counts->publish : 0;
+        $status['organizations']['with_schema'] = class_exists('\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema') ? $status['organizations']['total'] : 0;
     }
-    
+
     return $status;
 }
+
+/**
+ * The read-only "Schema Markup" fields on books and pages show the live schema.
+ */
+function load_live_schema_markup($value, $post_id = 0, $field = []) {
+    $post_id = is_numeric($post_id) ? (int) $post_id : 0;
+    if ($post_id <= 0 || !in_array(get_post_type($post_id), ['book', 'page'], true)) {
+        return $value;
+    }
+    $schema = get_post_schema($post_id);
+    return null !== $schema ? $schema : '';
+}
+\hexa_fields_on('load_value/name=schema_markup', __NAMESPACE__ . '\\load_live_schema_markup', 10, 3);

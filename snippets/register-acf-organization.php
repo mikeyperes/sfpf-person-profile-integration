@@ -38,7 +38,7 @@ function organization_acf_field_group(): array {
                 'label' => 'Schema Markup',
                 'name' => 'schema_markup',
                 'type' => 'textarea',
-                'instructions' => 'Generated JSON-LD schema markup for this organization. Auto-generated on save.',
+                'instructions' => 'Organization schema is built by SMC Organization Profile Integration when the page is viewed.',
                 'required' => 0,
                 'readonly' => 1,
                 'rows' => 10,
@@ -605,18 +605,4 @@ function organization_acf_field_group(): array {
         'active' => true,
         'show_in_rest' => 1,
     ];
-}
-
-/**
- * Build Organization schema on save
- */
-\hexa_fields_on('save_post', __NAMESPACE__ . '\\build_organization_schema_on_save', 20);
-function build_organization_schema_on_save($post_id) {
-    if (get_post_type($post_id) !== 'organization') return;
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-
-    $schema = build_organization_schema($post_id);
-    if (!empty($schema)) {
-        \Hexa\PluginCore\Fields\Field::update('schema_markup', schema_json($schema), $post_id);
-    }
 }

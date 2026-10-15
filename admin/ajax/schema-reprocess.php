@@ -54,8 +54,8 @@ function ajax_reprocess_schema() {
             ]);
 
             foreach ($books as $book) {
-                $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
-                    ? generate_and_save_schema($book->ID)
+                $result = function_exists(__NAMESPACE__ . '\\generate_post_schema')
+                    ? generate_post_schema($book->ID)
                     : ['success' => false];
                 if (!empty($result['success'])) {
                     $count++;
@@ -104,8 +104,8 @@ function ajax_rebuild_all_schema() {
         ]);
 
         foreach ($books as $book) {
-            $result = function_exists(__NAMESPACE__ . '\\generate_and_save_schema')
-                ? generate_and_save_schema($book->ID)
+            $result = function_exists(__NAMESPACE__ . '\\generate_post_schema')
+                ? generate_post_schema($book->ID)
                 : ['success' => false];
             if (!empty($result['success'])) {
                 $counts['books']++;

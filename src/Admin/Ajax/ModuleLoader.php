@@ -13,7 +13,6 @@ final class ModuleLoader {
         'sfpf_toggle_snippet'             => [ [ 'admin/ajax/settings.php' ], 'ajax_toggle_snippet' ],
         'sfpf_save_schema_type'           => [ [ 'admin/ajax/settings.php' ], 'ajax_save_schema_type' ],
         'sfpf_save_biography_schema_type' => [ [ 'admin/ajax/settings.php' ], 'ajax_save_biography_schema_type' ],
-        'sfpf_save_rankmath_settings'     => [ [ 'admin/ajax/settings.php' ], 'ajax_save_rankmath_settings' ],
         'sfpf_save_breadcrumb_settings'   => [ [ 'admin/ajax/settings.php' ], 'ajax_save_breadcrumb_settings' ],
         'sfpf_detect_schema'              => [ [ 'admin/ajax/schema-checklist.php', 'admin/ajax/schema-detection.php' ], 'ajax_detect_schema' ],
         'sfpf_reprocess_schema'           => [ [ 'admin/ajax/schema-reprocess.php' ], 'ajax_reprocess_schema' ],

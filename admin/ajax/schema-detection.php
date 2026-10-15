@@ -81,11 +81,7 @@ function ajax_detect_schema() {
         }
 
         if (defined("RANK_MATH_VERSION")) {
-            $rm_disabled = false;
-            if ($type === "homepage") $rm_disabled = get_option("sfpf_rankmath_disable_homepage", false);
-            elseif ($type === "biography") $rm_disabled = get_option("sfpf_rankmath_disable_biography", false);
-            elseif ($type === "books") $rm_disabled = get_option("sfpf_rankmath_disable_books", false);
-            $expected[] = "<strong>RankMath:</strong> " . ($rm_disabled ? "Disabled for this type" : "Active - may inject its own schema");
+            $expected[] = "<strong>RankMath:</strong> " . sfpf_rank_math_schema_mode_label();
         }
 
         $scanner = new \Hexa\PluginCore\SchemaDetection\SchemaPageScanner();
@@ -126,11 +122,7 @@ function ajax_detect_schema() {
     }
     $rm_active = defined('RANK_MATH_VERSION');
     if ($rm_active) {
-        $rm_disabled = false;
-        if ($type === 'homepage') $rm_disabled = get_option('sfpf_rankmath_disable_homepage', false);
-        elseif ($type === 'biography') $rm_disabled = get_option('sfpf_rankmath_disable_biography', false);
-        elseif ($type === 'books') $rm_disabled = get_option('sfpf_rankmath_disable_books', false);
-        $expected[] = '<strong>RankMath:</strong> ' . ($rm_disabled ? '<span style="color:#f59e0b;">Disabled for this type</span>' : '<span style="color:#e91e63;">Active — may inject its own schema</span>');
+        $expected[] = '<strong>RankMath:</strong> ' . esc_html(sfpf_rank_math_schema_mode_label());
     }
     if (!empty($expected)) {
         $output .= '<div style="background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#94a3b8;line-height:1.8;">';
@@ -419,7 +411,7 @@ function ajax_detect_schema() {
                         $output .= '<a href="' . esc_url($rm_schema_url) . '" target="_blank" style="color:#60a5fa;font-size:11px;background:#1e293b;padding:4px 10px;border-radius:4px;text-decoration:none;">🔧 RankMath Schema Settings →</a>';
                         $output .= '<a href="' . esc_url(admin_url('admin.php?page=rank-math-options-general')) . '" target="_blank" style="color:#60a5fa;font-size:11px;background:#1e293b;padding:4px 10px;border-radius:4px;text-decoration:none;">⚙️ RankMath General Settings →</a>';
                         $output .= '</div>';
-                        $output .= '<div style="color:#94a3b8;font-size:11px;margin-top:6px;">💡 To fix: Disable RankMath schema for this page type in the Schema tab, or disable it in RankMath\'s settings above.</div>';
+                        $output .= '<div style="color:#94a3b8;font-size:11px;margin-top:6px;">💡 To fix: set Rank Math schema output in HWS Base Tools, SEO & Rank Math tab.</div>';
                     }
                     $output .= '</div>';
                 } elseif ($has_person && $has_profile && count(array_keys($types_by_source)) > 1) {
@@ -438,4 +430,16 @@ function ajax_detect_schema() {
     $output .= '<div style="color:#6b7280;font-size:11px;margin-top:10px;padding-top:10px;border-top:1px solid #374151;">💡 Tip: Enable debug mode for HTTP details and additional info</div>';
 
     wp_send_json_success(['output' => $output]);
+}
+
+/**
+ * The site's Rank Math schema mode, set in HWS Base Tools.
+ */
+function sfpf_rank_math_schema_mode_label() {
+    if (!class_exists('\\Hexa\\PluginCore\\SchemaTools\\RankMathSchemaControl')) {
+        return 'Active - may print its own schema';
+    }
+    $modes = \Hexa\PluginCore\SchemaTools\RankMathSchemaControl::MODES;
+    $mode = \Hexa\PluginCore\SchemaTools\RankMathSchemaControl::mode();
+    return ($modes[$mode] ?? $mode) . ' (set in HWS Base Tools)';
 }

@@ -2,8 +2,9 @@
 namespace sfpf_person_website;
 
 /**
- * Schema Builder — single source of truth for all schema generation.
- * Each build_*_schema() returns a PHP array. Callers encode to JSON.
+ * Schema Builder: the person site's data mapped onto HexaWP Core's schema
+ * library (SchemaNodes, SchemaSources, SchemaIds). Nothing is stored; the
+ * nodes are built when a page is viewed and printed in Core's shared block.
  *
  * @package sfpf_person_website
  * @since 1.6.2
@@ -65,11 +66,9 @@ function build_person_schema() {
     $uk       = 'user_' . $uid;
 
     $p = [
-        '@type'            => 'Person',
-        '@id'              => $site_url . '/#person',
+        '@id'              => \Hexa\PluginCore\SchemaTools\SchemaIds::person(),
         'name'             => $founder['display_name'],
         'url'              => $site_url . '/',
-        'mainEntityOfPage' => $site_url,
     ];
 
     // ── identity ──
@@ -235,14 +234,10 @@ function build_person_schema() {
     // ── Knowledge Graph ID ──
     $kgid = _sf('knowledge_graph_id', $uk);
     if ($kgid) {
-        $p['identifier'] = [
-            '@type'      => 'PropertyValue',
-            'propertyID' => 'googleKgMID',
-            'value'      => sanitize_text_field($kgid),
-        ];
+        $p['identifier'] = \Hexa\PluginCore\SchemaTools\SchemaNodes::property_value('googleKgMID', $kgid);
     }
 
-    return $p;
+    return \Hexa\PluginCore\SchemaTools\SchemaNodes::person($p);
 }
 
 
@@ -251,94 +246,58 @@ function build_person_schema() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Build homepage / biography schema for injection AND dashboard preview.
+ * The person site's homepage or biography page nodes: the website, the
+ * page, and the Person, built with HexaWP Core's schema library.
  *
- * @param string $schema_type  person | profile_page_only | profile_page
- * @param int|null $page_id Specific page ID to model the ProfilePage node on
- * @return string|null  JSON string
+ * @param string   $schema_type person | profile_page_only | profile_page
+ * @param int|null $page_id     The page the ProfilePage describes
+ * @return list<array<string,mixed>>
+ */
+function build_profile_page_nodes($schema_type, $page_id = null) {
+    $person = build_person_schema();
+    if (empty($person) || 'none' === $schema_type) return [];
+
+    $person_id = \Hexa\PluginCore\SchemaTools\SchemaIds::person();
+    $website   = \Hexa\PluginCore\SchemaTools\SchemaSources::website($person_id);
+    if ('person' === $schema_type) {
+        return [$website, $person];
+    }
+
+    $page_id  = $page_id ? (int) $page_id : (int) get_option('page_on_front');
+    $page     = $page_id ? get_post($page_id) : null;
+    $page_url = $page instanceof \WP_Post ? (string) get_permalink($page) : \Hexa\PluginCore\SchemaTools\SchemaIds::home();
+    $person_image = is_array($person['image'] ?? null) && isset($person['image'][0]) ? $person['image'][0] : ($person['image'] ?? []);
+    $image = \Hexa\PluginCore\SchemaTools\SchemaNodes::image($person_image, \Hexa\PluginCore\SchemaTools\SchemaIds::primary_image($page_url));
+
+    $properties = [
+        'primaryImageOfPage' => $image ? \Hexa\PluginCore\SchemaTools\SchemaNodes::ref((string) $image['@id']) : null,
+        'about'              => \Hexa\PluginCore\SchemaTools\SchemaNodes::ref($person_id),
+        'mainEntity'         => 'profile_page' === $schema_type ? \Hexa\PluginCore\SchemaTools\SchemaNodes::ref($person_id) : null,
+    ];
+    if ($page instanceof \WP_Post) {
+        $node = \Hexa\PluginCore\SchemaTools\SchemaSources::post_page($page, 'ProfilePage', $properties + ['dateCreated' => get_post_time('c', true, $page)]);
+    } else {
+        $node = \Hexa\PluginCore\SchemaTools\SchemaNodes::web_page($properties + [
+            '@id'         => \Hexa\PluginCore\SchemaTools\SchemaIds::webpage($page_url),
+            'url'         => $page_url,
+            'name'        => get_bloginfo('name'),
+            'description' => get_bloginfo('description'),
+            'isPartOf'    => \Hexa\PluginCore\SchemaTools\SchemaNodes::ref(\Hexa\PluginCore\SchemaTools\SchemaIds::website()),
+            'inLanguage'  => \Hexa\PluginCore\SchemaTools\SchemaSources::language(),
+        ], 'ProfilePage');
+    }
+
+    return array_values(array_filter([$website, $node, $person, $image]));
+}
+
+/**
+ * The same nodes as a JSON document, for dashboard previews.
+ *
+ * @return string|null
  */
 function build_homepage_schema_for_injection($schema_type, $page_id = null) {
-    $person = build_person_schema();
-    if (empty($person)) return null;
-
-    $site_url   = rtrim(get_site_url(), '/');
-    $site_name  = get_bloginfo('name');
-    $site_desc  = get_bloginfo('description');
-    $page_id    = $page_id ? (int) $page_id : (int) get_option('page_on_front');
-    $page_url   = $page_id ? get_permalink($page_id) : home_url('/');
-    $page_url   = $page_url ? $page_url : $site_url . '/';
-    $page_name  = $site_name;
-    $page_desc  = $site_desc;
-
-    if ($page_id) {
-        $stored_title = get_the_title($page_id);
-        $stored_excerpt = wp_strip_all_tags((string) get_post_field('post_excerpt', $page_id));
-
-        if (!empty($stored_title)) {
-            $page_name = $stored_title;
-        }
-
-        if (!empty($stored_excerpt)) {
-            $page_desc = $stored_excerpt;
-        }
-    }
-
-    $schema = ['@context' => 'https://schema.org', '@graph' => []];
-
-    // ProfilePage node
-    $pp = [
-        '@type'      => 'ProfilePage',
-        '@id'        => $page_url . '#profilepage',
-        'url'        => $page_url,
-        'name'       => $page_name,
-        'inLanguage' => 'en-US',
-        'isPartOf'   => [
-            '@type' => 'WebSite',
-            '@id'   => $site_url . '/#website',
-            'url'   => $site_url . '/',
-            'name'  => $site_name,
-        ],
-    ];
-    if ($page_desc) $pp['description'] = $page_desc;
-
-    if ($page_id) {
-        $dm = get_post_modified_time('c', true, $page_id);
-        $dc = get_post_time('c', true, $page_id);
-        if ($dm) $pp['dateModified'] = $dm;
-        if ($dc) $pp['dateCreated']  = $dc;
-    }
-
-    // Primary image from person
-    $pi = isset($person['image'])
-        ? (is_array($person['image']) ? ($person['image'][0] ?? '') : $person['image'])
-        : '';
-    if ($pi) {
-        $pp['primaryImageOfPage'] = [
-            '@type' => 'ImageObject', '@id' => $page_url . '#primaryimage',
-            'url' => $pi, 'contentUrl' => $pi,
-        ];
-    }
-
-    switch ($schema_type) {
-        case 'person':
-            $schema['@graph'][] = $person;
-            break;
-        case 'profile_page_only':
-            $pp['about'] = ['@id' => $site_url . '/#person'];
-            $schema['@graph'][] = $pp;
-            // Include full Person so @id resolves
-            $schema['@graph'][] = $person;
-            break;
-        case 'profile_page':
-        default:
-            $pp['mainEntity'] = ['@id' => $site_url . '/#person'];
-            $pp['about']      = ['@id' => $site_url . '/#person'];
-            $schema['@graph'][] = $pp;
-            $schema['@graph'][] = $person;
-            break;
-    }
-
-    return schema_json($schema);
+    $nodes = build_profile_page_nodes($schema_type, $page_id);
+    return $nodes ? schema_json(['@context' => 'https://schema.org', '@graph' => $nodes]) : null;
 }
 
 // Backward-compat wrappers
@@ -364,16 +323,12 @@ function build_homepage_schema($post_id, $schema_type = 'profile_page') {
  * @return array  Schema array (with @context)
  */
 function build_book_schema($post_id) {
-    $site_url  = rtrim(get_site_url(), '/');
     $permalink = get_permalink($post_id);
     $title     = get_the_title($post_id);
-    $slug      = get_post_field('post_name', $post_id);
     $founder   = get_founder_full_info();
 
     $s = [
-        '@context' => 'https://schema.org',
-        '@type'    => 'Book',
-        '@id'      => $site_url . '#book-' . $slug,
+        '@id'      => \Hexa\PluginCore\SchemaTools\SchemaIds::for_url((string) $permalink, 'book'),
         'name'     => sanitize_text_field($title),
     ];
 
@@ -383,21 +338,12 @@ function build_book_schema($post_id) {
 
     // Author — full Person ref
     if ($founder) {
-        $s['author'] = [
-            '@type' => 'Person',
-            '@id'   => $site_url . '/#person',
-            'name'  => $founder['display_name'],
-            'url'   => $site_url,
-        ];
+        $s['author'] = \Hexa\PluginCore\SchemaTools\SchemaNodes::ref(\Hexa\PluginCore\SchemaTools\SchemaIds::person());
     }
 
     // Book imagery is owned by the native WordPress featured image.
-    if ($th = get_the_post_thumbnail_url($post_id, 'full')) {
-        $image_url = \Hexa\PluginCore\DataNormalization\ValueNormalizer::url($th);
-        if ($image_url) $s['image'] = ['@type' => 'ImageObject', 'url' => $image_url];
-    }
-
-    $s['mainEntityOfPage'] = $permalink;
+    $s['image'] = \Hexa\PluginCore\SchemaTools\SchemaSources::post_image((int) $post_id);
+    $s['mainEntityOfPage'] = \Hexa\PluginCore\SchemaTools\SchemaNodes::ref(\Hexa\PluginCore\SchemaTools\SchemaIds::webpage((string) $permalink));
 
     // sameAs — all book URLs + permalink
     $sa = _collect_urls(
@@ -449,7 +395,7 @@ function build_book_schema($post_id) {
 
     // Book format
     $fmt = _sf('book_format', $post_id);
-    if ($fmt) $s['bookFormat'] = 'https://schema.org/' . sanitize_text_field($fmt);
+    if ($fmt) $s['bookFormat'] = sanitize_text_field($fmt);
 
     // Language
     $lang = _sf('in_language', $post_id);
@@ -462,15 +408,36 @@ function build_book_schema($post_id) {
     // Knowledge Graph ID
     $kgid = _sf('knowledge_graph_id', $post_id);
     if ($kgid) {
-        $s['identifier'] = [
-            '@type'      => 'PropertyValue',
-            'propertyID' => 'googleKgMID',
-            'value'      => sanitize_text_field($kgid),
-        ];
+        $s['identifier'] = \Hexa\PluginCore\SchemaTools\SchemaNodes::property_value('googleKgMID', $kgid);
     }
 
-    return $s;
+    return \Hexa\PluginCore\SchemaTools\SchemaNodes::book($s);
 }
+
+/**
+ * A book page's nodes: the website, the book's page, the book and its author.
+ *
+ * @return list<array<string,mixed>>
+ */
+function build_book_nodes($post_id) {
+    $post = get_post($post_id);
+    $book = $post instanceof \WP_Post ? build_book_schema($post_id) : [];
+    if (!$book) return [];
+
+    $person = build_person_schema();
+    $page = \Hexa\PluginCore\SchemaTools\SchemaSources::post_page($post, 'ItemPage', [
+        'mainEntity' => \Hexa\PluginCore\SchemaTools\SchemaNodes::ref((string) $book['@id']),
+        'about'      => \Hexa\PluginCore\SchemaTools\SchemaNodes::ref((string) $book['@id']),
+    ]);
+
+    return array_values(array_filter([
+        \Hexa\PluginCore\SchemaTools\SchemaSources::website($person ? \Hexa\PluginCore\SchemaTools\SchemaIds::person() : ''),
+        $page,
+        $book,
+        $person,
+    ]));
+}
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -487,21 +454,4 @@ function build_organization_schema($post_id) {
     return class_exists( '\\SMC\\OrganizationProfile\\Schema\\OrganizationSchema' )
         ? \SMC\OrganizationProfile\Schema\OrganizationSchema::build( (int) $post_id, true )
         : [];
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  SAVE HOOKS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function enable_schema_on_save() {
-    add_action('save_post', __NAMESPACE__ . '\\handle_schema_on_save', 20, 2);
-}
-
-function handle_schema_on_save($post_id, $post) {
-    if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
-    $ok = ['book', 'page'];
-    if (!in_array($post->post_type, $ok, true)) return;
-    if ($post->post_type === 'page' && !is_schema_managed_page_id($post_id)) return;
-    generate_and_save_schema($post_id);
 }

@@ -13,11 +13,6 @@ defined('ABSPATH') || exit;
 $site_url = get_site_url_clean();
 $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
 
-// RankMath disable options
-$rankmath_disable_homepage = get_option('sfpf_rankmath_disable_homepage', false);
-$rankmath_disable_biography = get_option('sfpf_rankmath_disable_biography', false);
-$rankmath_disable_books = get_option('sfpf_rankmath_disable_books', false);
-
 ?>
 
 <!-- Homepage Schema Type Selection -->
@@ -272,38 +267,14 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
 </div>
 <?php endif; ?>
 
-<!-- RankMath Schema Control -->
+<!-- Rank Math schema output -->
 <div class="sfpf-card">
     <div class="sfpf-card-header">
         <span class="dashicons dashicons-shield" style="color:#f59e0b;"></span>
-        <h3>RankMath Schema Control</h3>
+        <h3>Rank Math schema output</h3>
     </div>
-    
-    <p style="color:#666;margin-bottom:15px;">Disable RankMath from injecting its own schema on specific post types:</p>
-    
-    <div style="display:flex;flex-direction:column;gap:12px;">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" name="rankmath_disable_homepage" value="1" <?php checked($rankmath_disable_homepage, true); ?> class="sfpf-rankmath-toggle">
-            <span>Disable RankMath schema on <strong>Homepage</strong></span>
-        </label>
-
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" name="rankmath_disable_biography" value="1" <?php checked($rankmath_disable_biography, true); ?> class="sfpf-rankmath-toggle">
-            <span>Disable RankMath schema on <strong>Biography Page</strong></span>
-        </label>
-        
-        <?php if (is_snippet_enabled('sfpf_enable_book_cpt')): ?>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" name="rankmath_disable_books" value="1" <?php checked($rankmath_disable_books, true); ?> class="sfpf-rankmath-toggle">
-            <span>Disable RankMath schema on <strong>Books</strong></span>
-        </label>
-        <?php endif; ?>
-        
-    </div>
-    
-    <div style="margin-top:15px;">
-        <button type="button" class="button button-primary" id="sfpf-save-rankmath-settings">💾 Save RankMath Settings</button>
-    </div>
+    <p style="color:#666;margin-bottom:0;">Every Hexa plugin prints its schema in one shared block. Whether Rank Math also prints its own schema is set once for the whole site in HWS Base Tools:
+        <a href="<?php echo esc_url(admin_url('options-general.php?page=hws-core-tools&tab=seo')); ?>"><?php echo esc_html(admin_url('options-general.php?page=hws-core-tools&tab=seo')); ?></a></p>
 </div>
 
 <!-- Note: Schema Detection Tool has been moved to the Overview tab -->
@@ -578,27 +549,6 @@ jQuery(document).ready(function($) {
             $btn.prop('disabled', false).html('💾 Save Biography Schema Type');
             if (response.success) {
                 showToast('Biography schema type saved!');
-            } else {
-                showToast('Error: ' + (response.data || 'Unknown error'), 'error');
-            }
-        });
-    });
-    
-    // Save RankMath settings (no page reload)
-    $('#sfpf-save-rankmath-settings').on('click', function() {
-        var $btn = $(this);
-        $btn.prop('disabled', true).text('Saving...');
-        
-        $.post(ajaxurl, {
-            action: 'sfpf_save_rankmath_settings',
-            disable_homepage: $('input[name="rankmath_disable_homepage"]').is(':checked') ? 1 : 0,
-            disable_biography: $('input[name="rankmath_disable_biography"]').is(':checked') ? 1 : 0,
-            disable_books: $('input[name="rankmath_disable_books"]').is(':checked') ? 1 : 0,
-            nonce: '<?php echo wp_create_nonce('sfpf_ajax'); ?>'
-        }, function(response) {
-            $btn.prop('disabled', false).html('💾 Save RankMath Settings');
-            if (response.success) {
-                showToast('RankMath settings saved!');
             } else {
                 showToast('Error: ' + (response.data || 'Unknown error'), 'error');
             }

@@ -5,7 +5,8 @@ declare( strict_types=1 );
 namespace sfpf_person_website;
 
 /**
- * Knowledge graph normalization and Rank Math integration.
+ * Knowledge graph ID normalization and Rank Math breadcrumb visibility.
+ * Rank Math's schema output is controlled only by HWS Base Tools (SEO & Rank Math).
  *
  * Callback names remain in the legacy namespace for template and hook compatibility.
  */
@@ -42,31 +43,6 @@ function sanitize_kgid_on_save($value, $post_id, $field) {
     return $value;
 }
 \hexa_fields_on('update_value/name=knowledge_graph_id', __NAMESPACE__ . '\\sanitize_kgid_on_save', 10, 3);
-
-// ============================================================================
-// RANKMATH SCHEMA CONTROL
-// ============================================================================
-
-/**
- * Disable RankMath schema on specific post types
- */
-function disable_rankmath_schema($data) {
-    if (is_front_page() && get_option('sfpf_rankmath_disable_homepage', false)) {
-        return [];
-    }
-
-    $bio_page_id = (int) get_option('sfpf_page_biography', 0);
-    if ($bio_page_id && is_page($bio_page_id) && get_option('sfpf_rankmath_disable_biography', false)) {
-        return [];
-    }
-
-    if (is_singular('book') && get_option('sfpf_rankmath_disable_books', false)) {
-        return [];
-    }
-
-    return $data;
-}
-add_filter('rank_math/json_ld', __NAMESPACE__ . '\\disable_rankmath_schema', 999);
 
 // ============================================================================
 // RANKMATH BREADCRUMB VISIBILITY CONTROL

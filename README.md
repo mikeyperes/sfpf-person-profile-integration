@@ -34,7 +34,7 @@ Reusable behavior is delegated to Hexa WordPress Plugin Core:
 - Schema document encoding and injection.
 - Plugin and Core update panels.
 
-The plugin bundles Core 3.22.0 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
+The plugin bundles Core 3.48.2 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUGIN_CORE_LIBRARY.md) synchronized with the canonical package.
 
 ## Features
 
@@ -68,7 +68,7 @@ The dashboard Shortcodes tab is the canonical source for the complete current li
 | --- | --- |
 | WordPress | 5.8 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.22.0 |
+| Hexa WP Core bundle | 3.48.2 |
 
 HWS Base Tools is recommended for canonical website/entity settings. ACF Pro is not required: the profile, Organization, Book and Quote field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not.
 
@@ -92,9 +92,9 @@ semantics, and truncation signaling are documented in
 
 ## Changelog
 
-### 3.3.3
+### 3.3.4
 
-- The homepage, biography page and books are built with Hexa WP Core 3.22.0's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
+- The homepage, biography page and books are built with Hexa WP Core 3.48.2's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
 - Schema is no longer saved into posts; dashboard previews and the read-only Schema Markup fields show the live schema.
 - Removed SFPF's own Rank Math schema switches; Rank Math's schema is one HWS Base Tools setting. Removed the unused schema templates.
 

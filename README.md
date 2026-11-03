@@ -94,7 +94,11 @@ semantics, and truncation signaling are documented in
 
 ### 3.3.4
 
-- The homepage, biography page and books are built with Hexa WP Core 3.48.2's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
+- Consolidates the person page catalog, conditional registered content layouts and current bundled Core guide.
+
+### 3.3.0
+
+- The homepage, biography page and books are built with Hexa WP Core 3.22.0's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
 - Schema is no longer saved into posts; dashboard previews and the read-only Schema Markup fields show the live schema.
 - Removed SFPF's own Rank Math schema switches; Rank Math's schema is one HWS Base Tools setting. Removed the unused schema templates.
 

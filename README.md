@@ -92,7 +92,7 @@ semantics, and truncation signaling are documented in
 
 ## Changelog
 
-### 3.3.2
+### 3.3.3
 
 - The homepage, biography page and books are built with Hexa WP Core 3.22.0's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
 - Schema is no longer saved into posts; dashboard previews and the read-only Schema Markup fields show the live schema.

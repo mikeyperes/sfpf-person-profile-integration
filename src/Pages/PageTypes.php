@@ -92,6 +92,7 @@ final class PageTypes {
         unset( $page );
         foreach ( [ 'book', 'organization', 'testimonial' ] as $type ) {
             $object = get_post_type_object( $type );
+            if ( ! $object ) { continue; }
             $condition = 'sfpf_content_type_settings.' . $type . '.enabled';
             $slug = $object ? (string) ( $object->rewrite['slug'] ?? $type ) : $type;
             $pages[$type] = [ 'title' => $object->labels->singular_name ?? ucfirst( $type ), 'slug' => '/' . trim( $slug, '/' ) . '/<name>/', 'parent' => '', 'kind' => 'profile', 'design' => 'custom', 'enabled_by_default' => false, 'conditions' => [ $condition ], 'content_source' => 'PersonContentTypes::content_types', 'slug_source' => 'Registered content-type rewrite settings' ];

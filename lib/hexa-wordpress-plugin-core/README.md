@@ -18,6 +18,19 @@
 
 ## Features
 
+- PodcastSeries, PodcastSeason, PodcastEpisode, AudioObject, VideoObject and DataFeed builders with stable IDs, linked graph references, and shared content schema declarations.
+
+### Submission deletion journal and list totals
+- **Does:** atomically records ID/list/UTC deletion tombstones on delete and privacy erase; serialized commits keep deletion cursors reliable. No subscriber personal fields are retained.
+- **Use:** `SubmissionStore::deleted($after,$limit)` returns items, next_after_id and has_more; cursor follows deletion_id. `lists()` includes known empty lists with zero totals. Hosts own authorization, migration and HTTP mapping. InnoDB is required for atomic deletion; a storage failure leaves rows intact.
+- **Code:** src/FrontendForms/SubmissionStore.php; docs/frontend-forms.md.
+
+### Submission snapshot scanning
+- **Does:** reads submissions in ascending ID order with an upper bound and optional collection filter; hosts own authorization.
+- **Use:** `FrontendForms\SubmissionStore::scan($after, $limit, $collection, $upper)` returns items, upper_id, next_after_id and has_more. Reuse upper_id on subsequent pages; limit is clamped to 1-500.
+- **Code:** src/FrontendForms/SubmissionStore.php.
+
+
 ### Shortcode inline styles
 - **Does:** queues inline CSS by WordPress handle, surviving discarded render expansions and deduplicating late shortcode styles.
 - **Use:** \Hexa\PluginCore\PublicComponents\InlineStyles::enqueue($handle, $css); see [style lifecycle](docs/shortcode-inline-styles.md).
@@ -260,7 +273,7 @@
 
 ### Schema tools
 - **Does:** the one schema library: node builders, WordPress data sources, shared `@id`s and one merged `hexa-schema` JSON-LD block per page from every plugin, plus the Rank Math schema switch and a schema dashboard.
-- **Use:** `SchemaNodes::organization()`, `person()`, `article()`, `web_page()` and the rest with `SchemaSources` and `SchemaIds`; `SchemaPage::register( $source, $callback )` to add nodes; `RankMathSchemaControl::register()`; `SchemaGraph::standalone_nodes()`, `validation_issues()`; `SchemaDashboardRenderer::render()`.
+- **Use:** `SchemaNodes::organization()`, `person()`, `article()`, `web_page()`, `event()`, `exhibition_event()`, `award_text()` and the rest with `SchemaSources` and `SchemaIds`; `SchemaPage::register( $source, $callback )` to add nodes; `RankMathSchemaControl::register()`; `SchemaGraph::standalone_nodes()`, `validation_issues()`; `SchemaDashboardRenderer::render()`.
 - **Extend:** `hexa_plugin_core_schema_graph`.
 - **Code:** `src/SchemaTools/` (docs: `docs/schema-tools.md`, `docs/schema-standalone-nodes.md`)
 

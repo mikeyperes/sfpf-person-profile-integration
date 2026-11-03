@@ -8,7 +8,7 @@ use Hexa\PluginCore\Sitemaps\SitemapsPanel;
 
 /**
  * The sitemaps this plugin owns: the person's content types (books,
- * organizations, press releases, interviews, contributing profiles, quotes).
+ * organizations, press releases, interviews, contributing profiles, quotes, awards, exhibitions).
  * HWS Base Tools shows them read-only and links to the Sitemaps tab.
  */
 final class SitemapTypes implements ModuleInterface {
@@ -21,6 +21,9 @@ final class SitemapTypes implements ModuleInterface {
             $defs[] = [ 'id' => 'post_type_' . $type, 'recommended' => true, 'why' => $why ];
         }
         $defs[] = [ 'id' => 'post_type_quote', 'recommended' => static fn( array $row ) => ! empty( $row['recommended'] ), 'why' => 'Quotes follow the usual content type rule.' ];
+        foreach ( [ 'award' => 'Awards', 'exhibition' => 'Exhibitions' ] as $type => $label ) {
+            $defs[] = [ 'id' => 'post_type_' . $type, 'recommended' => static fn( array $row ) => ! empty( $row['recommended'] ), 'why' => $label . ' follow the usual content type rule, once the content type is on.' ];
+        }
         return $defs;
     }
 

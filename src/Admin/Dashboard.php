@@ -21,7 +21,7 @@ final class Dashboard {
 
     private const GROUPS = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'content-types', 'shortcodes', 'schema' ] ],
+        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'content-types', 'awards', 'exhibitions', 'shortcodes', 'schema' ] ],
         [ 'label' => 'Site', 'tabs' => [ 'pages', 'templates', 'faq' ] ],
         [ 'label' => 'System', 'tabs' => [ 'debug', 'hexa-core' ] ],
     ];
@@ -38,6 +38,8 @@ final class Dashboard {
         'overview'   => 'overview',
         'settings'   => 'profile',
         'content-types' => 'profile',
+        'awards'     => 'profile',
+        'exhibitions' => 'profile',
         'shortcodes' => 'profile',
         'schema'     => 'profile',
         'pages'      => 'site',
@@ -234,6 +236,8 @@ final class Dashboard {
                 'overview'      => 'Status',
                 'settings'      => 'Settings',
                 'content-types' => 'Custom Post Types',
+                'awards'        => 'Awards',
+                'exhibitions'   => 'Exhibitions',
                 'shortcodes'    => 'Shortcodes',
                 'schema'        => 'Schema',
                 'pages'         => 'Pages & Menus',

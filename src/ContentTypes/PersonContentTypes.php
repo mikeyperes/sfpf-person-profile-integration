@@ -174,8 +174,76 @@ final class PersonContentTypes {
                         ],
                     ],
                 ]
+            )
+            ->add(
+                [
+                    'id' => 'award', 'owner' => 'SFPF Person Profile Integration',
+                    'description' => 'Awards and recognitions the person received, with year, giver and source.',
+                    'enabled_default' => false,
+                    'post_type' => [
+                        'key' => 'award', 'singular' => 'Award', 'plural' => 'Awards', 'rewrite_slug' => 'award',
+                        'args' => [ 'has_archive' => 'awards', 'supports' => [ 'title', 'editor', 'excerpt', 'thumbnail', 'custom-fields' ], 'rewrite' => [ 'with_front' => false, 'feeds' => false ] ] + self::profile_content_type_args( 'dashicons-awards', 25 ),
+                    ],
+                    'field_groups' => [
+                        [
+                            'id' => 'award-fields', 'label' => 'Award Fields',
+                            'description' => 'Year, giver (text or Organization record), source URL and featured flag. The award name is the post title.',
+                            'group_key' => 'group_sfpf_award', 'enabled_default' => false,
+                            'definition' => 'sfpf_person_website\\award_acf_field_group',
+                            'fields' => [ 'Year', 'Given By', 'Given By (Organization Record)', 'URL', 'Featured' ],
+                            'dependencies' => [],
+                        ],
+                    ],
+                ]
+            )
+            ->add(
+                [
+                    'id' => 'exhibition', 'owner' => 'SFPF Person Profile Integration',
+                    'description' => 'Exhibitions, shows and fairs where the person\'s work was displayed.',
+                    'enabled_default' => false,
+                    'post_type' => [
+                        'key' => 'exhibition', 'singular' => 'Exhibition', 'plural' => 'Exhibitions', 'rewrite_slug' => 'exhibition',
+                        'args' => [ 'has_archive' => 'exhibitions', 'supports' => [ 'title', 'editor', 'excerpt', 'thumbnail', 'custom-fields' ], 'rewrite' => [ 'with_front' => false, 'feeds' => false ] ] + self::profile_content_type_args( 'dashicons-art', 26 ),
+                    ],
+                    'field_groups' => [
+                        [
+                            'id' => 'exhibition-fields', 'label' => 'Exhibition Fields',
+                            'description' => 'Type, dates, venue, city, address, organizer, URL, works shown, gallery and featured flag. The exhibition name is the post title.',
+                            'group_key' => 'group_sfpf_exhibition', 'enabled_default' => false,
+                            'definition' => 'sfpf_person_website\\exhibition_acf_field_group',
+                            'fields' => [ 'Type', 'Start Date', 'End Date', 'Venue', 'City', 'Address', 'Organizer', 'Organizer (Organization Record)', 'URL', 'Works Shown', 'Gallery', 'Featured' ],
+                            'dependencies' => [],
+                        ],
+                    ],
+                ]
             );
         return self::$content_types;
+    }
+
+    /**
+     * A display-only registry holding the chosen content types, for tabs that
+     * show one type. Saving still goes through the main registry's AJAX action.
+     *
+     * @param string[] $only   IDs to keep (empty keeps all).
+     * @param string[] $except IDs to leave out.
+     */
+    public static function view( array $only = [], array $except = [] ): ContentTypeRegistry {
+        $main = self::content_types();
+        $view = new ContentTypeRegistry(
+            [
+                'option_name' => $main->config( 'option_name' ), 'capability' => $main->config( 'capability' ),
+                'ajax_action' => $main->config( 'ajax_action' ), 'nonce_action' => $main->config( 'nonce_action' ),
+                'nonce_field' => $main->config( 'nonce_field' ), 'hook_priority' => $main->config( 'hook_priority' ),
+            ]
+        );
+        foreach ( $main->definitions() as $definition ) {
+            $id = (string) $definition['id'];
+            if ( ( $only && ! in_array( $id, $only, true ) ) || in_array( $id, $except, true ) ) {
+                continue;
+            }
+            $view->add( $definition );
+        }
+        return $view;
     }
 
     public static function acf_groups( ?PluginContextInterface $context = null ): AcfFieldGroupRegistry {
@@ -217,7 +285,7 @@ final class PersonContentTypes {
     }
 
     private static function load_definitions(): void {
-        foreach ( [ 'register-acf-book.php', 'register-acf-profile-content-types.php', 'register-acf-quote.php', 'register-acf-user-schema.php', 'register-acf-homepage.php', 'register-acf-organization.php' ] as $file ) {
+        foreach ( [ 'register-acf-book.php', 'register-acf-profile-content-types.php', 'register-acf-quote.php', 'register-acf-award.php', 'register-acf-exhibition.php', 'register-acf-user-schema.php', 'register-acf-homepage.php', 'register-acf-organization.php' ] as $file ) {
             require_once SFPF_PLUGIN_DIR . 'snippets/' . $file;
         }
     }

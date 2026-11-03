@@ -44,6 +44,7 @@ The plugin bundles Core 3.48.2 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUG
 - Sitemaps: declares the sitemaps of its content types in `src/Sitemaps/SitemapTypes.php` (books, organizations, press releases, interviews and contributing profiles on; quotes follow the usual rule). The Sitemaps tab shows each one's Rank Math state, address and a turn on/off button; HWS Base Tools shows them read-only and links here (Hexa WP Core `SitemapProviders`, `SitemapsPanel`).
 
 - Person FAQ sets and reusable FAQ output.
+- Award and Exhibition CPTs, each switched on and off in its own settings tab (Awards, Exhibitions), both off by default. Award: name (title), year, given by (text or Organization record), source URL, featured; pages at `/award/<name>/` and `/awards/`. Exhibition: name (title), type (solo, group, fair, event), start and end dates, venue, city, address, organizer (text or Organization record), URL, works shown, gallery, featured; pages at `/exhibition/<name>/` and `/exhibitions/`. Their sitemaps follow the usual content type rule.
 - Book CPT, fields, schema, and shortcodes, including a `quotes` repeater with quote text, source URL, and attribution/tagline values.
 - Organization CPT, ACF fields, and deterministic shortcode registration.
 - Optional Press Release, Interview, and Contributing Profile CPTs with independently controlled ACF groups.

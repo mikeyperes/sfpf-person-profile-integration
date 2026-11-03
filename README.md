@@ -38,6 +38,8 @@ The plugin bundles Core 3.22.0 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUG
 
 ## Features
 
+- Canonical person page definitions live in src/Pages/PageTypes.php; legacy structure helpers delegate without changing assignments. Book, Organization and Testimonial layouts follow their content-type switches and registered addresses.
+
 - Person, ProfilePage and Book schema for the homepage, biography page and books, built live with Hexa WP Core's schema library and added to Core's shared `hexa-schema` block (`src/Schema/SchemaProvider.php`, source `sfpf-person`). Rank Math's schema is controlled only by HWS Base Tools.
 - Person FAQ sets and reusable FAQ output.
 - Book CPT, fields, schema, and shortcodes, including a `quotes` repeater with quote text, source URL, and attribution/tagline values.
@@ -90,7 +92,7 @@ semantics, and truncation signaling are documented in
 
 ## Changelog
 
-### 3.3.0
+### 3.3.1
 
 - The homepage, biography page and books are built with Hexa WP Core 3.22.0's shared schema library and printed in Core's one schema block per page. Books are on an ItemPage with the Book as its main entity.
 - Schema is no longer saved into posts; dashboard previews and the read-only Schema Markup fields show the live schema.

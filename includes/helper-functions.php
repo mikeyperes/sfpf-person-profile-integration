@@ -639,67 +639,7 @@ function format_json_display($json, $dark_theme = true) {
  * @return array Pages structure with hierarchy
  */
 function sfpf_site_structure_pages_definition() {
-    return [
-        'biography' => [
-            'title' => 'Biography',
-            'slug' => 'biography',
-            'parent' => null,
-            'children' => [
-                'education' => [
-                    'title' => 'Education',
-                    'slug' => 'education',
-                ],
-                'location_born' => [
-                    'title' => 'Location Born',
-                    'slug' => 'location-born',
-                ],
-                'organizations_founded' => [
-                    'title' => 'Organizations Founded',
-                    'slug' => 'organizations-founded',
-                ],
-                'alternate_names' => [
-                    'title' => 'Alternate Names',
-                    'slug' => 'alternate-names',
-                ],
-            ],
-        ],
-        'professions' => [
-            'title' => 'Professions',
-            'slug' => 'professions',
-            'parent' => null,
-            'children' => [],
-        ],
-        'recent_articles' => [
-            'title' => 'Recent Articles',
-            'slug' => 'recent-articles',
-            'parent' => null,
-            'children' => [],
-        ],
-        'additional_urls' => [
-            'title' => 'Additional URLs',
-            'slug' => 'additional-urls',
-            'parent' => null,
-            'children' => [],
-        ],
-        'connect' => [
-            'title' => 'Connect',
-            'slug' => 'connect',
-            'parent' => null,
-            'children' => [],
-        ],
-        'faqs' => [
-            'title' => 'FAQs',
-            'slug' => 'faqs',
-            'parent' => null,
-            'children' => [],
-        ],
-        'gallery' => [
-            'title' => 'Gallery',
-            'slug' => 'gallery',
-            'parent' => null,
-            'children' => [],
-        ],
-    ];
+    return \SFPF\PersonProfile\Pages\PageTypes::structure();
 }
 
 /**

@@ -41,6 +41,8 @@ The plugin bundles Core 3.48.2 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUG
 - Canonical person page definitions live in src/Pages/PageTypes.php; legacy structure helpers delegate without changing assignments. Book, Organization and Testimonial layouts follow their content-type switches and registered addresses.
 
 - Person, ProfilePage and Book schema for the homepage, biography page and books, built live with Hexa WP Core's schema library and added to Core's shared `hexa-schema` block (`src/Schema/SchemaProvider.php`, source `sfpf-person`). Rank Math's schema is controlled only by HWS Base Tools.
+- Sitemaps: declares the sitemaps of its content types in `src/Sitemaps/SitemapTypes.php` (books, organizations, press releases, interviews and contributing profiles on; quotes follow the usual rule). The Sitemaps tab shows each one's Rank Math state, address and a turn on/off button; HWS Base Tools shows them read-only and links here (Hexa WP Core `SitemapProviders`, `SitemapsPanel`).
+
 - Person FAQ sets and reusable FAQ output.
 - Book CPT, fields, schema, and shortcodes, including a `quotes` repeater with quote text, source URL, and attribution/tagline values.
 - Organization CPT, ACF fields, and deterministic shortcode registration.
@@ -91,6 +93,10 @@ semantics, and truncation signaling are documented in
 [Frontend Query Bounds](docs/frontend-query-bounds.md).
 
 ## Changelog
+
+### 3.4.0
+
+- Sitemaps tab and plugin-owned sitemap declarations (Hexa WP Core 3.51.0).
 
 ### 3.3.4
 

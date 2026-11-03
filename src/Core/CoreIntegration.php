@@ -47,7 +47,8 @@ final class CoreIntegration {
             ->add_module( new GitHubPluginUpdater( $updater ) )
             ->add_module( new UpdaterAjaxController( $updater ) )
             ->add_module( PersonContentTypes::content_types( $context ) )
-            ->add_module( PersonContentTypes::acf_groups( $context ) );
+            ->add_module( PersonContentTypes::acf_groups( $context ) )
+            ->add_module( new \SFPF\PersonProfile\Sitemaps\SitemapTypes() );
 
         SchemaProvider::register();
 

@@ -24,6 +24,8 @@ final class SitemapTypes implements ModuleInterface {
         foreach ( [ 'award' => 'Awards', 'exhibition' => 'Exhibitions' ] as $type => $label ) {
             $defs[] = [ 'id' => 'post_type_' . $type, 'recommended' => static fn( array $row ) => ! empty( $row['recommended'] ), 'why' => $label . ' follow the usual content type rule, once the content type is on.' ];
         }
+        // Site-type rule: a person website lists its authors only when someone besides the person writes.
+        $defs[] = [ 'id' => 'authors', 'site_types' => [ 'personal_website' ], 'recommended' => static fn( array $row ) => (int) ( $row['counts']['would_show'] ?? 0 ) > 1, 'why' => 'On a person website, only when more than one author has posts.' ];
         return $defs;
     }
 

@@ -90,15 +90,26 @@ final class PageTypes {
             }
         }
         unset( $page );
-        foreach ( [ 'book', 'organization', 'testimonial' ] as $type ) {
-            $object = get_post_type_object( $type );
-            if ( ! $object ) { continue; }
-            $condition = 'sfpf_content_type_settings.' . $type . '.enabled';
-            $slug = $object ? (string) ( $object->rewrite['slug'] ?? $type ) : $type;
-            $pages[$type] = [ 'title' => $object->labels->singular_name ?? ucfirst( $type ), 'slug' => '/' . trim( $slug, '/' ) . '/<name>/', 'parent' => '', 'kind' => 'profile', 'design' => 'custom', 'enabled_by_default' => false, 'conditions' => [ $condition ], 'content_source' => 'PersonContentTypes::content_types', 'slug_source' => 'Registered content-type rewrite settings' ];
-            if ( $object && $object->has_archive ) {
-                $url = get_post_type_archive_link( $type );
-                $pages[$type . '_archive'] = [ 'title' => $object->labels->name, 'slug' => trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' ), 'url' => $url, 'kind' => 'layout', 'design' => 'custom', 'enabled_by_default' => false, 'conditions' => [ $condition ], 'content_source' => 'PersonContentTypes::content_types' ];
+        // Media pages: the header's Media menu links to these.
+        foreach ( [
+            'media'      => [ 'title' => 'Media', 'slug' => 'media', 'content_source' => 'Recent Articles, Interviews and Podcasts' ],
+            'interviews' => [ 'title' => 'Interviews', 'slug' => 'interviews', 'content_source' => 'Interview content type' ],
+            'podcasts'   => [ 'title' => 'Podcasts', 'slug' => 'podcasts', 'content_source' => 'Podcasts the person hosts or appears on' ],
+        ] as $key => $page ) {
+            $pages[$key] = $page + [ 'parent' => '', 'kind' => 'page', 'design' => 'custom', 'enabled_by_default' => true, 'conditions' => [], 'slugs' => [] ];
+        }
+        // Every content type this plugin defines, switched on or not: its single page, and its list page where it has one.
+        foreach ( \SFPF\PersonProfile\ContentTypes\PersonContentTypes::content_types()->definitions() as $definition ) {
+            $type      = (string) ( $definition['post_type']['key'] ?? $definition['id'] ?? '' );
+            $archive   = $definition['post_type']['args']['has_archive'] ?? false;
+            $condition = 'sfpf_content_type_settings.' . ( $definition['id'] ?? $type ) . '.enabled';
+            $source    = 'PersonContentTypes::content_types';
+            $slug      = (string) ( $definition['post_type']['rewrite_slug'] ?? $type );
+            if ( '' === $type ) { continue; }
+            $pages[$type] = [ 'title' => (string) ( $definition['post_type']['singular'] ?? ucfirst( $type ) ), 'slug' => '/' . trim( $slug, '/' ) . '/<name>/', 'parent' => '', 'kind' => 'profile', 'design' => 'custom', 'enabled_by_default' => false, 'conditions' => [ $condition ], 'content_source' => $source, 'slug_source' => 'Registered content-type rewrite settings' ];
+            if ( $archive ) {
+                $path = is_string( $archive ) ? $archive : $slug;
+                $pages[$type . '_archive'] = [ 'title' => (string) ( $definition['post_type']['plural'] ?? ucfirst( $type ) ), 'slug' => trim( $path, '/' ), 'url' => home_url( '/' . trim( $path, '/' ) . '/' ), 'kind' => 'layout', 'design' => 'custom', 'enabled_by_default' => false, 'conditions' => [ $condition ], 'content_source' => $source ];
             }
         }
         return $pages;

@@ -38,6 +38,10 @@ The plugin bundles Core 3.48.2 and keeps [HEXA_PLUGIN_CORE_LIBRARY.md](HEXA_PLUG
 
 ## Features
 
+- Every page a person website's default menus link to is in the page catalog: Media, Interviews and Podcasts pages, and every content type the plugin defines (switched on or not), with its list page where it has one (Organizations, Books, Awards, Exhibitions).
+
+- Site-type sitemap rule: on a person website the authors sitemap is recommended only when more than one author has posts. Bundles Hexa WP Core 3.54.0.
+
 - Canonical person page definitions live in src/Pages/PageTypes.php; legacy structure helpers delegate without changing assignments. Book, Organization and Testimonial layouts follow their content-type switches and registered addresses.
 
 - Person, ProfilePage and Book schema for the homepage, biography page and books, built live with Hexa WP Core's schema library and added to Core's shared `hexa-schema` block (`src/Schema/SchemaProvider.php`, source `sfpf-person`). Rank Math's schema is controlled only by HWS Base Tools.

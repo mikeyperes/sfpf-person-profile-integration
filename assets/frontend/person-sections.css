@@ -21,6 +21,8 @@
 .sfpf-links__item{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25em .75em}
 .sfpf-links__link{display:inline-flex;flex-direction:column;gap:.15em}
 .sfpf-links__title{font-weight:500}
+.sfpf-links--titled .sfpf-links__link{flex-direction:row;align-items:baseline;gap:.4em}
+.sfpf-links--cards .sfpf-links__source{font-weight:400}
 .sfpf-links--cards>.sfpf-links__item{padding:calc(var(--sfpf-gap)*.75) var(--sfpf-gap);border:1px solid var(--sfpf-border);border-radius:var(--sfpf-radius)}
 .sfpf-links--compact>.sfpf-links__item{justify-content:space-between;flex-wrap:nowrap;padding:.5em 0;border-bottom:1px solid var(--sfpf-border)}
 .sfpf-links--compact .sfpf-links__title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -59,7 +61,7 @@ details.sfpf-faq__item[open]>.sfpf-faq__question::after{content:"\2212"}
 .sfpf-organizations__summary p{margin:.25em 0}
 .sfpf-organizations__website{font-size:.875em}
 .sfpf-organizations--compact .sfpf-organizations__item{padding:0}
-.sfpf-organizations--compact .sfpf-organizations__body{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:.25em .75em}
+.sfpf-organizations--compact .sfpf-organizations__body{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:.25em .4em}
 
 .sfpf-profile__part{margin:0 0 calc(var(--sfpf-gap)*1.5)}
 .sfpf-profile__heading{margin:0 0 .5em}

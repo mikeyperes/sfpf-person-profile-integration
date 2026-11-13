@@ -30,7 +30,7 @@ final class ContentLoopShortcode {
         $rows    = absint( $atts['rows'] );
         $count   = QueryLimits::clamp( $rows > 0 ? $columns * min( $rows, $limits['hard_max'] ) : 0, $limits['default'], $limits['hard_max'] );
         if ( ! post_type_exists( $type ) ) {
-            return '';
+            return esc_html( $atts['fallback'] );
         }
         $posts = get_posts( [ 'post_type' => $type, 'post_status' => 'publish', 'posts_per_page' => $count, 'orderby' => 'date', 'order' => 'DESC', 'ignore_sticky_posts' => true, 'no_found_rows' => true ] );
         if ( [] === $posts ) {

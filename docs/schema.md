@@ -9,6 +9,7 @@ Each page carries one JSON-LD block (`<script id="hexa-schema">`) that every Hex
 | Other pages | Every other page (or only the person pages) | WebPage / ContactPage / ImageGallery / CollectionPage (about: the person), Person, BreadcrumbList | all (default), assigned, off |
 | FAQs | FAQs page and pages showing an FAQ | FAQPage | on, off |
 | Books | Each book, the books list | ItemPage + Book (author: the person); CollectionPage + ItemList | on, off |
+| Organizations | Each organization, the organizations list | ItemPage + Organization (founder: the person when they founded it; the @id the person's worksFor points to); CollectionPage + ItemList | on, off |
 | Awards | Each award, the list | ItemPage; CollectionPage + ItemList; each award also on the Person | on, off |
 | Exhibitions | Each exhibition, the list | ItemPage + ExhibitionEvent (contributor: the person) | on, off |
 | Quotes | Each quote | ItemPage + Quotation | on, off |

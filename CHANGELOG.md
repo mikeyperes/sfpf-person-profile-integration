@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.0.2
+
+- Organization pages get schema: an ItemPage about the Organization (name, legal name, website, summary, logo, founding date, headquarters, address, contact, brands, awards, profiles and Knowledge Graph ID), with the person as founder, and a CollectionPage on the organizations list.
+- Older shortcodes look as they did before 4.0: article links keep their ↗ arrow, article cards keep their source, education reads "school - degree", compact organizations read "name — place", and `[founder action="display_bio_full"]` leaves out the social links block.
+- `[faq_set]` without a slug shows the primary FAQ set again.
+- The title value no longer comes wrapped in a paragraph, so it fits in headings and Elementor's text tags.
+- `[person_loop]` prints its fallback when the content type is off.
+- Article import keeps addresses pasted without https:// when the same paste also has full links, and ignores the visible text of links.
+- Set Up Pages finds an existing articles page at /recent-press/, /press/ or /articles/, and a contact page at /contact/.
+
 ## 4.0.1
 
 - Removes a PHP error log that was committed by mistake and keeps error logs out of the repository.

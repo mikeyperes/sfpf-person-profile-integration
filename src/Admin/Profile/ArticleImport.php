@@ -60,13 +60,14 @@ final class ArticleImport {
         $rest = (string) preg_replace( '/href=["\'][^"\']+["\']/i', '', $input );
         if ( preg_match_all( '#https?://[^\s<>"\')\]]+#i', $rest, $matches ) ) {
             $candidates = array_merge( $candidates, $matches[0] );
+            $rest       = str_replace( $matches[0], ' ', $rest );
         }
-        if ( [] === $candidates ) {
-            foreach ( preg_split( '/[\s,]+/', wp_strip_all_tags( $input ) ) ?: [] as $part ) {
-                $part = trim( $part, " \t\n\r\0\x0B,;\"'<>()[]" );
-                if ( preg_match( '/^[a-z0-9][a-z0-9\-]*(\.[a-z0-9\-]+)*\.[a-z]{2,}(\/\S*)?$/i', $part ) ) {
-                    $candidates[] = $part;
-                }
+        // Links pasted without https:// ("www.site.com/page" or "site.com/page"), from text outside links.
+        $rest = (string) preg_replace( '#<a\b[^>]*>.*?</a>#is', ' ', $rest );
+        foreach ( preg_split( '/[\s,]+/', wp_strip_all_tags( $rest ) ) ?: [] as $part ) {
+            $part = trim( $part, " \t\n\r\0\x0B,;\"'<>()[]" );
+            if ( preg_match( '/^[a-z0-9][a-z0-9\-]*(\.[a-z0-9\-]+)*\.[a-z]{2,}(\/\S*)?$/i', $part ) ) {
+                $candidates[] = $part;
             }
         }
         $urls = [];

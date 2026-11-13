@@ -49,6 +49,7 @@ final class OrganizationsSection implements Section {
                 $html .= '<img class="sfpf-organizations__logo org-logo" src="' . esc_url( $org->logo_url() ) . '" alt="' . esc_attr( $org->name() ) . '" loading="lazy">';
             }
             $html .= '<div class="sfpf-organizations__body"><a class="sfpf-organizations__name org-name" href="' . esc_url( $org->permalink() ) . '">' . esc_html( $org->name() ) . '</a>';
+            $html .= [] !== $facts && 'compact' === $layout ? '<span class="sfpf-organizations__separator" aria-hidden="true"> — </span>' : '';
             $html .= [] !== $facts ? '<span class="sfpf-organizations__facts org-meta">' . esc_html( implode( ' · ', $facts ) ) . '</span>' : '';
             if ( 'compact' !== $layout ) {
                 $summary = $org->summary_html();

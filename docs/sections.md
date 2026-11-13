@@ -35,7 +35,7 @@ Older class names (`founder-education`, `education-item`, `founder-articles`, `o
 </ul>
 ```
 
-`layout="inline"` prints school, degree and year on one line, comma-separated, as `<span>`s.
+`layout="inline"` prints each school on one line as `<span>`s: school - degree in field, year.
 
 ## professions
 
@@ -56,13 +56,13 @@ Older class names (`founder-education`, `education-item`, `founder-articles`, `o
 ```html
 <ul class="sfpf-links__list sfpf-links--titled founder-articles">
   <li class="sfpf-links__item">
-    <a class="sfpf-links__link article-link" href="…" target="_blank" rel="noopener"><span class="sfpf-links__title">Title</span></a>
+    <a class="sfpf-links__link article-link" href="…" target="_blank" rel="noopener"><span class="sfpf-links__arrow article-arrow" aria-hidden="true">↗</span><span class="sfpf-links__title">Title</span></a>
     <span class="sfpf-links__source article-source-tag">forbes.com</span>
   </li>
 </ul>
 ```
 
-`layout="cards"` adds `.sfpf-links__url` under the title and borders each item; `compact` puts the source on the right of one line; `sources` groups items under `.sfpf-links__group-name`. `limit` shows the first n.
+`layout="cards"` moves the source inside the link, adds `.sfpf-links__url` under the title and borders each item (no arrow); `compact` puts the source on the right of one line; `sources` groups items under `.sfpf-links__group-name`. `limit` shows the first n.
 
 ## gallery
 
@@ -108,6 +108,8 @@ Two columns under 900px, one under 560px. `source="knowledge_graph"` shows the K
   </li>
 </ul>
 ```
+
+`layout="compact"` prints one line per organization, name — facts, with `.sfpf-organizations__separator` between them and no summary or website.
 
 ## birthplace, nationality, knowledge_panel, biography
 

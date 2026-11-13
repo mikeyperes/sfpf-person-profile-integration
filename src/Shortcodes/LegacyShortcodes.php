@@ -33,7 +33,7 @@ final class LegacyShortcodes {
         'display_knowledge_panel'          => [ 'id' => 'knowledge_panel' ],
         'display_nationality'              => [ 'id' => 'nationality' ],
         'display_organizations_founded'    => [ 'id' => 'organizations' ],
-        'display_bio_full'                 => [ 'id' => 'profile' ],
+        'display_bio_full'                 => [ 'id' => 'profile', 'parts' => 'biography,alternate_names,education,birthplace,organizations,professions' ],
     ];
 
     /** [founder id="…"] names that are now named differently. */

@@ -105,9 +105,16 @@ final class PersonProfile {
         return '' !== $title ? $title : ValueNormalizer::text( $this->contact( 'title' ) );
     }
 
-    /** The professional title with its basic formatting. */
+    /**
+     * The professional title with its basic formatting. The editor wraps a
+     * one-line title in a paragraph; it is unwrapped so the title fits inside
+     * a heading or a line of text.
+     */
     public function title_html(): string {
-        $html = (string) $this->field( PersonFields::TITLE, '' );
+        $html = trim( (string) $this->field( PersonFields::TITLE, '' ) );
+        if ( preg_match( '~^<p[^>]*>((?:(?!</?p[\s>]).)*)</p>$~is', $html, $match ) ) {
+            $html = trim( $match[1] );
+        }
         return '' !== trim( wp_strip_all_tags( $html ) ) ? wp_kses_post( $html ) : esc_html( $this->title() );
     }
 

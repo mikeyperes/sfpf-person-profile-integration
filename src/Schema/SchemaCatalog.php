@@ -17,6 +17,7 @@ use SFPF\PersonProfile\Schema\Structures\ExhibitionStructure;
 use SFPF\PersonProfile\Schema\Structures\FaqStructure;
 use SFPF\PersonProfile\Schema\Structures\HomepageStructure;
 use SFPF\PersonProfile\Schema\Structures\InterviewStructure;
+use SFPF\PersonProfile\Schema\Structures\OrganizationStructure;
 use SFPF\PersonProfile\Schema\Structures\PersonPagesStructure;
 use SFPF\PersonProfile\Schema\Structures\PressReleaseStructure;
 use SFPF\PersonProfile\Schema\Structures\QuoteStructure;
@@ -42,6 +43,7 @@ final class SchemaCatalog implements ModuleInterface {
             new PersonPagesStructure(),
             new FaqStructure(),
             new BookStructure(),
+            new OrganizationStructure(),
             new AwardStructure(),
             new ExhibitionStructure(),
             new QuoteStructure(),

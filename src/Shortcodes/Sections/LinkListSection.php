@@ -69,15 +69,15 @@ final class LinkListSection implements Section {
         foreach ( $rows as $row ) {
             $title = '' !== $row['title'] ? $row['title'] : Links::pretty( $row['url'] );
             $html .= '<li class="sfpf-links__item"><a class="sfpf-links__link article-link" href="' . esc_url( $row['url'] ) . '" target="_blank" rel="noopener">';
+            $html .= 'titled' === $layout ? '<span class="sfpf-links__arrow article-arrow" aria-hidden="true">↗</span>' : '';
             $html .= '<span class="sfpf-links__title">' . esc_html( $title ) . '</span>';
+            $source = '' !== $row['source'] ? '<span class="sfpf-links__source article-source-tag">' . esc_html( $row['source'] ) . '</span>' : '';
             if ( 'cards' === $layout ) {
-                $html .= '<span class="sfpf-links__url">' . esc_html( Links::pretty( $row['url'] ) ) . '</span>';
+                // A card keeps its source inside the link, above the address.
+                $html .= $source . '<span class="sfpf-links__url">' . esc_html( Links::pretty( $row['url'] ) ) . '</span>';
+                $source = '';
             }
-            $html .= '</a>';
-            if ( '' !== $row['source'] && 'cards' !== $layout ) {
-                $html .= '<span class="sfpf-links__source article-source-tag">' . esc_html( $row['source'] ) . '</span>';
-            }
-            $html .= '</li>';
+            $html .= '</a>' . $source . '</li>';
         }
         return $html . '</ul>';
     }

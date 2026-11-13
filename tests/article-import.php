@@ -12,5 +12,6 @@ $html   = '<p><a href="https://www.forbes.com/a">A</a> and <a href="#">skip</a> 
 sfpf_assert( [ 'https://forbes.com/a', 'https://techcrunch.com/b' ] === $import->extract( $html ), 'Links come from href values and bare text, without anchors, mail links or repeats.' );
 sfpf_assert( [ 'https://example.com/story' ] === $import->extract( "example.com/story\nnot-a-domain" ), 'Bare domains get https://.' );
 sfpf_assert( [] === $import->extract( 'nothing here' ), 'Text without links gives none.' );
+sfpf_assert( [ 'https://forbes.com/a', 'https://cnn.com/b', 'https://example.com/news/x' ] === $import->extract( '<a href="https://forbes.com/a">forbes.com</a> www.example.com/news/x, https://cnn.com/b' ), 'A mixed paste keeps links, full addresses and bare addresses, without the link text.' );
 
 echo "PASS: article links are found and cleaned.\n";

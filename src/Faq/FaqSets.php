@@ -35,7 +35,8 @@ final class FaqSets {
 
     /** One FAQ set by its slug; an empty slug gives the primary set. */
     public static function set( string $slug ): ?array {
-        return self::manager()->resolveSet( self::sets(), sanitize_title( $slug ), (string) get_option( Settings::PRIMARY_FAQ_SET, '' ) );
+        $slug = sanitize_title( $slug );
+        return self::manager()->resolveSet( self::sets(), '' !== $slug ? $slug : 'primary', (string) get_option( Settings::PRIMARY_FAQ_SET, '' ) );
     }
 
     /**

@@ -40,7 +40,9 @@ final class EducationSection implements Section {
             $degree = implode( ' in ', array_map( 'esc_html', array_filter( [ $row['degree'], $row['field'] ] ) ) );
             $html  .= '<li class="sfpf-education__item education-item">';
             if ( $inline ) {
-                $html .= implode( ', ', array_filter( [ '' !== $row['school'] ? '<span class="sfpf-education__school college">' . $school . '</span>' : '', '' !== $degree ? '<span class="sfpf-education__degree degree">' . $degree . '</span>' : '', '' !== $row['year'] ? '<span class="sfpf-education__year year">' . esc_html( $row['year'] ) . '</span>' : '' ] ) );
+                // School - degree in field, year
+                $line  = implode( ' - ', array_filter( [ '' !== $row['school'] ? '<span class="sfpf-education__school college">' . $school . '</span>' : '', '' !== $degree ? '<span class="sfpf-education__degree degree">' . $degree . '</span>' : '' ] ) );
+                $html .= implode( ', ', array_filter( [ $line, '' !== $row['year'] ? '<span class="sfpf-education__year year">' . esc_html( $row['year'] ) . '</span>' : '' ] ) );
             } else {
                 $html .= '' !== $row['school'] ? '<div class="sfpf-education__school college">' . $school . '</div>' : '';
                 $html .= '' !== $degree ? '<div class="sfpf-education__degree degree">' . $degree . '</div>' : '';

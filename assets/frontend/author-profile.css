@@ -1,0 +1,11 @@
+/* The author profile page shown when no Elementor archive template covers /author/name/. */
+.sfpf-author-profile{max-width:1120px;margin:0 auto;padding:48px 20px 64px}
+.sfpf-author-profile__hero{display:grid;grid-template-columns:180px 1fr;gap:32px;align-items:start;margin:0 0 32px}
+.sfpf-author-profile__portrait{width:180px;height:180px;border-radius:16px;object-fit:cover}
+.sfpf-author-profile__name{margin:0 0 8px;line-height:1.1}
+.sfpf-author-profile__title{margin:0 0 16px;opacity:.75;font-size:1.125em}
+.sfpf-author-profile__facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:0 0 32px}
+.sfpf-author-profile__facts dt{font-size:.75em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.65}
+.sfpf-author-profile__facts dd{margin:4px 0 0}
+.sfpf-author-profile>.sfpf-section{margin:0 0 32px}
+@media (max-width:760px){.sfpf-author-profile__hero{grid-template-columns:1fr}.sfpf-author-profile__portrait{width:132px;height:132px}}

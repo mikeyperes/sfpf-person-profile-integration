@@ -4,302 +4,199 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\Admin;
 
+use Hexa\PluginCore\CoreContracts\ModuleInterface;
 use Hexa\PluginCore\CoreRuntime\CoreVersion;
 use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
 use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
+use Hexa\PluginCore\WpAdminComponents\CoreUi;
 use Hexa\PluginCore\WpAdminTabs\HostTabsRenderer;
-use Hexa\PluginCore\WpAdminTabs\TabDefinition;
-use Hexa\PluginCore\WpAdminTabs\TabRegistry;
+use SFPF\PersonProfile\Admin\Actions\PagesActions;
+use SFPF\PersonProfile\Admin\Actions\SchemaActions;
+use SFPF\PersonProfile\Admin\Tabs\BreadcrumbsTab;
+use SFPF\PersonProfile\Admin\Tabs\ContentTypesTab;
+use SFPF\PersonProfile\Admin\Tabs\DebugTab;
+use SFPF\PersonProfile\Admin\Tabs\FaqTab;
+use SFPF\PersonProfile\Admin\Tabs\PagesTab;
+use SFPF\PersonProfile\Admin\Tabs\PersonTab;
+use SFPF\PersonProfile\Admin\Tabs\SchemaTab;
+use SFPF\PersonProfile\Admin\Tabs\SettingsTab;
+use SFPF\PersonProfile\Admin\Tabs\ShortcodesTab;
+use SFPF\PersonProfile\Admin\Tabs\SitemapsTab;
+use SFPF\PersonProfile\Admin\Tabs\StatusTab;
+use SFPF\PersonProfile\Admin\Tabs\Tab;
+use SFPF\PersonProfile\Admin\Tabs\TemplatesTab;
+use SFPF\PersonProfile\Admin\Tabs\UpdateCenterTab;
+use SFPF\PersonProfile\PluginRuntime\PluginMetadata;
 
 defined( 'ABSPATH' ) || exit;
 
-final class Dashboard {
-    private const PAGE_SLUG = 'sfpf-person-profile';
-    private const AJAX_ACTION = 'sfpf_load_dashboard_tab';
-    private const NONCE_ACTION = 'sfpf_dashboard_tabs';
+/**
+ * The plugin's one settings page (Settings, SFPF Person Profile): grouped
+ * tabs in a sidebar through Hexa WP Core's tab shell, each loaded when opened.
+ * Other plugins and Core add tabs through the sfpf_dashboard_tabs and
+ * sfpf_dashboard_render_tab filters.
+ */
+final class Dashboard implements ModuleInterface {
+    public const TAB_ACTION = 'sfpf_load_dashboard_tab';
+    public const TAB_NONCE  = 'sfpf_dashboard_tabs';
+    public const TABS_FILTER   = 'sfpf_dashboard_tabs';
+    public const RENDER_FILTER = 'sfpf_dashboard_render_tab';
 
-    private const GROUPS = [
-        [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profile', 'tabs' => [ 'settings', 'content-types', 'awards', 'exhibitions', 'shortcodes', 'schema' ] ],
-        [ 'label' => 'Site', 'tabs' => [ 'pages', 'templates', 'faq' ] ],
-        [ 'label' => 'System', 'tabs' => [ 'debug', 'hexa-core' ] ],
-    ];
+    private const GROUPS = [ 'Overview', 'Person', 'Schema', 'Content', 'Site', 'System' ];
 
-    private const LEGACY_SECTION_DEFAULTS = [
-        'overview'     => 'overview',
-        'profile'      => 'settings',
-        'site'         => 'pages',
-        'integrations' => 'content-types',
-        'system'       => 'debug',
-    ];
+    /** @var array<string,Tab>|null */
+    private static ?array $tabs = null;
 
-    private const TAB_SECTIONS = [
-        'overview'   => 'overview',
-        'settings'   => 'profile',
-        'content-types' => 'profile',
-        'awards'     => 'profile',
-        'exhibitions' => 'profile',
-        'shortcodes' => 'profile',
-        'schema'     => 'profile',
-        'pages'      => 'site',
-        'templates'  => 'site',
-        'faq'        => 'site',
-        'debug'      => 'system',
-        'hexa-core'  => 'system',
-    ];
-
-    private static bool $registered = false;
-    private static ?TabRegistry $tabRegistry = null;
-
-    public static function register(): void {
-        if ( self::$registered ) {
-            return;
-        }
-
-        add_action( 'admin_menu', [ self::class, 'registerMenu' ] );
-        add_action( 'admin_enqueue_scripts', [ self::class, 'enqueueAssets' ] );
-
-        if ( class_exists( AjaxActionRegistry::class ) ) {
-            ( new AjaxActionRegistry(
-                [
-                    'capability'   => 'manage_options',
-                    'nonce_action' => self::NONCE_ACTION,
-                    'nonce_field'  => 'nonce',
-                ]
-            ) )->register(
-                [
-                    self::AJAX_ACTION => [
-                        'callback' => [ self::class, 'loadTab' ],
-                    ],
-                ]
-            );
-        }
-
-        self::$registered = true;
-    }
-
-    public static function registerMenu(): void {
-        add_options_page(
-            'HWS Person Profile Setup',
-            'HWS Person Profile',
-            'manage_options',
-            self::PAGE_SLUG,
-            [ self::class, 'render' ]
+    public function register(): void {
+        add_action( 'admin_menu', [ $this, 'menu' ] );
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
+        add_filter( 'plugin_action_links_' . PluginMetadata::basename(), [ $this, 'action_links' ] );
+        AjaxActionRegistry::create( [ 'capability' => PluginMetadata::ADMIN_CAPABILITY, 'nonce_action' => self::TAB_NONCE ] )->register(
+            [ self::TAB_ACTION => [ $this, 'load_tab' ] ]
         );
     }
 
-    public static function enqueueAssets( string $hookSuffix ): void {
-        if ( 'settings_page_' . self::PAGE_SLUG !== $hookSuffix ) {
-            return;
-        }
-
-        $css = self::dashboardCss();
-        if ( '' !== $css ) {
-            wp_add_inline_style( 'common', $css );
-        }
+    public function menu(): void {
+        add_options_page( 'SFPF Person Profile', 'SFPF Person Profile', PluginMetadata::ADMIN_CAPABILITY, PluginMetadata::ADMIN_PAGE_SLUG, [ $this, 'render' ] );
     }
 
-    public static function render(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
+    /** @param array<int|string,string> $links */
+    public function action_links( array $links ): array {
+        array_unshift( $links, '<a href="' . esc_url( PluginMetadata::admin_url() ) . '">Settings</a>' );
+        return $links;
+    }
+
+    public function enqueue( string $hook ): void {
+        if ( 'settings_page_' . PluginMetadata::ADMIN_PAGE_SLUG !== $hook ) {
+            return;
+        }
+        wp_enqueue_style( 'sfpf-dashboard', PluginMetadata::url( 'assets/admin/dashboard.css' ), [], PluginMetadata::VERSION );
+        wp_enqueue_script( 'sfpf-dashboard', PluginMetadata::url( 'assets/admin/dashboard.js' ), [], PluginMetadata::VERSION, true );
+        wp_localize_script(
+            'sfpf-dashboard',
+            'sfpfAdmin',
+            [
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( AdminUi::NONCE ),
+                'actions' => [ 'scan' => SchemaActions::SCAN, 'createProfession' => PagesActions::CREATE_PROFESSION, 'deleteProfession' => PagesActions::DELETE_PROFESSION ],
+            ]
+        );
+    }
+
+    public function render(): void {
+        if ( ! current_user_can( PluginMetadata::ADMIN_CAPABILITY ) ) {
             wp_die( esc_html__( 'You do not have permission to view this page.', 'sfpf-person-profile-integration' ) );
         }
-
-        $tabs = self::tabs();
-        $tab  = self::currentTab( $tabs );
-        ?>
-        <div class="wrap sfpf-dashboard sfpf-dashboard-shell">
-            <header class="sfpf-dashboard-header">
-                <div>
-                    <h1>SFPF Person Profile</h1>
-                </div>
-            </header>
-
-            <?php
-            ( new HostTabsRenderer() )->render(
-                [
-                    'tabs'                => $tabs,
-                    'active'              => $tab,
-                    'page_url'            => self::pageUrl(),
-                    'ajax_action'         => self::AJAX_ACTION,
-                    'nonce'               => wp_create_nonce( self::NONCE_ACTION ),
-                    'nonce_field'         => 'nonce',
-                    'root_id'             => 'sfpf-person-profile-tabs',
-                    'panel_id'            => 'sfpf-dashboard-panel',
-                    'label'               => 'SFPF Person Profile sections',
-                    'layout'              => 'sidebar',
-                    'groups'              => self::GROUPS,
-                    'sidebar_identity'    => [
-                        'plugin_name'     => 'SFPF Person Profile',
-                        'current_version' => SFPF_PLUGIN_VERSION,
-                        'github_url'      => 'https://github.com/mikeyperes/sfpf-person-profile-integration',
-                        'core_name'       => CoreVersion::PACKAGE_NAME,
-                        'core_version'    => CoreVersion::current(),
-                        'core_github_url' => 'https://github.com/mikeyperes/hexa-wordpress-plugin-core',
-                    ],
-                    'sidebar_collapsible' => true,
-                    'sidebar_collapsed'   => false,
-                    'sidebar_persist'     => true,
-                    'render_callback'     => [ self::class, 'renderPanel' ],
-                ]
-            );
-            ?>
-            <?php self::renderLegacyHashRedirect(); ?>
-        </div>
-        <?php
-    }
-
-    public static function loadTab( AjaxRequest $request ): array {
-        $tabs = self::tabs();
-        $tab  = $request->key( 'tab', '', 'post' );
-
-        if ( ! isset( $tabs[ $tab ] ) ) {
-            throw AjaxFailure::not_found( 'Unknown dashboard tab.', 'unknown_tab' );
-        }
-
-        ob_start();
-        self::renderPanel( $tab );
-        $html = (string) ob_get_clean();
-
-        return [
-            'html'    => $html,
-            'tab'     => $tab,
-            'section' => self::legacySectionForTab( $tab ),
-            'label'   => self::tabLabel( $tabs[ $tab ] ),
-        ];
-    }
-
-    public static function renderPanel( string $tab ): void {
-        if ( apply_filters( 'sfpf_dashboard_render_tab', false, $tab ) ) {
-            return;
-        }
-
-        $definition = self::tabRegistry()->get( $tab );
-        if ( ! $definition instanceof TabDefinition || ! is_callable( $definition->renderer ) ) {
-            echo '<div class="notice notice-warning"><p>Dashboard panel not found.</p></div>';
-            return;
-        }
-
-        call_user_func( $definition->renderer );
-    }
-
-    private static function renderLegacyPanel( string $tab ): void {
-        if ( 'overview' === $tab ) {
-            require_once SFPF_PLUGIN_DIR . 'admin/dashboard-plugin-info.php';
-        }
-
-        $file = SFPF_PLUGIN_DIR . 'admin/dashboard-' . $tab . '.php';
-        if ( ! is_readable( $file ) ) {
-            echo '<div class="notice notice-warning"><p>Dashboard panel is unavailable.</p></div>';
-            return;
-        }
-
-        include $file;
-    }
-
-    /** @param array<string,mixed> $tabs */
-    private static function currentTab( array $tabs ): string {
-        $requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
-        if ( isset( $tabs[ $requested ] ) ) {
-            return $requested;
-        }
-
-        $section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
-        $legacy  = self::LEGACY_SECTION_DEFAULTS[ $section ] ?? 'overview';
-        if ( isset( $tabs[ $legacy ] ) ) {
-            return $legacy;
-        }
-
-        $keys = array_keys( $tabs );
-        return isset( $keys[0] ) ? (string) $keys[0] : 'overview';
+        CoreUi::render_assets();
+        $tabs   = $this->tab_labels();
+        $active = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab choice.
+        echo '<div class="wrap sfpf-dashboard hpc-ui"><h1>SFPF Person Profile</h1>';
+        ( new HostTabsRenderer() )->render(
+            [
+                'tabs'                => $tabs,
+                'active'              => isset( $tabs[ $active ] ) ? $active : 'overview',
+                'page_url'            => PluginMetadata::admin_url(),
+                'ajax_action'         => self::TAB_ACTION,
+                'nonce'               => wp_create_nonce( self::TAB_NONCE ),
+                'nonce_field'         => 'nonce',
+                'root_id'             => 'sfpf-dashboard-tabs',
+                'panel_id'            => 'sfpf-dashboard-panel',
+                'label'               => 'SFPF Person Profile sections',
+                'layout'              => 'sidebar',
+                'groups'              => $this->groups( $tabs ),
+                'sidebar_identity'    => [
+                    'plugin_name'     => 'SFPF Person Profile',
+                    'current_version' => PluginMetadata::VERSION,
+                    'github_url'      => 'https://github.com/' . PluginMetadata::GITHUB_REPOSITORY,
+                    'core_name'       => CoreVersion::PACKAGE_NAME,
+                    'core_version'    => CoreVersion::current(),
+                    'core_github_url' => 'https://github.com/mikeyperes/hexa-wordpress-plugin-core',
+                ],
+                'sidebar_collapsible' => true,
+                'sidebar_persist'     => true,
+                'render_callback'     => [ $this, 'render_tab' ],
+            ]
+        );
+        echo '</div>';
     }
 
     /** @return array<string,mixed> */
-    private static function tabs(): array {
-        $tabs = [];
-        foreach ( self::tabRegistry()->all() as $tab ) {
-            $tabs[ $tab->id ] = [ 'label' => $tab->label ];
+    public function load_tab( AjaxRequest $request ): array {
+        $tab = $request->key( 'tab', '', 'post' );
+        if ( ! isset( $this->tab_labels()[ $tab ] ) ) {
+            throw AjaxFailure::not_found( 'Unknown tab.', 'unknown_tab' );
         }
+        ob_start();
+        $this->render_tab( $tab );
+        return [ 'html' => (string) ob_get_clean(), 'tab' => $tab ];
+    }
 
-        $filtered = apply_filters( 'sfpf_dashboard_tabs', $tabs );
+    public function render_tab( string $tab ): void {
+        if ( apply_filters( self::RENDER_FILTER, false, $tab ) ) {
+            return;
+        }
+        $definition = self::tabs()[ $tab ] ?? null;
+        if ( null === $definition ) {
+            echo '<div class="notice notice-warning"><p>This section is not available.</p></div>';
+            return;
+        }
+        $definition->render();
+    }
+
+    /** @return array<string,Tab> */
+    public static function tabs(): array {
+        if ( null === self::$tabs ) {
+            self::$tabs = [];
+            foreach ( [
+                new StatusTab(),
+                new PersonTab(),
+                new ShortcodesTab(),
+                new SchemaTab(),
+                new ContentTypesTab(),
+                new ContentTypesTab( 'awards', 'Awards', [ 'award' ], [], 'Awards the person received. Turn the content type on here; each award gets a page at /award/name/, the list is at /awards/, and every award is added to the person\'s schema.' ),
+                new ContentTypesTab( 'exhibitions', 'Exhibitions', [ 'exhibition' ], [], 'Exhibitions, shows and fairs that showed the person\'s work. Each gets a page at /exhibition/name/ with ExhibitionEvent schema, and the list is at /exhibitions/.' ),
+                new PagesTab(),
+                new TemplatesTab(),
+                new FaqTab(),
+                new BreadcrumbsTab(),
+                new SettingsTab(),
+                new SitemapsTab(),
+                new UpdateCenterTab(),
+                new DebugTab(),
+            ] as $tab ) {
+                self::$tabs[ $tab->id() ] = $tab;
+            }
+        }
+        return self::$tabs;
+    }
+
+    /** @return array<string,array{label:string}> Every tab, Core's included, by id. */
+    private function tab_labels(): array {
+        $tabs = [];
+        foreach ( self::tabs() as $id => $tab ) {
+            $tabs[ $id ] = [ 'label' => $tab->label() ];
+        }
+        $filtered = apply_filters( self::TABS_FILTER, $tabs );
         return is_array( $filtered ) ? $filtered : $tabs;
     }
 
-    private static function tabRegistry(): TabRegistry {
-        if ( self::$tabRegistry instanceof TabRegistry ) {
-            return self::$tabRegistry;
+    /**
+     * @param array<string,mixed> $tabs
+     * @return list<array{label:string,tabs:list<string>}>
+     */
+    private function groups( array $tabs ): array {
+        $groups = array_fill_keys( self::GROUPS, [] );
+        foreach ( array_keys( $tabs ) as $id ) {
+            $group = isset( self::tabs()[ $id ] ) ? self::tabs()[ $id ]->group() : 'System';
+            $groups[ $group ][] = (string) $id;
         }
-
-        self::$tabRegistry = new TabRegistry();
-        foreach (
-            [
-                'overview'      => 'Status',
-                'settings'      => 'Settings',
-                'content-types' => 'Custom Post Types',
-                'awards'        => 'Awards',
-                'exhibitions'   => 'Exhibitions',
-                'shortcodes'    => 'Shortcodes',
-                'schema'        => 'Schema',
-                'pages'         => 'Pages & Menus',
-                'templates'     => 'Templates',
-                'faq'           => 'FAQ Structures',
-                'debug'         => 'Debug',
-            ] as $id => $label
-        ) {
-            self::$tabRegistry->add(
-                new TabDefinition(
-                    $id,
-                    $label,
-                    static fn(): mixed => self::renderLegacyPanel( $id )
-                )
-            );
+        $out = [];
+        foreach ( $groups as $label => $ids ) {
+            if ( [] !== $ids ) {
+                $out[] = [ 'label' => $label, 'tabs' => $ids ];
+            }
         }
-
-        return self::$tabRegistry;
-    }
-
-    private static function legacySectionForTab( string $tab ): string {
-        return self::TAB_SECTIONS[ $tab ] ?? 'system';
-    }
-
-    private static function tabLabel( mixed $tab ): string {
-        if ( is_array( $tab ) && isset( $tab['label'] ) ) {
-            return (string) $tab['label'];
-        }
-
-        return (string) $tab;
-    }
-
-    private static function pageUrl(): string {
-        return add_query_arg( 'page', self::PAGE_SLUG, admin_url( 'options-general.php' ) );
-    }
-
-    private static function renderLegacyHashRedirect(): void {
-        $urls = [];
-        foreach ( array_keys( self::tabs() ) as $tab ) {
-            $urls[ $tab ] = add_query_arg( 'tab', $tab, self::pageUrl() );
-        }
-        ?>
-        <script>
-        (function(){
-            var tab = String(window.location.hash || "").replace(/^#/, "");
-            var urls = <?php echo wp_json_encode( $urls ); ?>;
-            if (tab && urls[tab]) window.location.replace(urls[tab]);
-        })();
-        </script>
-        <?php
-    }
-
-    private static function dashboardCss(): string {
-        static $css = null;
-
-        if ( is_string( $css ) ) {
-            return $css;
-        }
-
-        $path = SFPF_PLUGIN_DIR . 'assets/admin/dashboard.css';
-        $css  = is_readable( $path ) ? (string) file_get_contents( $path ) : '';
-
-        return $css;
+        return $out;
     }
 }

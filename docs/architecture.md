@@ -1,32 +1,35 @@
-# SFPF Plugin Architecture
+# Architecture
 
-## Ownership Boundaries
+`initialization.php` (the main file, named so because sites and Code's audit tool activate the plugin by that path) registers the autoloader for `src/`, registers the bundled Hexa WP Core and boots `PluginRuntime\Bootstrap` on `plugins_loaded`. The bootstrap builds one `PluginContext`, one `CoreBootstrap` and adds every feature as a module whose `register()` only adds hooks.
 
-- `initialization.php` owns only plugin metadata, constants, Core package registration, PSR-4 registration, and composition-root startup.
-- `src/Plugin.php` is the namespaced composition root. `src` also contains Core adapters, registries, and deterministic module loaders.
-- includes/runtime contains lifecycle, ACF-profile, diagnostics, SEO, and profile-admin compatibility callbacks.
-- `includes/shortcodes` contains legacy procedural callbacks for Person, Book, loop, and FAQ behavior. Registration is centralized in `Shortcodes/ShortcodeRegistrar`.
-- includes/frontend contains frontend route renderers that are not shortcode handlers.
-- admin/ajax-handlers.php is a compatibility entry point that loads only the module mapped to the current AJAX action.
-- admin/ajax separates settings, schema, site structure, templates, Elementor, professions, diagnostics, and article actions; ordinary admin, dashboard-tab, and unrelated AJAX requests do not parse these modules.
-- `lib/hexa-wordpress-plugin-core` is a byte-for-byte vendored copy of canonical Core and is never the source-of-truth editing location.
+## Namespaces (`SFPF\PersonProfile\…`)
 
-## Domain Ownership
+| Namespace | Owns |
+| --- | --- |
+| `PluginRuntime` | Identity (`PluginMetadata`), autoloader, bootstrap, activation, updater configs |
+| `Settings` | Every option name, default and reader |
+| `Person` | Who the person is (`PersonResolver`), their normalized profile (`PersonProfile`), field names, typed values (`FieldValue`, `PersonFieldValues`), links and Knowledge Graph IDs, organizations founded, query limits |
+| `Fields` | The person's field group, profile-screen repeater protection, duplicate field-group guard, Knowledge Graph ID clean-up, education hints |
+| `ContentTypes\<Type>` | One folder per content type: `<Type>ContentType` (registration), `<Type>Fields` (fields), and a `<Type>Record` reader where shortcodes need one. `ContentTypeCatalog` lists them |
+| `Schema` | The Person node, page nodes, shortcode detection, the structure catalog and `Structures\*` (one class per structure) |
+| `Shortcodes` | Every shortcode, shared attributes and output, `Sections\*` (one class per section) and the older tags |
+| `Pages` | The page catalog, starting content, Core's page manager and profession pages |
+| `Faq` | FAQ sets |
+| `Elementor` | Dynamic tags, display condition, social icon cleanup |
+| `Frontend` | Author profile pages, breadcrumb visibility |
+| `Admin` | Settings page, `Tabs\*`, `Actions\*` (AJAX), `Checks\*`, `Profile\*` (profile screen) |
+| `Migrations` | One class per one-time upgrade and their runner |
+| `Diagnostics` | Profile report and its debug page |
+| `Sitemaps`, `Support` | Sitemap declarations; activity log and plugin requirements |
 
-SFPF owns Person profile behavior, the Book content type, Person/Book field structures, FAQ sets, bounded Person-to-Organization relationship views, and its page/template orchestration.
+## Shared Core
 
-SFPF is the canonical owner of Organization CPT registration, the `group_sfpf_organization` ACF structure, primary Organization resolution, and the `[organization]` shortcode. Existing HWS content-type settings and legacy SFPF field toggles are migrated into SFPF's Core-backed content-type store without deleting their source options. Organization schema may still delegate to a dedicated integration when one is installed.
+Generic behavior lives in Hexa WP Core (`lib/hexa-wordpress-plugin-core`, never edited here): schema builders and the `SchemaStructures` registry, content types and field groups, the page manager, admin tabs and UI, AJAX guards, shortcode catalogs, FAQ sets, schema scanning, sitemaps, activity logs and updaters. The plugin adds only person-website definitions.
 
-## Compatibility Policy
+## Stored data
 
-Public Person/Organization/Book/FAQ shortcode tags, action names, filters, and procedural callback names remain in `sfpf_person_website` until a versioned deprecation path exists. New orchestration code uses the `SFPF\PersonProfile` namespace.
+Field keys and names (`tests/fixtures/stored-field-keys.json`) and option names never change; upgrades in `Migrations` move older data without deleting it.
 
-## Shared Core Policy
+## Query bounds
 
-Generic grouped admin tabs, tab/shortcode catalogs, updater controls, AJAX registration and request guards, activity-log storage, plugin checks, site-structure services, value/row/URL/media normalization, and reusable UI primitives belong in Hexa WordPress Plugin Core. SFPF owns the Person/Book/FAQ definitions, tab labels and panels, dependency policy, domain-specific Wikidata filtering, schema construction, and host-specific callback mapping.
-
-The procedural AJAX, logging, ACF getter, URL collection, and gallery functions are compatibility seams, not alternate implementations. AJAX modules are selected by the current action and registered through Core with one capability/nonce policy. Existing log rows are migrated in place to Core's permanent activity-log format while legacy callers continue receiving their historical array shape. Normalization callbacks delegate to Core while retaining their historical empty-value, ordering, deduplication, and fixed gallery-record contracts.
-
-## Regression Limits
-
-The standalone suite enforces thin bootstrap files, bounded ownership modules, synchronized Core vendors, no arbitrary PHP evaluation, no unauthenticated SFPF AJAX actions, centralized Core-backed registries and logging, Organization ownership, gallery schema mapping, and server-side social-icon filtering.
+Public queries are bounded: organizations founded load in batches of 20 up to 100 (`sfpf_founder_organizations_default_limit`, `sfpf_founder_organizations_hard_max`), lists up to 12 by default and 48 at most (`sfpf_loop_default_limit`, `sfpf_loop_hard_max`). `sfpf_founder_organizations_allow_inventory_fallback` turns off the fallback to every published organization when no founder relation exists.

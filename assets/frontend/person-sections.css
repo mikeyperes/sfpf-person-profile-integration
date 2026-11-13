@@ -1,0 +1,71 @@
+/*
+ * SFPF person sections. Layout and spacing only: text color, font and link
+ * color come from the page, so a section fits any design. Override the
+ * variables on .sfpf-section (or a parent) to adjust; add style="none" to a
+ * shortcode to leave these styles off.
+ */
+.sfpf-section{--sfpf-gap:16px;--sfpf-radius:8px;--sfpf-border:rgba(0,0,0,.12);--sfpf-muted:rgba(0,0,0,.6);--sfpf-surface:rgba(0,0,0,.03);margin:0 0 var(--sfpf-gap)}
+.sfpf-section ul{list-style:none;margin:0;padding:0}
+.sfpf-section__heading{margin:0 0 calc(var(--sfpf-gap)*.75)}
+.sfpf-section a{text-decoration:none}
+.sfpf-section a:hover,.sfpf-section a:focus-visible{text-decoration:underline}
+
+.sfpf-education__list,.sfpf-professions__list,.sfpf-organizations__list{display:grid;gap:var(--sfpf-gap)}
+.sfpf-education__school,.sfpf-professions__name{font-weight:600}
+.sfpf-education__degree,.sfpf-education__year,.sfpf-organizations__facts,.sfpf-links__source,.sfpf-links__url,.sfpf-gallery__item figcaption{color:var(--sfpf-muted);font-size:.875em}
+.sfpf-education--inline .sfpf-education__item>span:not(:last-child)::after{content:""}
+.sfpf-professions__summary p{margin:.25em 0}
+.sfpf-professions__link{display:inline-block;margin-top:.25em;font-size:.875em}
+
+.sfpf-links__list{display:grid;gap:calc(var(--sfpf-gap)*.5)}
+.sfpf-links__item{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25em .75em}
+.sfpf-links__link{display:inline-flex;flex-direction:column;gap:.15em}
+.sfpf-links__title{font-weight:500}
+.sfpf-links--cards>.sfpf-links__item{padding:calc(var(--sfpf-gap)*.75) var(--sfpf-gap);border:1px solid var(--sfpf-border);border-radius:var(--sfpf-radius)}
+.sfpf-links--compact>.sfpf-links__item{justify-content:space-between;flex-wrap:nowrap;padding:.5em 0;border-bottom:1px solid var(--sfpf-border)}
+.sfpf-links--compact .sfpf-links__title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfpf-links__group{margin:0 0 var(--sfpf-gap)}
+.sfpf-links__group-name{margin:0 0 .5em;font-size:.75em;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--sfpf-muted)}
+
+.sfpf-gallery__grid{display:grid;grid-template-columns:repeat(var(--sfpf-gallery-columns,3),minmax(0,1fr));gap:var(--sfpf-gap)}
+.sfpf-gallery__item{margin:0;border-radius:var(--sfpf-radius);overflow:hidden;background:var(--sfpf-surface)}
+.sfpf-gallery__item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.sfpf-gallery__item figcaption{padding:.5em .75em}
+@media (max-width:900px){.sfpf-gallery__grid{grid-template-columns:repeat(min(2,var(--sfpf-gallery-columns,3)),minmax(0,1fr))}}
+@media (max-width:560px){.sfpf-gallery__grid{grid-template-columns:1fr}}
+
+.sfpf-faq__items{display:grid;gap:calc(var(--sfpf-gap)*.625)}
+.sfpf-faq__item{border:1px solid var(--sfpf-border);border-radius:var(--sfpf-radius);overflow:hidden}
+.sfpf-faq__question{display:flex;align-items:center;justify-content:space-between;gap:.75em;margin:0;padding:.875em 1em;font-weight:600;line-height:1.4;cursor:pointer;list-style:none}
+.sfpf-faq__question::-webkit-details-marker{display:none}
+details.sfpf-faq__item>.sfpf-faq__question::after{content:"+";font-size:1.25em;line-height:1;color:var(--sfpf-muted)}
+details.sfpf-faq__item[open]>.sfpf-faq__question::after{content:"\2212"}
+.sfpf-faq__answer{padding:0 1em .875em;line-height:1.65}
+.sfpf-faq__answer>:first-child{margin-top:0}.sfpf-faq__answer>:last-child{margin-bottom:0}
+.sfpf-faq__items--list .sfpf-faq__question{cursor:auto}
+
+.sfpf-socials__list{display:grid;gap:.375em}
+.sfpf-socials--inline .sfpf-socials__list{display:flex;flex-wrap:wrap;gap:.5em 1em}
+.sfpf-contact__list{display:grid;gap:.5em;margin:0 0 var(--sfpf-gap)}
+.sfpf-contact__row{display:flex;flex-wrap:wrap;gap:.25em .75em}
+.sfpf-contact__row dt{min-width:5em;font-weight:600}
+.sfpf-contact__row dd{margin:0}
+
+.sfpf-organizations__item{display:flex;gap:var(--sfpf-gap);align-items:flex-start}
+.sfpf-organizations--cards .sfpf-organizations__item{padding:var(--sfpf-gap);border:1px solid var(--sfpf-border);border-radius:var(--sfpf-radius)}
+.sfpf-organizations__logo{flex:0 0 72px;width:72px;height:72px;object-fit:contain;border-radius:calc(var(--sfpf-radius)*.75)}
+.sfpf-organizations__body{display:flex;flex-direction:column;gap:.25em;min-width:0}
+.sfpf-organizations__name{font-weight:600}
+.sfpf-organizations__summary p{margin:.25em 0}
+.sfpf-organizations__website{font-size:.875em}
+.sfpf-organizations--compact .sfpf-organizations__item{padding:0}
+.sfpf-organizations--compact .sfpf-organizations__body{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:.25em .75em}
+
+.sfpf-profile__part{margin:0 0 calc(var(--sfpf-gap)*1.5)}
+.sfpf-profile__heading{margin:0 0 .5em}
+.sfpf-birthplace__label{font-weight:600}
+
+.sfpf-loop{display:grid;grid-template-columns:repeat(var(--sfpf-loop-columns,3),minmax(0,1fr));gap:20px}
+@media (max-width:768px){.sfpf-loop{grid-template-columns:repeat(min(2,var(--sfpf-loop-columns,3)),minmax(0,1fr))}}
+@media (max-width:480px){.sfpf-loop{grid-template-columns:1fr}}
+.sfpf-organization-profile__logo{max-width:160px;height:auto}

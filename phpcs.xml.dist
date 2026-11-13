@@ -6,8 +6,6 @@
     <arg value="sp"/>
 
     <file>src</file>
-    <file>admin/settings-dashboard.php</file>
-    <file>admin/dashboard-plugin-info.php</file>
     <file>tests</file>
 
     <config name="minimum_supported_wp_version" value="5.8"/>

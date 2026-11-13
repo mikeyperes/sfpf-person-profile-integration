@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  * Consolidates legacy Book quote fields into the canonical quotes repeater.
  * Legacy metadata is retained after verification so the migration is reversible.
  */
-final class BookQuoteRepeaterMigration {
+final class BookQuoteRepeaterMigration implements Migration {
     public const OPTION = 'sfpf_book_quotes_repeater_migration';
     public const VERSION = '1';
 
@@ -25,8 +25,12 @@ final class BookQuoteRepeaterMigration {
     /** @var list<string> */
     private const LEGACY_SINGLE_FIELDS = [ 'quote', 'book_quote' ];
 
-    public static function register(): void {
-        \hexa_fields_on( 'init', [ self::class, 'run' ], 20 );
+    public function id(): string {
+        return 'book-quote-repeater-' . self::VERSION;
+    }
+
+    public function migrate(): bool {
+        return [] === self::run()['errors'];
     }
 
     /** @return array<string,mixed> */

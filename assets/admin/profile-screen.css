@@ -1,0 +1,21 @@
+/* Person profile fields on the WordPress user profile screens. */
+#acf-group_sfpf_user_schema_structures{background:#fff!important;border:1px solid #c3c4c7!important;border-radius:8px!important;margin:20px 0!important;box-shadow:0 1px 3px rgba(0,0,0,.05)!important}
+#acf-group_sfpf_user_schema_structures>.postbox-header,#acf-group_sfpf_user_schema_structures>h2{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;color:#fff!important;padding:12px 15px!important;margin:0!important;border-radius:8px 8px 0 0!important}
+#acf-group_sfpf_user_schema_structures>.postbox-header .hndle,#acf-group_sfpf_user_schema_structures>h2{color:#fff!important;font-weight:600!important}
+#acf-group_sfpf_user_schema_structures>.inside,#acf-group_sfpf_user_schema_structures .acf-fields{background:#fff!important;padding:15px!important}
+#acf-group_sfpf_user_schema_structures .acf-label label{font-weight:600!important;color:#1e1e1e!important}
+#acf-group_sfpf_user_schema_structures .acf-field .description,#acf-group_sfpf_user_schema_structures .acf-field .acf-instructions{background:transparent!important;padding:5px 0!important;color:#666!important;font-size:12px!important}
+#acf-group_sfpf_user_schema_structures .acf-field .acf-instructions code{background:#e8f4fc!important;color:#0073aa!important;padding:2px 6px!important;border-radius:3px!important;font-size:11px!important}
+#acf-group_sfpf_user_schema_structures .acf-repeater .acf-row{background:#fff!important;border:1px solid #e5e7eb!important;border-radius:6px!important;margin-bottom:10px!important}
+#acf-group_sfpf_user_schema_structures .acf-repeater .acf-row .acf-fields{padding:10px!important}
+#acf-group_sfpf_user_schema_structures input[type=text],#acf-group_sfpf_user_schema_structures input[type=url],#acf-group_sfpf_user_schema_structures textarea{border-radius:4px!important}
+/* Fields for another entity type stay in the form (so saving never clears them) and are only hidden. */
+.acf-field.sfpf-entity-hidden{display:none!important}
+.sfpf-profile-hint{color:#6b7280}
+#sfpf-articles-report{display:none;margin-top:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;font-size:12px;font-family:"SF Mono",Menlo,Monaco,monospace;line-height:1.6;overflow:hidden;flex-direction:column;max-height:500px}
+#sfpf-articles-report.is-open{display:flex}
+#sfpf-articles-report-header,#sfpf-articles-report-footer{padding:12px 16px;flex-shrink:0}
+#sfpf-articles-report-header{border-bottom:1px solid #334155}
+#sfpf-articles-report-footer{border-top:1px solid #334155}
+#sfpf-articles-report-body{padding:16px;overflow-y:auto;flex:1;color:#e2e8f0;white-space:pre-wrap}
+.sfpf-report-ok{color:#4ade80;font-weight:700}.sfpf-report-warn{color:#fbbf24;font-weight:700}.sfpf-report-bad{color:#f87171;font-weight:700}.sfpf-report-muted{color:#94a3b8}

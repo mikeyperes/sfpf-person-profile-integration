@@ -56,22 +56,25 @@ final class LinkListSection implements Section {
             ksort( $groups );
             $html = '';
             foreach ( $groups as $source => $items ) {
-                $html .= '<div class="sfpf-links__group"><div class="sfpf-links__group-name">' . esc_html( $source ) . ' <span>(' . count( $items ) . ')</span></div>' . self::list( $items, 'titled' ) . '</div>';
+                $html .= '<div class="sfpf-links__group"><div class="sfpf-links__group-name">' . esc_html( $source ) . ' <span>(' . count( $items ) . ')</span></div>' . self::list( $items, 'titled', false ) . '</div>';
             }
             return $html;
         }
         return self::list( $rows, $layout );
     }
 
-    /** @param list<array{title:string,source:string,url:string}> $rows */
-    private static function list( array $rows, string $layout ): string {
+    /**
+     * @param list<array{title:string,source:string,url:string}> $rows
+     * @param bool $sources False under a source's own heading, where the name would repeat.
+     */
+    private static function list( array $rows, string $layout, bool $sources = true ): string {
         $html = '<ul class="sfpf-links__list sfpf-links--' . esc_attr( $layout ) . ' founder-articles format-' . esc_attr( $layout ) . '">';
         foreach ( $rows as $row ) {
             $title = '' !== $row['title'] ? $row['title'] : Links::pretty( $row['url'] );
             $html .= '<li class="sfpf-links__item"><a class="sfpf-links__link article-link" href="' . esc_url( $row['url'] ) . '" target="_blank" rel="noopener">';
             $html .= 'titled' === $layout ? '<span class="sfpf-links__arrow article-arrow" aria-hidden="true">↗</span>' : '';
             $html .= '<span class="sfpf-links__title">' . esc_html( $title ) . '</span>';
-            $source = '' !== $row['source'] ? '<span class="sfpf-links__source article-source-tag">' . esc_html( $row['source'] ) . '</span>' : '';
+            $source = $sources && '' !== $row['source'] ? '<span class="sfpf-links__source article-source-tag">' . esc_html( $row['source'] ) . '</span>' : '';
             if ( 'cards' === $layout ) {
                 // A card keeps its source inside the link, above the address.
                 $html .= $source . '<span class="sfpf-links__url">' . esc_html( Links::pretty( $row['url'] ) ) . '</span>';

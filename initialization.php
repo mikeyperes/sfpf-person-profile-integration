@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://github.com/mikeyperes/sfpf-person-profile-integration
  * Description: Person profile websites for SEO for Public Figures: the person's fields, schema for search engines and Knowledge Panels, shortcodes, pages and content types.
- * Version: 4.0.2
+ * Version: 4.0.3
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration

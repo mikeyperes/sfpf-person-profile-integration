@@ -50,11 +50,19 @@ final class OrganizationsSection implements Section {
             }
             $html .= '<div class="sfpf-organizations__body"><a class="sfpf-organizations__name org-name" href="' . esc_url( $org->permalink() ) . '">' . esc_html( $org->name() ) . '</a>';
             $html .= [] !== $facts && 'compact' === $layout ? '<span class="sfpf-organizations__separator" aria-hidden="true"> — </span>' : '';
-            $html .= [] !== $facts ? '<span class="sfpf-organizations__facts org-meta">' . esc_html( implode( ' · ', $facts ) ) . '</span>' : '';
+            $website = 'compact' !== $layout && '' !== $org->website() ? '<a class="sfpf-organizations__website org-url" href="' . esc_url( $org->website() ) . '" target="_blank" rel="noopener">' . esc_html( Links::pretty( $org->website() ) ) . '</a>' : '';
+            if ( 'list' === $layout ) {
+                // A list item reads "place · website" on one line, then the summary.
+                $line    = implode( ' · ', array_filter( [ esc_html( implode( ' · ', $facts ) ), $website ] ) );
+                $html   .= '' !== $line ? '<span class="sfpf-organizations__facts org-meta">' . $line . '</span>' : '';
+                $website = '';
+            } else {
+                $html .= [] !== $facts ? '<span class="sfpf-organizations__facts org-meta">' . esc_html( implode( ' · ', $facts ) ) . '</span>' : '';
+            }
             if ( 'compact' !== $layout ) {
                 $summary = $org->summary_html();
                 $html   .= '' !== trim( wp_strip_all_tags( $summary ) ) ? '<div class="sfpf-organizations__summary org-summary">' . wpautop( $summary ) . '</div>' : '';
-                $html   .= '' !== $org->website() ? '<a class="sfpf-organizations__website org-url" href="' . esc_url( $org->website() ) . '" target="_blank" rel="noopener">' . esc_html( Links::pretty( $org->website() ) ) . '</a>' : '';
+                $html   .= $website;
             }
             $html .= '</div></li>';
         }

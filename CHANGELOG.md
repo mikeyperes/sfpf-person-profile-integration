@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.3
+
+- Articles grouped by source no longer repeat the source name on each item.
+- The organization list layout shows "place · website" on one line above the summary, as before 4.0.
+
 ## 4.0.2
 
 - Organization pages get schema: an ItemPage about the Organization (name, legal name, website, summary, logo, founding date, headquarters, address, contact, brands, awards, profiles and Knowledge Graph ID), with the person as founder, and a CollectionPage on the organizations list.

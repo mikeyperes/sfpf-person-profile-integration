@@ -109,7 +109,7 @@ Two columns under 900px, one under 560px. `source="knowledge_graph"` shows the K
 </ul>
 ```
 
-`layout="compact"` prints one line per organization, name — facts, with `.sfpf-organizations__separator` between them and no summary or website.
+`layout="list"` puts the website on the facts line (place · website) above the summary. `layout="compact"` prints one line per organization, name — facts, with `.sfpf-organizations__separator` between them and no summary or website.
 
 ## birthplace, nationality, knowledge_panel, biography
 

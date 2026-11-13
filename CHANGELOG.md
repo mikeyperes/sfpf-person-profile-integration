@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- Removes a PHP error log that was committed by mistake and keeps error logs out of the repository.
+
 ## 4.0.0
 
 - Rebuilt on the modern structure: every feature is a Hexa WP Core module in its own namespace under `src/` (PluginRuntime, Person, Fields, ContentTypes/<Type>, Schema, Shortcodes, Pages, Elementor, Frontend, Admin, Migrations, Diagnostics, Support). The pre-4.0 `includes/`, `admin/`, `snippets/` and `schema/` folders are gone; every stored field key and option name is unchanged.

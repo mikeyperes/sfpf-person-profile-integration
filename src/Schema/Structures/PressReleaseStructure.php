@@ -48,7 +48,7 @@ final class PressReleaseStructure implements SchemaStructure {
                 'dateModified'     => get_the_modified_date( DATE_W3C, $post ),
                 'image'            => SchemaSources::post_image( $id ),
                 'about'            => PersonSchema::exists() ? PersonSchema::ref() : null,
-                'author'           => '' !== $source ? SchemaNodes::thing( $source, '', 'Organization' ) : ( PersonSchema::exists() ? PersonSchema::ref() : null ),
+                'citation'         => '' !== $source ? $source : null,
                 'publisher'        => PersonSchema::exists() ? PersonSchema::ref() : null,
                 'isBasedOn'        => ValueNormalizer::url( FieldReader::acf_value( 'sfpf_press_release_original_url', $id, '', true ) ),
                 'mainEntityOfPage' => SchemaNodes::ref( SchemaIds::webpage( $url ) ),
@@ -56,7 +56,7 @@ final class PressReleaseStructure implements SchemaStructure {
             ],
             'NewsArticle'
         );
-        $graph   = PageSchema::graph( $context );
+        $graph   = PageSchema::graph( $context, 'WebPage', [ 'mainEntity' => SchemaNodes::ref( (string) $article['@id'] ) ] );
         $graph[] = $article;
         return $graph;
     }

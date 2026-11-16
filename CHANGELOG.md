@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.5
+
+- Education schema uses EducationalOrganization because the profile does not store an institution type. Schools are no longer all labeled as colleges or universities.
+- Press release pages identify their NewsArticle as the main entity. A source name is credited as a citation instead of being assumed to be the author.
+- Documents the schema checklist and includes a read-only WordPress integration check for every structure.
+
 ## 4.0.4
 
 - Add the Press Releases section with separate By you and About you switches, both off by default.

@@ -80,7 +80,14 @@ final class PersonSchema {
         }
         $education = [];
         foreach ( $profile->education() as $row ) {
-            $education[] = [ 'school' => $row['school'], 'same_as' => $row['wikipedia_url'], 'degree' => $row['degree'], 'field' => $row['field'], 'year' => $row['year'] ];
+            $education[] = [
+                'school'  => $row['school'],
+                'same_as' => $row['wikipedia_url'],
+                'degree'  => $row['degree'],
+                'field'   => $row['field'],
+                'year'    => $row['year'],
+                'type'    => 'EducationalOrganization',
+            ];
         }
         return [
             '@id'                => self::id(),

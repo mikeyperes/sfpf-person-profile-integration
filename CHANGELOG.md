@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.4
+
+- Add the Press Releases section with separate By you and About you switches, both off by default.
+- Check canonical author URLs and search published Verified Profiles through protected AJAX, using the shared publication contract.
+- Bind settings to the website's person and provide gated release-list sections with canonical profile links and existing layouts.
+- Bundle Hexa WP Core 3.63.0, including its shared press-release profile client.
+
 ## 4.0.3
 
 - Articles grouped by source no longer repeat the source name on each item.

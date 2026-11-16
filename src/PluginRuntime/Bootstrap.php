@@ -12,6 +12,7 @@ use Hexa\PluginCore\PluginUpdates\UpdaterAjaxController;
 use Hexa\PluginCore\WpAdminTabs\CoreTabConfig;
 use Hexa\PluginCore\WpAdminTabs\CoreTabModule;
 use SFPF\PersonProfile\Admin\Actions\PagesActions;
+use SFPF\PersonProfile\Admin\Actions\PressReleaseActions;
 use SFPF\PersonProfile\Admin\Actions\SchemaActions;
 use SFPF\PersonProfile\Admin\Actions\SettingsActions;
 use SFPF\PersonProfile\Admin\Dashboard;
@@ -88,6 +89,7 @@ final class Bootstrap {
                 ->add_module( new Requirements() )
                 ->add_module( new Dashboard() )
                 ->add_module( new SettingsActions() )
+                ->add_module( new PressReleaseActions() )
                 ->add_module( new PagesActions() )
                 ->add_module( new SchemaActions() )
                 ->add_module( new ProfileScreen() )

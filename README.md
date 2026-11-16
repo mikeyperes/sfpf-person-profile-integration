@@ -90,6 +90,14 @@
 - **Switch:** Content Types, Awards and Exhibitions tabs (`sfpf_content_type_settings`).
 - **Code:** `src/ContentTypes/<Type>/` (`<Type>ContentType.php`, `<Type>Fields.php`), `src/ContentTypes/ContentTypeCatalog.php`.
 
+### Press Releases by and about the person
+- **Does:** connects a canonical publication author profile and a Verified Profile to the website's person, with AJAX connection checks, paged person search and separate release lists.
+- **Switch:** Press Releases tab (`sfpf_press_releases`), By you and About you both off by default. Connections are bound to the selected person's user ID.
+- **Use:** `[person_section id="press_releases_by"]`, `[person_section id="press_releases_about"]`; existing link layouts and section attributes, including `style="none"`. Lists show the first remote result page.
+- **Style:** existing link-list classes and variables; `.sfpf-press-releases__profile` links the confirmed author or person profile.
+- **Example:** [docs/press-releases.md](docs/press-releases.md), [list HTML and styling](docs/sections.md).
+- **Code:** `src/PressReleases/`, `src/Admin/Actions/PressReleaseActions.php`, `src/Admin/Tabs/PressReleasesTab.php`, `src/Shortcodes/Sections/PressReleaseSection.php`.
+
 ### Author pages
 - **Does:** /author/name/ shows the author's profile (portrait, title, bio, social profiles, facts, biography, education, links) when no Elementor archive template covers it, with ProfilePage schema and without Rank Math's copy.
 - **Switch:** Settings → Author profile pages (`sfpf_author_archive_profile`), on.
@@ -118,7 +126,7 @@
 
 ## Requirements
 
-WordPress 6.0, PHP 8.1, Hexa WP Core 3.61.0 (bundled at `lib/hexa-wordpress-plugin-core`). ACF Pro is not required.
+WordPress 6.0, PHP 8.1, Hexa WP Core 3.63.0 (bundled at `lib/hexa-wordpress-plugin-core`). ACF Pro is not required.
 
 ## Development
 

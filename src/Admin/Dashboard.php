@@ -12,6 +12,7 @@ use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 use Hexa\PluginCore\WpAdminComponents\CoreUi;
 use Hexa\PluginCore\WpAdminTabs\HostTabsRenderer;
 use SFPF\PersonProfile\Admin\Actions\PagesActions;
+use SFPF\PersonProfile\Admin\Actions\PressReleaseActions;
 use SFPF\PersonProfile\Admin\Actions\SchemaActions;
 use SFPF\PersonProfile\Admin\Tabs\BreadcrumbsTab;
 use SFPF\PersonProfile\Admin\Tabs\ContentTypesTab;
@@ -19,6 +20,7 @@ use SFPF\PersonProfile\Admin\Tabs\DebugTab;
 use SFPF\PersonProfile\Admin\Tabs\FaqTab;
 use SFPF\PersonProfile\Admin\Tabs\PagesTab;
 use SFPF\PersonProfile\Admin\Tabs\PersonTab;
+use SFPF\PersonProfile\Admin\Tabs\PressReleasesTab;
 use SFPF\PersonProfile\Admin\Tabs\SchemaTab;
 use SFPF\PersonProfile\Admin\Tabs\SettingsTab;
 use SFPF\PersonProfile\Admin\Tabs\ShortcodesTab;
@@ -79,7 +81,12 @@ final class Dashboard implements ModuleInterface {
             [
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                 'nonce'   => wp_create_nonce( AdminUi::NONCE ),
-                'actions' => [ 'scan' => SchemaActions::SCAN, 'createProfession' => PagesActions::CREATE_PROFESSION, 'deleteProfession' => PagesActions::DELETE_PROFESSION ],
+                'actions' => [
+                    'scan' => SchemaActions::SCAN,
+                    'createProfession' => PagesActions::CREATE_PROFESSION,
+                    'deleteProfession' => PagesActions::DELETE_PROFESSION,
+                    'pressCheck' => PressReleaseActions::CHECK,
+                ],
             ]
         );
     }
@@ -151,6 +158,7 @@ final class Dashboard implements ModuleInterface {
             foreach ( [
                 new StatusTab(),
                 new PersonTab(),
+                new PressReleasesTab(),
                 new ShortcodesTab(),
                 new SchemaTab(),
                 new ContentTypesTab(),

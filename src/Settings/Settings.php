@@ -15,6 +15,7 @@ final class Settings {
     public const HOMEPAGE_SCHEMA_CHOSEN     = 'sfpf_homepage_schema_explicitly_saved';
     public const BIOGRAPHY_SCHEMA_MODE      = 'sfpf_biography_schema_type';
     public const PRIMARY_BOOK               = 'sfpf_primary_book';
+    public const PRESS_RELEASES              = 'sfpf_press_releases';
     public const PRIMARY_ORGANIZATION       = 'sfpf_primary_organization';
     public const FAQ_SETS                   = 'sfpf_faq_sets';
     public const PRIMARY_FAQ_SET            = 'sfpf_primary_faq_set';

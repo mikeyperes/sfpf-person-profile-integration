@@ -11,3 +11,12 @@
 Nothing loads in `wp_head` on every page; the schema block is data, printed by Core.
 
 To check: compare the home page, a person page with sections, a book page and the settings page with the browser's network panel; the sections stylesheet appears only as the inline style `sfpf-person-sections-inline-css` on pages with sections.
+
+## Press Releases
+
+The Press Releases tab reuses `assets/admin/dashboard.js`, already limited to
+the SFPF settings page. Its delegated handlers support tabs loaded by AJAX.
+There is no new admin asset. The home page and an article load no additional
+assets. A page explicitly using an enabled release section uses the existing
+section stylesheet on first nonempty output, or no stylesheet with
+`style="none"`. Disabled and empty release sections load no assets.

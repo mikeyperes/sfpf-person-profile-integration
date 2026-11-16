@@ -23,6 +23,8 @@ final class SectionRegistry {
                 new ProfessionsSection(),
                 new LinkListSection( 'articles', 'Articles', static fn( PersonProfile $profile ): array => $profile->articles() ),
                 new LinkListSection( 'additional_urls', 'Additional links', static fn( PersonProfile $profile ): array => $profile->additional_urls() ),
+                new PressReleaseSection( 'by' ),
+                new PressReleaseSection( 'about' ),
                 new GallerySection(),
                 new FaqSection(),
                 new SocialsSection(),

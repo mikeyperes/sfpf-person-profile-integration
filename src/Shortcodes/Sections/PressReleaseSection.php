@@ -17,7 +17,7 @@ final class PressReleaseSection implements Section {
     public function __construct( private readonly string $mode ) {
         $this->links = new LinkListSection(
             'press_releases_' . $mode,
-            'Press releases ' . ( 'by' === $mode ? 'by you' : 'about you' ),
+            'Press releases ' . strtolower( PressReleaseSettings::MODES[ $mode ] ),
             fn( PersonProfile $person ): array => PressReleaseSource::rows( $person, $this->mode )
         );
     }

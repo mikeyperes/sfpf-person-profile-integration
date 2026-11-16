@@ -81,20 +81,44 @@ final class PressReleaseActions implements ModuleInterface {
         }
         $same_author = $origin === ( $saved['origin'] ?? '' ) && $author_url === ( $saved['author_url'] ?? '' );
         $same_profile = $origin === ( $saved['origin'] ?? '' ) && $profile_id === (int) ( $saved['profile_id'] ?? 0 );
+        $author = $this->resolve_connection( $author, $saved, 'author', $same_author );
+        $profile = $this->resolve_connection( $profile, $saved, 'profile', $same_profile );
         update_option( Settings::PRESS_RELEASES, [
             'person_id' => $person_id,
             'origin' => $origin,
             'by' => $by,
             'about' => $about,
-            'author_id' => (int) ( $author['id'] ?? ( $same_author ? ( $saved['author_id'] ?? 0 ) : 0 ) ),
+            'author_id' => (int) ( $author['id'] ?? 0 ),
             'author_url' => (string) ( $author['url'] ?? $author_url ),
-            'author_name' => (string) ( $author['name'] ?? ( $same_author ? ( $saved['author_name'] ?? '' ) : '' ) ),
+            'author_name' => (string) ( $author['name'] ?? '' ),
             'profile_id' => $profile_id,
-            'profile_name' => (string) ( $profile['name'] ?? ( $same_profile ? ( $saved['profile_name'] ?? '' ) : $request->text( 'profile_label', '', 'post' ) ) ),
-            'profile_url' => (string) ( $profile['url'] ?? ( $same_profile ? ( $saved['profile_url'] ?? '' ) : '' ) ),
+            'profile_name' => (string) ( $profile['name'] ?? $request->text( 'profile_label', '', 'post' ) ),
+            'profile_url' => (string) ( $profile['url'] ?? '' ),
         ], false );
         ActivityLog::add( 'Press release connections saved.' );
-        return [ 'message' => 'Saved. By you: ' . ( $by ? 'on' : 'off' ) . '. About you: ' . ( $about ? 'on' : 'off' ) . '.' ];
+        return [
+            'message' => 'Saved. ' . PressReleaseSettings::MODES['by'] . ': ' . ( $by ? 'on' : 'off' )
+                . '. ' . PressReleaseSettings::MODES['about'] . ': ' . ( $about ? 'on' : 'off' ) . '.',
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $fresh
+     * @param array<string,mixed> $saved
+     * @return array<string,mixed>
+     */
+    private function resolve_connection( array $fresh, array $saved, string $prefix, bool $unchanged ): array {
+        if ( [] !== $fresh ) {
+            return $fresh;
+        }
+        if ( ! $unchanged ) {
+            return [];
+        }
+        return [
+            'id'   => (int) ( $saved[ $prefix . '_id' ] ?? 0 ),
+            'name' => (string) ( $saved[ $prefix . '_name' ] ?? '' ),
+            'url'  => (string) ( $saved[ $prefix . '_url' ] ?? '' ),
+        ];
     }
 
     private function require_person( AjaxRequest $request ): int {

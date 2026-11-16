@@ -41,7 +41,8 @@ is linked above the release list. These lists show the first remote result
 page; `limit` can shorten that list. Layouts are `titled`, `cards`, `sources`
 and `compact`, with the existing section attributes, including `style="none"`.
 No remote request runs for a disabled section. Successful release lists are
-cached for five minutes and failures are not cached.
+cached for five minutes. Failed calls cache an empty list for one minute,
+so an unavailable publication is not contacted on every page view.
 
 The wrapper classes are `.sfpf-press-releases-by` and
 `.sfpf-press-releases-about`. The profile link uses

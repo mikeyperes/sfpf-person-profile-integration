@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.6
+
+- Centralize the publication origin default and By you/About you labels.
+- Split Press Releases settings into focused field renderers and resolve saved connections through one helper.
+- Cache failed release requests as empty lists for one minute to avoid repeated calls during an outage.
+- Preserve the education and press-release schema fixes from 4.0.5 and the bundled Hexa WP Core 3.63.0.
+
 ## 4.0.5
 
 - Education schema uses EducationalOrganization because the profile does not store an institution type. Schools are no longer all labeled as colleges or universities.

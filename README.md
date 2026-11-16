@@ -91,7 +91,7 @@
 - **Code:** `src/ContentTypes/<Type>/` (`<Type>ContentType.php`, `<Type>Fields.php`), `src/ContentTypes/ContentTypeCatalog.php`.
 
 ### Press Releases by and about the person
-- **Does:** connects a canonical publication author profile and a Verified Profile to the website's person, with AJAX connection checks, paged person search and separate release lists.
+- **Does:** connects a canonical publication author profile and a Verified Profile to the website's person, with AJAX connection checks, paged person search and separate release lists. Successful lists are cached for five minutes; failed calls are cached as empty lists for one minute.
 - **Switch:** Press Releases tab (`sfpf_press_releases`), By you and About you both off by default. Connections are bound to the selected person's user ID.
 - **Use:** `[person_section id="press_releases_by"]`, `[person_section id="press_releases_about"]`; existing link layouts and section attributes, including `style="none"`. Lists show the first remote result page.
 - **Style:** existing link-list classes and variables; `.sfpf-press-releases__profile` links the confirmed author or person profile.

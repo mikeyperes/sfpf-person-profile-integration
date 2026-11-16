@@ -35,10 +35,11 @@ final class PressReleaseSource {
         }
         $client = new PressReleaseProfilesClient();
         $result = 'by' === $mode ? $client->author_releases( $origin, $id ) : $client->releases( $origin, $id );
-        $rows = [];
         if ( empty( $result['success'] ) ) {
+            set_transient( $key, [], MINUTE_IN_SECONDS );
             return self::$rows[ $key ] = [];
         }
+        $rows = [];
         foreach ( (array) ( $result['data']['items'] ?? [] ) as $release ) {
             $url = esc_url_raw( (string) ( $release['url'] ?? '' ), [ 'https' ] );
             if ( '' !== $url ) {

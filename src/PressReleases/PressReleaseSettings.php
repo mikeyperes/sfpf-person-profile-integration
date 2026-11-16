@@ -11,7 +11,8 @@ defined( 'ABSPATH' ) || exit;
 
 /** The two press-release sections belong to the website's selected person. */
 final class PressReleaseSettings {
-    public const MODES = [ 'by' => 'By you', 'about' => 'About you' ];
+    public const DEFAULT_ORIGIN = 'https://hexaprwire.com';
+    public const MODES          = [ 'by' => 'By you', 'about' => 'About you' ];
 
     /** @return array<string,mixed> */
     public static function current(): array {

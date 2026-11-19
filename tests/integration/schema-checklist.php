@@ -76,11 +76,11 @@ $fields = [
 $metadata = static function ( mixed $value, int $id, string $key ) use ( $fixture_id, &$fields ): mixed {
     return $id === $fixture_id && array_key_exists( $key, $fields ) ? [ $fields[ $key ] ] : $value;
 };
-$acf = static function ( mixed $value, mixed $id, array $field ) use ( $fixture_id, &$fields ): mixed {
+$core_field = static function ( mixed $value, mixed $id, array $field ) use ( $fixture_id, &$fields ): mixed {
     return (int) $id === $fixture_id && isset( $fields[ $field['name'] ] ) ? $fields[ $field['name'] ] : $value;
 };
 add_filter( 'get_post_metadata', $metadata, 10, 3 );
-add_filter( 'acf/pre_load_value', $acf, 10, 3 );
+add_filter( 'hexa_fields/load_value', $core_field, 10, 3 );
 $expected = [
     'award'                => 'ItemPage',
     'exhibition'           => 'ExhibitionEvent',
@@ -115,7 +115,7 @@ try {
     }
 } finally {
     remove_filter( 'get_post_metadata', $metadata, 10 );
-    remove_filter( 'acf/pre_load_value', $acf, 10 );
+    remove_filter( 'hexa_fields/load_value', $core_field, 10 );
 }
 $assert( count( $expected ) === $fixtures, 'Not every fixture structure was checked.' );
 foreach ( (array) ( PersonSchema::node()['alumniOf'] ?? [] ) as $school ) {

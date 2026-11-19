@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.7
+
+- Use the Hexa WP Core field engine on which this plugin already registers all of its profile fields.
+
 ## 4.0.6
 
 - Centralize the publication origin default and By you/About you labels.

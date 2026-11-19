@@ -15,6 +15,8 @@
 
 ## Features
 
+- Hexa WP Core 3.64.0 registers and edits Person Profile user fields. Existing profile, schema and education fields retain their stored values and keys.
+
 ### The website's person
 - **Does:** every value comes from one WordPress user: the Person chosen as the site's primary entity in HWS Base Tools (a user, or the user bound to a person post). Older sites that set a founder user keep working.
 - **Switch:** HWS Base Tools → Website Profile.
@@ -126,7 +128,7 @@
 
 ## Requirements
 
-WordPress 6.0, PHP 8.1, Hexa WP Core 3.63.0 (bundled at `lib/hexa-wordpress-plugin-core`). ACF Pro is not required.
+WordPress 6.0, PHP 8.1, Hexa WP Core 3.64.0 (bundled at `lib/hexa-wordpress-plugin-core`).
 
 ## Development
 

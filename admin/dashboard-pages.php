@@ -313,8 +313,8 @@ jQuery(document).ready(function($) {
                 $status.html('<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:4px;font-size:12px;">Set</span>');
                 
                 // Replace create button with edit/view links
-                var editUrl = '<?php echo admin_url('post.php?post='); ?>' + response.data.page_id + '&action=edit';
-                var viewUrl = '<?php echo home_url('/'); ?>' + slug + '/';
+                var editUrl = response.data.edit_url || ('<?php echo admin_url('post.php?post='); ?>' + response.data.page_id + '&action=edit');
+                var viewUrl = response.data.permalink;
                 $btn.replaceWith('<a href="' + editUrl + '" target="_blank" class="button button-small">Edit</a> <a href="' + viewUrl + '" target="_blank" class="button button-small">View</a> <button type="button" class="button button-small sfpf-apply-page-template" data-page-id="' + response.data.page_id + '" data-page-key="' + pageKey + '">Apply Template</button>');
                 
                 showToast('✅ Page created: ' + title, 'success');

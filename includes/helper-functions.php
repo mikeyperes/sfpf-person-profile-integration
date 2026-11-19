@@ -616,6 +616,36 @@ function get_front_page_id() {
 }
 
 /**
+ * Check whether a post ID is the configured front page.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_front_page_id($post_id) {
+    return (int) $post_id > 0 && (int) $post_id === (int) get_front_page_id();
+}
+
+/**
+ * Check whether a post ID is the configured biography page.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_biography_page_id($post_id) {
+    return (int) $post_id > 0 && (int) $post_id === (int) get_option('sfpf_page_biography', 0);
+}
+
+/**
+ * Check whether a page should receive SFPF-generated page schema.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+function is_schema_managed_page_id($post_id) {
+    return is_front_page_id($post_id) || is_biography_page_id($post_id);
+}
+
+/**
  * =============================================================================
  * ACF STRUCTURE DISPLAY
  * =============================================================================

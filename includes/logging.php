@@ -19,6 +19,10 @@ defined('ABSPATH') || exit;
  * @param string $type Log type (info, warning, error)
  */
 function write_log($message, $type = 'info') {
+    if (!is_string($type) || $type === '') {
+        $type = 'info';
+    }
+
     $log = get_option('sfpf_activity_log', []);
     
     // Keep only last 100 entries

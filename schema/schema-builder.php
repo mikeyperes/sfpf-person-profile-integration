@@ -270,24 +270,43 @@ function build_person_schema() {
  * Build homepage / biography schema for injection AND dashboard preview.
  *
  * @param string $schema_type  person | profile_page_only | profile_page
+ * @param int|null $page_id Specific page ID to model the ProfilePage node on
  * @return string|null  JSON string
  */
-function build_homepage_schema_for_injection($schema_type) {
+function build_homepage_schema_for_injection($schema_type, $page_id = null) {
     $person = build_person_schema();
     if (empty($person)) return null;
 
-    $site_url  = rtrim(get_site_url(), '/');
-    $site_name = get_bloginfo('name');
-    $site_desc = get_bloginfo('description');
+    $site_url   = rtrim(get_site_url(), '/');
+    $site_name  = get_bloginfo('name');
+    $site_desc  = get_bloginfo('description');
+    $page_id    = $page_id ? (int) $page_id : (int) get_option('page_on_front');
+    $page_url   = $page_id ? get_permalink($page_id) : home_url('/');
+    $page_url   = $page_url ? $page_url : $site_url . '/';
+    $page_name  = $site_name;
+    $page_desc  = $site_desc;
+
+    if ($page_id) {
+        $stored_title = get_the_title($page_id);
+        $stored_excerpt = wp_strip_all_tags((string) get_post_field('post_excerpt', $page_id));
+
+        if (!empty($stored_title)) {
+            $page_name = $stored_title;
+        }
+
+        if (!empty($stored_excerpt)) {
+            $page_desc = $stored_excerpt;
+        }
+    }
 
     $schema = ['@context' => 'https://schema.org', '@graph' => []];
 
     // ProfilePage node
     $pp = [
         '@type'      => 'ProfilePage',
-        '@id'        => $site_url . '/#profilepage',
-        'url'        => $site_url . '/',
-        'name'       => $site_name,
+        '@id'        => $page_url . '#profilepage',
+        'url'        => $page_url,
+        'name'       => $page_name,
         'inLanguage' => 'en-US',
         'isPartOf'   => [
             '@type' => 'WebSite',
@@ -296,12 +315,11 @@ function build_homepage_schema_for_injection($schema_type) {
             'name'  => $site_name,
         ],
     ];
-    if ($site_desc) $pp['description'] = $site_desc;
+    if ($page_desc) $pp['description'] = $page_desc;
 
-    $fp = get_option('page_on_front');
-    if ($fp) {
-        $dm = get_post_modified_time('c', true, $fp);
-        $dc = get_post_time('c', true, $fp);
+    if ($page_id) {
+        $dm = get_post_modified_time('c', true, $page_id);
+        $dc = get_post_time('c', true, $page_id);
         if ($dm) $pp['dateModified'] = $dm;
         if ($dc) $pp['dateCreated']  = $dc;
     }
@@ -312,7 +330,7 @@ function build_homepage_schema_for_injection($schema_type) {
         : '';
     if ($pi) {
         $pp['primaryImageOfPage'] = [
-            '@type' => 'ImageObject', '@id' => $site_url . '/#headshot',
+            '@type' => 'ImageObject', '@id' => $page_url . '#primaryimage',
             'url' => $pi, 'contentUrl' => $pi,
         ];
     }
@@ -346,7 +364,7 @@ function build_person_schema_from_settings($include_context = false) {
     return $p;
 }
 function build_homepage_schema($post_id, $schema_type = 'profile_page') {
-    $j = build_homepage_schema_for_injection($schema_type);
+    $j = build_homepage_schema_for_injection($schema_type, $post_id);
     return $j ? json_decode($j, true) : [];
 }
 
@@ -658,6 +676,6 @@ function handle_schema_on_save($post_id, $post) {
     if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
     $ok = ['book', 'organization', 'page'];
     if (!in_array($post->post_type, $ok, true)) return;
-    if ($post->post_type === 'page' && !is_front_page_id($post_id)) return;
+    if ($post->post_type === 'page' && !is_schema_managed_page_id($post_id)) return;
     generate_and_save_schema($post_id);
 }

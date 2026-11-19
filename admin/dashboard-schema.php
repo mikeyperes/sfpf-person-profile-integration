@@ -15,6 +15,7 @@ $homepage_schema_type = get_option('sfpf_homepage_schema_type', 'person');
 
 // RankMath disable options
 $rankmath_disable_homepage = get_option('sfpf_rankmath_disable_homepage', false);
+$rankmath_disable_biography = get_option('sfpf_rankmath_disable_biography', false);
 $rankmath_disable_books = get_option('sfpf_rankmath_disable_books', false);
 $rankmath_disable_organizations = get_option('sfpf_rankmath_disable_organizations', false);
 $rankmath_disable_testimonials = get_option('sfpf_rankmath_disable_testimonials', false);
@@ -167,7 +168,7 @@ $rankmath_disable_testimonials = get_option('sfpf_rankmath_disable_testimonials'
     <?php else:
         // Use the REAL builder — same function that injects on the live site
         $hp_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-            ? build_homepage_schema_for_injection($homepage_schema_type) : null;
+            ? build_homepage_schema_for_injection($homepage_schema_type, get_front_page_id()) : null;
         if ($hp_json):
             $hp_decoded = json_decode($hp_json, true);
     ?>
@@ -206,7 +207,7 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
         <p style="color:#dc2626;text-align:center;padding:20px;">No founder configured.</p>
     <?php else:
         $bio_json = function_exists(__NAMESPACE__ . '\\build_homepage_schema_for_injection') 
-            ? build_homepage_schema_for_injection($biography_schema_type) : null;
+            ? build_homepage_schema_for_injection($biography_schema_type, $bio_page_id_preview) : null;
         if ($bio_json):
             $bio_decoded = json_decode($bio_json, true);
     ?>
@@ -327,6 +328,11 @@ if ($bio_page_id_preview && $biography_schema_type !== 'none'):
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
             <input type="checkbox" name="rankmath_disable_homepage" value="1" <?php checked($rankmath_disable_homepage, true); ?> class="sfpf-rankmath-toggle">
             <span>Disable RankMath schema on <strong>Homepage</strong></span>
+        </label>
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="rankmath_disable_biography" value="1" <?php checked($rankmath_disable_biography, true); ?> class="sfpf-rankmath-toggle">
+            <span>Disable RankMath schema on <strong>Biography Page</strong></span>
         </label>
         
         <?php if (is_snippet_enabled('sfpf_enable_book_cpt')): ?>
@@ -639,6 +645,7 @@ jQuery(document).ready(function($) {
         $.post(ajaxurl, {
             action: 'sfpf_save_rankmath_settings',
             disable_homepage: $('input[name="rankmath_disable_homepage"]').is(':checked') ? 1 : 0,
+            disable_biography: $('input[name="rankmath_disable_biography"]').is(':checked') ? 1 : 0,
             disable_books: $('input[name="rankmath_disable_books"]').is(':checked') ? 1 : 0,
             disable_organizations: $('input[name="rankmath_disable_organizations"]').is(':checked') ? 1 : 0,
             disable_testimonials: $('input[name="rankmath_disable_testimonials"]').is(':checked') ? 1 : 0,

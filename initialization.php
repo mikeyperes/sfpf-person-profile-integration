@@ -165,6 +165,7 @@ function activate_plugin() {
     // Set default options — add_option only writes if key doesn't exist yet
     add_option('sfpf_homepage_schema_type', 'person');
     add_option('sfpf_biography_schema_type', 'profile_page_only');
+    add_option('sfpf_rankmath_disable_biography', false);
     
     // Migration: fix sites that had the old 'none' default from previous activation bug
     $current_hp = get_option('sfpf_homepage_schema_type');
@@ -1048,6 +1049,11 @@ add_filter('acf/update_value/name=knowledge_graph_id', __NAMESPACE__ . '\\saniti
  */
 function disable_rankmath_schema($data) {
     if (is_front_page() && get_option('sfpf_rankmath_disable_homepage', false)) {
+        return [];
+    }
+
+    $bio_page_id = (int) get_option('sfpf_page_biography', 0);
+    if ($bio_page_id && is_page($bio_page_id) && get_option('sfpf_rankmath_disable_biography', false)) {
         return [];
     }
     

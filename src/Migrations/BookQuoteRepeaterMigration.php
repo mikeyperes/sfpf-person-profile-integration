@@ -51,7 +51,7 @@ final class BookQuoteRepeaterMigration implements Migration {
         ];
 
         if ( ! function_exists( 'get_posts' ) || ! function_exists( 'get_post_meta' ) || ! \Hexa\PluginCore\Fields\Field::available() ) {
-            $report['errors'][] = 'The WordPress and ACF field APIs required for Book quote migration are unavailable.';
+            $report['errors'][] = 'The WordPress and Hexa WP Core field APIs required for Book quote migration are unavailable.';
             return $report;
         }
 

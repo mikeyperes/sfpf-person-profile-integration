@@ -15,6 +15,8 @@
 
 ## Features
 
+- The Book Quote migration names the Core field engine in its requirements message.
+
 - Hexa WP Core 3.64.0 registers and edits Person Profile user fields. Existing profile, schema and education fields retain their stored values and keys.
 
 ### The website's person

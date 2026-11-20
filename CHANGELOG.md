@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.8
+
+- Name the Core field engine in the Book Quote migration requirements message.
+
 ## 4.0.7
 
 - Use the Hexa WP Core field engine on which this plugin already registers all of its profile fields.

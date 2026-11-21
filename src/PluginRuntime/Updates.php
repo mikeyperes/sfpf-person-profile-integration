@@ -15,24 +15,18 @@ final class Updates {
     private static ?CorePackageConfig $core = null;
 
     public static function plugin(): UpdaterConfig {
-        return self::$plugin ??= UpdaterConfig::from_plugin_file(
+        return self::$plugin ??= UpdaterConfig::from_managed_plugin_file(
             PluginMetadata::plugin_file(),
             PluginMetadata::GITHUB_REPOSITORY,
+            PluginMetadata::SLUG,
+            'sfpf_core_updater',
             [
-                'plugin_slug'               => PluginMetadata::SLUG,
-                'proper_folder_name'        => PluginMetadata::SLUG,
-                'runtime_folder_name'       => dirname( PluginMetadata::basename() ),
-                'plugin_basename'           => PluginMetadata::basename(),
-                'canonical_plugin_basename' => PluginMetadata::SLUG . '/' . PluginMetadata::MAIN_FILE,
-                'plugin_starter_file'       => PluginMetadata::MAIN_FILE,
-                'github_branch'             => PluginMetadata::GITHUB_BRANCH,
-                'requires'                  => PluginMetadata::REQUIRES_WORDPRESS,
-                'tested'                    => PluginMetadata::TESTED_WORDPRESS,
-                'requires_php'              => PluginMetadata::REQUIRES_PHP,
-                'nonce_action'              => 'sfpf_core_updater',
-                'nonce_param'               => 'nonce',
-                'ajax_action_prefix'        => 'sfpf_core_updater',
-                'progress_key'              => 'sfpf_core_update_progress',
+                'plugin_starter_file' => PluginMetadata::MAIN_FILE,
+                'github_branch'       => PluginMetadata::GITHUB_BRANCH,
+                'requires'            => PluginMetadata::REQUIRES_WORDPRESS,
+                'tested'              => PluginMetadata::TESTED_WORDPRESS,
+                'requires_php'        => PluginMetadata::REQUIRES_PHP,
+                'plugin_basename'     => PluginMetadata::basename(),
             ]
         );
     }

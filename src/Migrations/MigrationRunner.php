@@ -25,6 +25,7 @@ final class MigrationRunner implements ModuleInterface {
             new SchemaModesMigration(),
             new BookQuoteRepeaterMigration(),
             new RewriteRulesMigration(),
+            new PressReleaseOriginMigration(),
         ];
     }
 

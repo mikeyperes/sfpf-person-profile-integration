@@ -18,9 +18,14 @@ final class PressReleaseSettings {
         return (string) get_option( Settings::PRESS_RELEASE_DEFAULT_ORIGIN, '' );
     }
 
-    /** Save the initial origin without changing the person's connections or switches. */
-    public static function save_default_origin( string $origin ): void {
-        update_option( Settings::PRESS_RELEASE_DEFAULT_ORIGIN, esc_url_raw( $origin, [ 'https' ] ), false );
+    /** Create the initial origin only when no setting exists. */
+    public static function seed_default_origin( string $origin ): bool {
+        $option = Settings::PRESS_RELEASE_DEFAULT_ORIGIN;
+        if ( null !== get_option( $option, null ) ) {
+            return true;
+        }
+        $origin = esc_url_raw( $origin, [ 'https' ] );
+        return '' !== $origin && ( add_option( $option, $origin, '', false ) || null !== get_option( $option, null ) );
     }
 
     /** @return array<string,mixed> */

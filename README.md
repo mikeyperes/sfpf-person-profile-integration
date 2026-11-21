@@ -15,6 +15,8 @@
 
 ## Features
 
+- The one-time upgrade preserves the previous press-release form origin where it was never saved. Existing origins and publication switches are preserved.
+
 - The initial press-release connection origin can be configured per site. Existing person connections and switches keep their saved values.
 
 - The Book Quote migration names the Core field engine in its requirements message.

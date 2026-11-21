@@ -46,13 +46,17 @@ final class PressReleasesTab implements Tab {
 
     /** @param array<string,mixed> $saved */
     private function origin_field( array $saved ): string {
-        $origin = (string) ( $saved['origin'] ?? PressReleaseSettings::DEFAULT_ORIGIN );
+        // Bug: an unconfigured form was tied to a specific press-wire site.
+        // Fix: use the selected origin or the site's saved initial origin.
+        // Why this way: connection switches and read-only checks keep their existing behavior.
+        $origin = (string) ( $saved['origin'] ?? PressReleaseSettings::default_origin() );
         return '<p><label><strong>Publication origin</strong><br><input type="url" class="large-text" name="origin" value="' . esc_attr( $origin ) . '" required></label></p>';
     }
 
     /** @param array<string,mixed> $saved */
     private function by_you_block( array $saved ): string {
-        $placeholder = PressReleaseSettings::DEFAULT_ORIGIN . '/author/…/';
+        $default = PressReleaseSettings::default_origin();
+        $placeholder = '' !== $default ? untrailingslashit( $default ) . '/author/…/' : 'https://example.com/author/…/';
         return AdminUi::toggle( 'by', PressReleaseSettings::enabled( 'by' ), PressReleaseSettings::MODES['by'], 'Show releases authored by this person on Hexa PR Wire.' )
             . '<p><label><strong>Author profile URL</strong><br><input type="url" class="large-text" name="author_url" value="' . esc_attr( (string) ( $saved['author_url'] ?? '' ) ) . '" placeholder="' . esc_attr( $placeholder ) . '"></label></p>'
             . $this->check_button( 'author', 'Check author connection' );

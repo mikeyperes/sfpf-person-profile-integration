@@ -15,6 +15,8 @@
 
 ## Features
 
+- The initial press-release connection origin can be configured per site. Existing person connections and switches keep their saved values.
+
 - The Book Quote migration names the Core field engine in its requirements message.
 
 - Hexa WP Core 3.64.0 registers and edits Person Profile user fields. Existing profile, schema and education fields retain their stored values and keys.

@@ -11,8 +11,17 @@ defined( 'ABSPATH' ) || exit;
 
 /** The two press-release sections belong to the website's selected person. */
 final class PressReleaseSettings {
-    public const DEFAULT_ORIGIN = 'https://hexaprwire.com';
     public const MODES          = [ 'by' => 'By you', 'about' => 'About you' ];
+
+    /** Read this site's initial origin for a new press-release connection. */
+    public static function default_origin(): string {
+        return (string) get_option( Settings::PRESS_RELEASE_DEFAULT_ORIGIN, '' );
+    }
+
+    /** Save the initial origin without changing the person's connections or switches. */
+    public static function save_default_origin( string $origin ): void {
+        update_option( Settings::PRESS_RELEASE_DEFAULT_ORIGIN, esc_url_raw( $origin, [ 'https' ] ), false );
+    }
 
     /** @return array<string,mixed> */
     public static function current(): array {

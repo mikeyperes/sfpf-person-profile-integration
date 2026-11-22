@@ -4,10 +4,12 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\ContentTypes\Organization;
 
+use HWS\BaseTools\ContentTypes\Organization\OrganizationContentType as BaseToolsOrganization;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The Organization content type. Organizations the person founded or leads. SMC Organization Profile builds their schema.
+ * The person profile’s Organization fields and legacy registration fallback. SMC Organization Profile builds Organization schema.
  * Off until a site turns it on; its fields are on with it.
  */
 final class OrganizationContentType {
@@ -16,9 +18,13 @@ final class OrganizationContentType {
 
     /** @return array<string,mixed> */
     public static function definition(): array {
+        // The new Base Tools owns Organization even when its local switch is off.
+        // Retain the previous registrar on sites that have not received that provider.
+        $base_tools_owns_type = defined( BaseToolsOrganization::class . '::SETTINGS_OPTION' );
         return [
             'id'              => self::ID,
-            'owner'           => 'SFPF Person Profile Integration',
+            'owner'           => $base_tools_owns_type ? 'HWS Base Tools (post type) / SFPF (fields)' : 'SFPF Person Profile Integration',
+            'registration_mode' => $base_tools_owns_type ? 'external' : 'owned',
             'description'     => 'Organizations the person founded or leads. SMC Organization Profile builds their schema.',
             'enabled_default' => false,
             'legacy_enabled_option' => 'smp_enable_cpt_organization',

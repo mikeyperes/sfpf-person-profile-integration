@@ -18,6 +18,22 @@
 
 ## Features
 
+- Existing post-type settings and rewrite signatures can stay in a feature plugin when a shared provider takes over registration.
+
+### Press-release syndication
+
+- **Use:** Publish and read existing PR Wire feeds, deletion manifests and author profiles with shared formats. See [the wire contract](docs/press-release-syndication.md).
+
+### Existing AJAX guards
+
+- **Use:** Run a handler’s capability and nonce guards through Core while retaining the action’s existing check order and failure response.
+- **Code:** `WpAdminAjax\AjaxGuard::require_access()` and the existing capability and nonce helpers.
+
+### Legacy snippet activation
+
+- **Use:** Run saved snippet callbacks in host-defined order, keep the existing debug format, and render existing switches with their established markup.
+- **Docs:** [Legacy snippet compatibility](docs/legacy-snippet-compatibility.md)
+
 ### Press-release profile client
 - **Does:** validates and reads public author identities, person-profile search, exact person identity, and paginated releases by author or person from a configured HTTPS source. Redirects are disabled; safe HTTP transport rejects private network targets.
 - **Use:** `PressReleaseProfiles\PressReleaseProfilesClient`: `author()`, `find_author()`, `author_releases()`, `search_people()`, `person()`, `releases()`. Each takes the source origin first and returns a success/data or failure/code/message envelope.

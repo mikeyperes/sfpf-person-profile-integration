@@ -2,6 +2,8 @@
 
 namespace Hexa\PluginCore\FieldStructures;
 
+use Hexa\PluginCore\WpAdminAjax\AjaxGuard;
+
 final class AcfFieldGroupAjaxController {
     public function __construct( private AcfFieldGroupRegistry $registry, private array $config ) {
     }
@@ -14,10 +16,12 @@ final class AcfFieldGroupAjaxController {
     }
 
     public function save(): void {
-        if ( ! current_user_can( (string) ( $this->config['capability'] ?? 'manage_options' ) ) ) {
-            wp_send_json_error( [ 'message' => 'You do not have permission to change field structures.' ], 403 );
-        }
-        check_ajax_referer( (string) $this->config['nonce_action'], (string) ( $this->config['nonce_field'] ?? 'nonce' ) );
+        AjaxGuard::require_access(
+            (string) ( $this->config['capability'] ?? 'manage_options' ),
+            (string) $this->config['nonce_action'],
+            (string) ( $this->config['nonce_field'] ?? 'nonce' ),
+            capability_error: [ [ 'message' => 'You do not have permission to change field structures.' ], 403 ]
+        );
         $id = isset( $_POST['field_group_id'] ) ? sanitize_key( (string) wp_unslash( $_POST['field_group_id'] ) ) : '';
         $definition = $this->registry->definition( $id );
         if ( ! $definition ) {

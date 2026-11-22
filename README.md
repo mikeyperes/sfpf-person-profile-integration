@@ -15,6 +15,8 @@
 
 ## Features
 
+- Exposes enabled field groups in the existing WordPress REST responses through Hexa WP Core.
+
 - Extends the Base Tools Organization type with its existing fields. The legacy registrar stays available while a site has an older Base Tools version.
 
 - The plugin updater uses the shared Hexa WP Core 3.65.3 configuration with its existing settings.

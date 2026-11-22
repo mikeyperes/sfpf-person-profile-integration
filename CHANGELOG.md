@@ -1,3 +1,7 @@
+## 4.0.13 - 2026-11-21
+
+- Bundle Hexa WP Core 3.67.2 to restore the declared REST fields for person profile content types.
+
 # Changelog
 
 ## 4.0.8

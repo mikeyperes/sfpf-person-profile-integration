@@ -5,9 +5,12 @@ declare( strict_types=1 );
 namespace SFPF\PersonProfile\Admin\Profile;
 
 use Hexa\PluginCore\CoreContracts\ModuleInterface;
+use Hexa\PluginCore\Fields\FieldGroups;
 use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
 use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
+use SFPF\PersonProfile\Fields\FieldKeys;
+use SFPF\PersonProfile\Fields\PersonProfileFields;
 use SFPF\PersonProfile\Person\PersonProfile;
 use SFPF\PersonProfile\PluginRuntime\PluginMetadata;
 
@@ -31,6 +34,11 @@ final class ProfileScreen implements ModuleInterface {
 
     public function enqueue( string $hook ): void {
         if ( ! in_array( $hook, [ 'profile.php', 'user-edit.php' ], true ) ) {
+            return;
+        }
+        $group_key = FieldKeys::active( PersonProfileFields::GROUP_KEY );
+        $groups = array_column( FieldGroups::native(), null, 'key' );
+        if ( empty( $groups[ $group_key ]['active'] ) ) {
             return;
         }
         $version = PluginMetadata::VERSION;

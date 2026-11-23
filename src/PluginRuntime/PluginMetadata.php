@@ -14,13 +14,14 @@ defined( 'ABSPATH' ) || exit;
 final class PluginMetadata {
     public const NAME               = 'SFPF Person Profile Integration';
     public const SLUG               = 'sfpf-person-profile-integration';
+    public const HOOK_PREFIX        = 'sfpf_person_profile_integration';
     public const PREFIX             = 'sfpf';
     public const ADMIN_PAGE_SLUG    = 'sfpf-person-profile';
     public const ADMIN_CAPABILITY   = 'manage_options';
     public const MAIN_FILE          = 'initialization.php';
     public const GITHUB_REPOSITORY  = 'mikeyperes/sfpf-person-profile-integration';
     public const GITHUB_BRANCH      = 'main';
-    public const VERSION            = '4.0.13';
+    public const VERSION            = '4.0.14';
     public const REQUIRES_WORDPRESS = '6.0';
     public const REQUIRES_PHP       = '8.1';
     public const TESTED_WORDPRESS   = '7.0';

@@ -4,21 +4,28 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\ContentTypes\Quote;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * The Quote fields: the quote, who said it, the source link, publication logos and details.
- * The keys are stored data and never change.
+ * Field names are stable. FieldKeys selects the identifiers used by the site.
  */
 final class QuoteFields {
     /** @return array<string,mixed> */
     public static function group(): array {
+        return FieldKeys::active_group( self::canonical_group() );
+    }
+
+    /** Describes the fields with the canonical keys. */
+    private static function canonical_group(): array {
         return [
             'key' => 'group_sfpf_quote',
             'title' => 'Quote Fields',
             'fields' => [
                 [
-                    'key' => 'field_sfpf_quote',
+                    'key' => 'field_sfpf_quote_text',
                     'label' => 'Quote',
                     'name' => 'quote',
                     'type' => 'textarea',

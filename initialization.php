@@ -3,7 +3,7 @@
  * Plugin Name: SFPF Person Profile Integration
  * Plugin URI: https://github.com/mikeyperes/sfpf-person-profile-integration
  * Description: Person profile websites for SEO for Public Figures: the person's fields, schema for search engines and Knowledge Panels, shortcodes, pages and content types.
- * Version: 4.0.13
+ * Version: 4.0.14
  * Author: SEO For Public Figures
  * Author URI: https://seoforpublicfigures.com
  * Text Domain: sfpf-person-profile-integration
@@ -30,8 +30,6 @@ require_once __DIR__ . '/src/PluginRuntime/Autoloader.php';
 
 require_once __DIR__ . '/lib/hexa-wordpress-plugin-core/bootstrap.php';
 \hexa_plugin_core_register_package( 'sfpf-person-profile-integration', __DIR__ . '/lib/hexa-wordpress-plugin-core' );
-
-\SFPF\PersonProfile\PluginRuntime\Lifecycle::register( __FILE__ );
 
 if ( did_action( 'plugins_loaded' ) ) {
     \SFPF\PersonProfile\PluginRuntime\Bootstrap::boot();

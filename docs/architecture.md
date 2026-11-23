@@ -28,7 +28,7 @@ Generic behavior lives in Hexa WP Core (`lib/hexa-wordpress-plugin-core`, never 
 
 ## Stored data
 
-Field keys and names (`tests/fixtures/stored-field-keys.json`) and option names never change; upgrades in `Migrations` move older data without deleting it.
+Field names and existing option names are stable. [The field-key migration](field-key-migration.md) translates the previous field identifiers and preserves their stored values.
 
 ## Query bounds
 

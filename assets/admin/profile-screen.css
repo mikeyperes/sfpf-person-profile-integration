@@ -1,14 +1,14 @@
 /* Person profile fields on the WordPress user profile screens. */
-#acf-group_sfpf_user_schema_structures{background:#fff!important;border:1px solid #c3c4c7!important;border-radius:8px!important;margin:20px 0!important;box-shadow:0 1px 3px rgba(0,0,0,.05)!important}
-#acf-group_sfpf_user_schema_structures>.postbox-header,#acf-group_sfpf_user_schema_structures>h2{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;color:#fff!important;padding:12px 15px!important;margin:0!important;border-radius:8px 8px 0 0!important}
-#acf-group_sfpf_user_schema_structures>.postbox-header .hndle,#acf-group_sfpf_user_schema_structures>h2{color:#fff!important;font-weight:600!important}
-#acf-group_sfpf_user_schema_structures>.inside,#acf-group_sfpf_user_schema_structures .acf-fields{background:#fff!important;padding:15px!important}
-#acf-group_sfpf_user_schema_structures .acf-label label{font-weight:600!important;color:#1e1e1e!important}
-#acf-group_sfpf_user_schema_structures .acf-field .description,#acf-group_sfpf_user_schema_structures .acf-field .acf-instructions{background:transparent!important;padding:5px 0!important;color:#666!important;font-size:12px!important}
-#acf-group_sfpf_user_schema_structures .acf-field .acf-instructions code{background:#e8f4fc!important;color:#0073aa!important;padding:2px 6px!important;border-radius:3px!important;font-size:11px!important}
-#acf-group_sfpf_user_schema_structures .acf-repeater .acf-row{background:#fff!important;border:1px solid #e5e7eb!important;border-radius:6px!important;margin-bottom:10px!important}
-#acf-group_sfpf_user_schema_structures .acf-repeater .acf-row .acf-fields{padding:10px!important}
-#acf-group_sfpf_user_schema_structures input[type=text],#acf-group_sfpf_user_schema_structures input[type=url],#acf-group_sfpf_user_schema_structures textarea{border-radius:4px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures){background:#fff!important;border:1px solid #c3c4c7!important;border-radius:8px!important;margin:20px 0!important;box-shadow:0 1px 3px rgba(0,0,0,.05)!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures)>.postbox-header,:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures)>h2{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)!important;color:#fff!important;padding:12px 15px!important;margin:0!important;border-radius:8px 8px 0 0!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures)>.postbox-header .hndle,:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures)>h2{color:#fff!important;font-weight:600!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures)>.inside,:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-fields{background:#fff!important;padding:15px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-label label{font-weight:600!important;color:#1e1e1e!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-field .description,:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-field .acf-instructions{background:transparent!important;padding:5px 0!important;color:#666!important;font-size:12px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-field .acf-instructions code{background:#e8f4fc!important;color:#0073aa!important;padding:2px 6px!important;border-radius:3px!important;font-size:11px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-repeater .acf-row{background:#fff!important;border:1px solid #e5e7eb!important;border-radius:6px!important;margin-bottom:10px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) .acf-repeater .acf-row .acf-fields{padding:10px!important}
+:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) input[type=text],:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) input[type=url],:is(#acf-group_sfpf_person,#acf-group_sfpf_user_schema_structures) textarea{border-radius:4px!important}
 /* Fields for another entity type stay in the form (so saving never clears them) and are only hidden. */
 .acf-field.sfpf-entity-hidden{display:none!important}
 .sfpf-profile-hint{color:#6b7280}

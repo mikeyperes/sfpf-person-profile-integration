@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class EducationProfileLinks implements ModuleInterface {
     public function register(): void {
-        Hooks::on( 'prepare_field/key=field_sfpf_education_repeater', [ $this, 'prepare' ] );
+        Hooks::on( 'prepare_field/key=' . FieldKeys::active( 'field_sfpf_person_education_repeater' ), [ $this, 'prepare' ] );
     }
 
     /** @return array<string,mixed>|false */

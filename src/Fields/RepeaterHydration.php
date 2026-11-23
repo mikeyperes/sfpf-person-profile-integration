@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class RepeaterHydration implements ModuleInterface {
     public function register(): void {
-        foreach ( array_keys( PersonFields::REPEATERS ) as $key ) {
+        foreach ( array_keys( self::repeaters() ) as $key ) {
             Hooks::on( 'load_value/key=' . $key, [ $this, 'load_value' ], 20, 3 );
             Hooks::on( 'prepare_field/key=' . $key, [ $this, 'prepare_field' ], 50 );
             Hooks::on( 'update_value/key=' . $key, [ $this, 'update_value' ], 1, 3 );
@@ -35,7 +35,7 @@ final class RepeaterHydration implements ModuleInterface {
 
     public function load_value( mixed $value, mixed $post_id, array $field ): mixed {
         $user_id = self::user_id( $post_id );
-        $meta    = PersonFields::REPEATERS[ $field['key'] ?? '' ] ?? '';
+        $meta    = self::repeaters()[ $field['key'] ?? '' ] ?? '';
         if ( ! self::on_profile_screen() || $user_id <= 0 || '' === $meta || self::has_data( $value, $field ) ) {
             return $value;
         }
@@ -48,7 +48,7 @@ final class RepeaterHydration implements ModuleInterface {
             return false === $field ? false : [];
         }
         $user_id = self::profile_user_id();
-        $meta    = PersonFields::REPEATERS[ $field['key'] ?? '' ] ?? '';
+        $meta    = self::repeaters()[ $field['key'] ?? '' ] ?? '';
         if ( ! self::on_profile_screen() || $user_id <= 0 || '' === $meta || self::has_data( $field['value'] ?? null, $field ) ) {
             return $field;
         }
@@ -61,7 +61,7 @@ final class RepeaterHydration implements ModuleInterface {
 
     public function update_value( mixed $value, mixed $post_id, array $field ): mixed {
         $user_id = self::user_id( $post_id );
-        $meta    = PersonFields::REPEATERS[ $field['key'] ?? '' ] ?? '';
+        $meta    = self::repeaters()[ $field['key'] ?? '' ] ?? '';
         $subs    = (array) ( $field['sub_fields'] ?? [] );
         if ( ! self::on_profile_screen() || $user_id <= 0 || '' === $meta || ! is_array( $value ) || [] === $subs ) {
             return $value;
@@ -87,6 +87,15 @@ final class RepeaterHydration implements ModuleInterface {
             }
         }
         return $kept;
+    }
+
+    /** Identifies repeaters by the field keys in use on this site. */
+    private static function repeaters(): array {
+        $repeaters = [];
+        foreach ( PersonFields::REPEATERS as $key => $meta ) {
+            $repeaters[ FieldKeys::active( FieldKeys::RENAMED[ $key ] ?? $key ) ] = $meta;
+        }
+        return $repeaters;
     }
 
     private static function has_data( mixed $value, array $field ): bool {

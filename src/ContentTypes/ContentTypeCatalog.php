@@ -18,6 +18,8 @@ use SFPF\PersonProfile\Fields\PersonProfileFields;
 use SFPF\PersonProfile\PluginRuntime\PluginMetadata;
 use SFPF\PersonProfile\Settings\Settings;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -79,7 +81,7 @@ final class ContentTypeCatalog {
                     'id'              => 'person-user-profile',
                     'label'           => 'Person Profile Fields',
                     'description'     => 'The person\'s identity, biography, professions, education, profile links, photos, Knowledge Graph ID and FAQ, on their WordPress user.',
-                    'group_key'       => PersonProfileFields::GROUP_KEY,
+                    'group_key'       => FieldKeys::active( PersonProfileFields::GROUP_KEY ),
                     'legacy_option'   => 'sfpf_enable_user_schema_acf',
                     'enabled_default' => true,
                     'definition'      => [ PersonProfileFields::class, 'group' ],

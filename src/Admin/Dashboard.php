@@ -11,24 +11,9 @@ use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 use Hexa\PluginCore\WpAdminComponents\CoreUi;
 use Hexa\PluginCore\WpAdminTabs\HostTabsRenderer;
-use SFPF\PersonProfile\Admin\Actions\PagesActions;
-use SFPF\PersonProfile\Admin\Actions\PressReleaseActions;
-use SFPF\PersonProfile\Admin\Actions\SchemaActions;
-use SFPF\PersonProfile\Admin\Tabs\BreadcrumbsTab;
-use SFPF\PersonProfile\Admin\Tabs\ContentTypesTab;
-use SFPF\PersonProfile\Admin\Tabs\DebugTab;
-use SFPF\PersonProfile\Admin\Tabs\FaqTab;
-use SFPF\PersonProfile\Admin\Tabs\PagesTab;
-use SFPF\PersonProfile\Admin\Tabs\PersonTab;
-use SFPF\PersonProfile\Admin\Tabs\PressReleasesTab;
-use SFPF\PersonProfile\Admin\Tabs\SchemaTab;
-use SFPF\PersonProfile\Admin\Tabs\SettingsTab;
-use SFPF\PersonProfile\Admin\Tabs\ShortcodesTab;
-use SFPF\PersonProfile\Admin\Tabs\SitemapsTab;
-use SFPF\PersonProfile\Admin\Tabs\StatusTab;
+use Hexa\PluginCore\WpAdminTabs\TabRegistry;
+use SFPF\PersonProfile\Admin\Tabs\DashboardTabs;
 use SFPF\PersonProfile\Admin\Tabs\Tab;
-use SFPF\PersonProfile\Admin\Tabs\TemplatesTab;
-use SFPF\PersonProfile\Admin\Tabs\UpdateCenterTab;
 use SFPF\PersonProfile\PluginRuntime\PluginMetadata;
 
 defined( 'ABSPATH' ) || exit;
@@ -36,8 +21,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The plugin's one settings page (Settings, SFPF Person Profile): grouped
  * tabs in a sidebar through Hexa WP Core's tab shell, each loaded when opened.
- * Other plugins and Core add tabs through the sfpf_dashboard_tabs and
- * sfpf_dashboard_render_tab filters.
+ * Other plugins and Core can add tabs through the dashboard filters.
  */
 final class Dashboard implements ModuleInterface {
     public const TAB_ACTION = 'sfpf_load_dashboard_tab';
@@ -45,14 +29,13 @@ final class Dashboard implements ModuleInterface {
     public const TABS_FILTER   = 'sfpf_dashboard_tabs';
     public const RENDER_FILTER = 'sfpf_dashboard_render_tab';
 
-    private const GROUPS = [ 'Overview', 'Person', 'Schema', 'Content', 'Site', 'System' ];
+    public const STANDARD_TABS_FILTER   = PluginMetadata::HOOK_PREFIX . '_dashboard_tabs';
+    public const STANDARD_RENDER_FILTER = PluginMetadata::HOOK_PREFIX . '_render_dashboard_tab';
 
-    /** @var array<string,Tab>|null */
-    private static ?array $tabs = null;
+    private ?TabRegistry $registry = null;
 
     public function register(): void {
         add_action( 'admin_menu', [ $this, 'menu' ] );
-        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
         add_filter( 'plugin_action_links_' . PluginMetadata::basename(), [ $this, 'action_links' ] );
         AjaxActionRegistry::create( [ 'capability' => PluginMetadata::ADMIN_CAPABILITY, 'nonce_action' => self::TAB_NONCE ] )->register(
             [ self::TAB_ACTION => [ $this, 'load_tab' ] ]
@@ -69,26 +52,9 @@ final class Dashboard implements ModuleInterface {
         return $links;
     }
 
+    /** Enqueues the shared dashboard stylesheet for callers of this entry point. */
     public function enqueue( string $hook ): void {
-        if ( 'settings_page_' . PluginMetadata::ADMIN_PAGE_SLUG !== $hook ) {
-            return;
-        }
-        wp_enqueue_style( 'sfpf-dashboard', PluginMetadata::url( 'assets/admin/dashboard.css' ), [], PluginMetadata::VERSION );
-        wp_enqueue_script( 'sfpf-dashboard', PluginMetadata::url( 'assets/admin/dashboard.js' ), [], PluginMetadata::VERSION, true );
-        wp_localize_script(
-            'sfpf-dashboard',
-            'sfpfAdmin',
-            [
-                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-                'nonce'   => wp_create_nonce( AdminUi::NONCE ),
-                'actions' => [
-                    'scan' => SchemaActions::SCAN,
-                    'createProfession' => PagesActions::CREATE_PROFESSION,
-                    'deleteProfession' => PagesActions::DELETE_PROFESSION,
-                    'pressCheck' => PressReleaseActions::CHECK,
-                ],
-            ]
-        );
+        ( new DashboardAssets() )->enqueue( $hook );
     }
 
     public function render(): void {
@@ -111,7 +77,7 @@ final class Dashboard implements ModuleInterface {
                 'panel_id'            => 'sfpf-dashboard-panel',
                 'label'               => 'SFPF Person Profile sections',
                 'layout'              => 'sidebar',
-                'groups'              => $this->groups( $tabs ),
+                'groups'              => DashboardTabs::groups( $tabs ),
                 'sidebar_identity'    => [
                     'plugin_name'     => 'SFPF Person Profile',
                     'current_version' => PluginMetadata::VERSION,
@@ -139,72 +105,49 @@ final class Dashboard implements ModuleInterface {
         return [ 'html' => (string) ob_get_clean(), 'tab' => $tab ];
     }
 
+    /** Renders one tab and attaches only the assets its controls require. */
     public function render_tab( string $tab ): void {
-        if ( apply_filters( self::RENDER_FILTER, false, $tab ) ) {
-            return;
+        ob_start();
+        try {
+            $rendered = (bool) apply_filters( self::RENDER_FILTER, false, $tab );
+            if ( ! $rendered ) {
+                $rendered = (bool) apply_filters( self::STANDARD_RENDER_FILTER, false, $tab );
+            }
+            if ( ! $rendered ) {
+                $definition = $this->registry()->get( $tab );
+                if ( null !== $definition ) {
+                    ( $definition->renderer )();
+                } else {
+                    echo '<div class="notice notice-warning"><p>This section is not available.</p></div>';
+                }
+            }
+            $html = (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
         }
-        $definition = self::tabs()[ $tab ] ?? null;
-        if ( null === $definition ) {
-            echo '<div class="notice notice-warning"><p>This section is not available.</p></div>';
-            return;
-        }
-        $definition->render();
+
+        echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by each tab renderer.
+        DashboardAssets::render( $html );
     }
 
-    /** @return array<string,Tab> */
+    /** @return array<string,Tab> The built-in tab objects for existing callers. */
     public static function tabs(): array {
-        if ( null === self::$tabs ) {
-            self::$tabs = [];
-            foreach ( [
-                new StatusTab(),
-                new PersonTab(),
-                new PressReleasesTab(),
-                new ShortcodesTab(),
-                new SchemaTab(),
-                new ContentTypesTab(),
-                new ContentTypesTab( 'awards', 'Awards', [ 'award' ], [], 'Awards the person received. Turn the content type on here; each award gets a page at /award/name/, the list is at /awards/, and every award is added to the person\'s schema.' ),
-                new ContentTypesTab( 'exhibitions', 'Exhibitions', [ 'exhibition' ], [], 'Exhibitions, shows and fairs that showed the person\'s work. Each gets a page at /exhibition/name/ with ExhibitionEvent schema, and the list is at /exhibitions/.' ),
-                new PagesTab(),
-                new TemplatesTab(),
-                new FaqTab(),
-                new BreadcrumbsTab(),
-                new SettingsTab(),
-                new SitemapsTab(),
-                new UpdateCenterTab(),
-                new DebugTab(),
-            ] as $tab ) {
-                self::$tabs[ $tab->id() ] = $tab;
-            }
-        }
-        return self::$tabs;
+        return DashboardTabs::tab_objects();
     }
 
     /** @return array<string,array{label:string}> Every tab, Core's included, by id. */
     private function tab_labels(): array {
         $tabs = [];
-        foreach ( self::tabs() as $id => $tab ) {
-            $tabs[ $id ] = [ 'label' => $tab->label() ];
+        foreach ( $this->registry()->all() as $id => $definition ) {
+            $tabs[ $id ] = [ 'label' => $definition->label ];
         }
-        $filtered = apply_filters( self::TABS_FILTER, $tabs );
+        $filtered = apply_filters( self::STANDARD_TABS_FILTER, $tabs );
+        $filtered = apply_filters( self::TABS_FILTER, is_array( $filtered ) ? $filtered : $tabs );
         return is_array( $filtered ) ? $filtered : $tabs;
     }
 
-    /**
-     * @param array<string,mixed> $tabs
-     * @return list<array{label:string,tabs:list<string>}>
-     */
-    private function groups( array $tabs ): array {
-        $groups = array_fill_keys( self::GROUPS, [] );
-        foreach ( array_keys( $tabs ) as $id ) {
-            $group = isset( self::tabs()[ $id ] ) ? self::tabs()[ $id ]->group() : 'System';
-            $groups[ $group ][] = (string) $id;
-        }
-        $out = [];
-        foreach ( $groups as $label => $ids ) {
-            if ( [] !== $ids ) {
-                $out[] = [ 'label' => $label, 'tabs' => $ids ];
-            }
-        }
-        return $out;
+    /** Keeps the Core tab registry scoped to this dashboard instance. */
+    private function registry(): TabRegistry {
+        return $this->registry ??= DashboardTabs::registry();
     }
 }

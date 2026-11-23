@@ -6,6 +6,8 @@ namespace SFPF\PersonProfile\ContentTypes\ContributingProfile;
 
 use SFPF\PersonProfile\ContentTypes\ContentTypeCatalog;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -36,7 +38,7 @@ final class ContributingProfileContentType {
                     'id'              => 'contributing-profile-fields',
                     'label'           => 'Contributing Profile Fields',
                     'description'     => 'Destination URL, alternate logo, and featured-profile controls.',
-                    'group_key'       => 'group_64bb58d10c008',
+                    'group_key'       => FieldKeys::active( 'group_sfpf_contributing_profile' ),
                     'enabled_default' => true,
                     'legacy_option'   => 'sfpf_enable_contributing_profile_acf',
                     'definition'      => [ ContributingProfileFields::class, 'group' ],

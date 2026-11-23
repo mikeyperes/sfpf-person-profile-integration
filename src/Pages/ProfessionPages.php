@@ -10,6 +10,8 @@ use SFPF\PersonProfile\Person\PersonResolver;
 use SFPF\PersonProfile\Settings\Settings;
 use SFPF\PersonProfile\Support\ActivityLog;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -71,7 +73,8 @@ final class ProfessionPages {
         // Unformatted rows, so the summaries are saved back exactly as stored.
         $rows = array_values( (array) Field::get( PersonFields::PROFESSIONS, $context, false ) );
         if ( isset( $rows[ $index ] ) && is_array( $rows[ $index ] ) ) {
-            $key = array_key_exists( 'field_sfpf_profession_page', $rows[ $index ] ) ? 'field_sfpf_profession_page' : 'page';
+            $field_key = FieldKeys::active( 'field_sfpf_person_profession_page' );
+            $key = array_key_exists( $field_key, $rows[ $index ] ) ? $field_key : 'page';
             $rows[ $index ][ $key ] = $page_id > 0 ? $page_id : '';
             Field::update( PersonFields::PROFESSIONS, $rows, $context );
         }

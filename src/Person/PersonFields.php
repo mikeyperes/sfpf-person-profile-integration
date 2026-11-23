@@ -49,16 +49,16 @@ final class PersonFields {
 
     /** Repeaters by field key, with the meta name their rows are stored under. */
     public const REPEATERS = [
-        'field_sfpf_education_repeater'     => self::EDUCATION,
-        'field_sfpf_professions_repeater'   => self::PROFESSIONS,
-        'field_sfpf_alternate_names'        => self::ALTERNATE_NAMES,
-        'field_sfpf_nationality'            => self::NATIONALITY,
-        'field_sfpf_knows_language'         => self::LANGUAGES,
-        'field_sfpf_awards'                 => self::AWARDS,
-        'field_sfpf_articles'               => self::ARTICLES,
-        'field_sfpf_additional_urls'        => self::ADDITIONAL_URLS,
-        'field_sfpf_wikimedia_commons_urls' => self::WIKIMEDIA_PHOTOS,
-        'field_sfpf_faq'                    => self::FAQ,
+        'field_sfpf_person_education_repeater'     => self::EDUCATION,
+        'field_sfpf_person_professions_repeater'   => self::PROFESSIONS,
+        'field_sfpf_person_alternate_names'        => self::ALTERNATE_NAMES,
+        'field_sfpf_person_nationality'            => self::NATIONALITY,
+        'field_sfpf_person_knows_language'         => self::LANGUAGES,
+        'field_sfpf_person_awards'                 => self::AWARDS,
+        'field_sfpf_person_articles'               => self::ARTICLES,
+        'field_sfpf_person_additional_urls'        => self::ADDITIONAL_URLS,
+        'field_sfpf_person_wikimedia_commons_urls' => self::WIKIMEDIA_PHOTOS,
+        'field_sfpf_person_faq'                    => self::FAQ,
     ];
 
     /** Social networks HWS Base Tools stores in the user's URLs group, with their names. */

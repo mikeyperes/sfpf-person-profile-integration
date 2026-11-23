@@ -4,27 +4,34 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\ContentTypes\ContributingProfile;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * The Contributing Profile fields: the profile link, a second logo and the featured flags.
- * The keys are stored data and never change.
+ * Field names are stable. FieldKeys selects the identifiers used by the site.
  */
 final class ContributingProfileFields {
     /** @return array<string,mixed> */
     public static function group(): array {
+        return FieldKeys::active_group( self::canonical_group() );
+    }
+
+    /** Describes the fields with the canonical keys. */
+    private static function canonical_group(): array {
         return [
-            'key' => 'group_64bb58d10c008',
+            'key' => 'group_sfpf_contributing_profile',
             'title' => 'Contributing Profile',
             'fields' => [
                 [
-                    'key' => 'field_64bb58d291399',
+                    'key' => 'field_sfpf_contributing_profile_url',
                     'label' => 'URL',
                     'name' => 'url',
                     'type' => 'text',
                 ],
                 [
-                    'key' => 'field_64bc93db4f0f8',
+                    'key' => 'field_sfpf_contributing_profile_secondary_logo',
                     'label' => 'Secondary Logo',
                     'name' => 'secondary_logo',
                     'type' => 'image',
@@ -33,7 +40,7 @@ final class ContributingProfileFields {
                     'library' => 'all',
                 ],
                 [
-                    'key' => 'field_64bc93ee4f0f9',
+                    'key' => 'field_sfpf_contributing_profile_featured_item',
                     'label' => 'Featured Item',
                     'name' => 'featured_item',
                     'type' => 'true_false',
@@ -41,7 +48,7 @@ final class ContributingProfileFields {
                     'ui' => 0,
                 ],
                 [
-                    'key' => 'field_64bc94084f0fa',
+                    'key' => 'field_sfpf_contributing_profile_primary_featured_item',
                     'label' => 'Primary Featured Item',
                     'name' => 'primary_featured_item',
                     'type' => 'true_false',

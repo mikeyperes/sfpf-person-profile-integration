@@ -22,7 +22,7 @@ final class AdminUi {
 
     /**
      * A form that posts its fields to an admin-ajax action and shows the
-     * result next to its button (assets/admin/dashboard.js).
+     * result next to its button. The dashboard loads the script with the form.
      */
     public static function form( string $action, string $fields_html, string $button = 'Save' ): string {
         return '<form class="sfpf-ajax-form" data-sfpf-action="' . esc_attr( $action ) . '">' . $fields_html

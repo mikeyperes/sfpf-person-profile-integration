@@ -1,22 +1,18 @@
 # Asset loading
 
-| Asset | Loads on | Check |
-| --- | --- | --- |
-| `assets/frontend/person-sections.css` | Front-end pages that show a styled section, `[person_loop]`, `[faq_set]` or an organization block; printed once through Core's `InlineStyles` | The page's shortcodes render; nothing on pages without them |
-| `assets/frontend/author-profile.css` | Author pages drawn by the plugin (no Elementor archive template) | `is_author()` and the fallback renders |
-| `assets/admin/dashboard.css`, `assets/admin/dashboard.js` | Settings → SFPF Person Profile only | Hook suffix `settings_page_sfpf-person-profile` |
-| `assets/admin/profile-screen.css`, `assets/admin/profile-screen.js` | The user profile screens only | Hook suffix `profile.php` or `user-edit.php` |
-| `[sfpf_elementor_faq]` inline script | Pages using that older shortcode | Printed with the shortcode |
+| Asset | Where it loads |
+| --- | --- |
+| `assets/frontend/person-sections.css` | Once, with the first styled section, content loop, FAQ set or organization output. `style="none"` leaves it out. |
+| `assets/frontend/author-profile.css` | Only when the author archive uses the plugin's fallback layout. |
+| Legacy Elementor FAQ script | With a rendered `[sfpf_elementor_faq]` that has FAQ items. |
+| `assets/admin/dashboard.css` | The SFPF settings screen. |
+| `assets/admin/dashboard.js` | A tab with SFPF settings controls or a copyable shortcode, or a tab that needs a feature script. |
+| `assets/admin/press-releases.js` | The Press Releases tab when its connection controls are present. |
+| `assets/admin/schema.js` | The Schema tab when the schema scan control is present. |
+| `assets/admin/profession-pages.js` | The Pages & Menus tab when a profession page action is available. |
+| `assets/admin/faq.js` and `assets/admin/faq.css` | The FAQ Sets tab. |
+| `assets/admin/profile-screen.css` and `assets/admin/profile-screen.js` | WordPress user profile screens with the SFPF field group enabled. |
 
-Nothing loads in `wp_head` on every page; the schema block is data, printed by Core.
+Core loads each dashboard tab on demand. The Update Center uses Core's updater scripts and the shared SFPF dashboard stylesheet.
 
-To check: compare the home page, a person page with sections, a book page and the settings page with the browser's network panel; the sections stylesheet appears only as the inline style `sfpf-person-sections-inline-css` on pages with sections.
-
-## Press Releases
-
-The Press Releases tab reuses `assets/admin/dashboard.js`, already limited to
-the SFPF settings page. Its delegated handlers support tabs loaded by AJAX.
-There is no new admin asset. The home page and an article load no additional
-assets. A page explicitly using an enabled release section uses the existing
-section stylesheet on first nonempty output, or no stylesheet with
-`style="none"`. Disabled and empty release sections load no assets.
+For a release, compare the plugin's style and script list before and after on the home page, an article, a page that renders a styled SFPF section, and the settings tabs. The home page and article should only contain SFPF assets when they render a feature that uses them.

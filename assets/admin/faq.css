@@ -1,0 +1,4 @@
+/* FAQ set controls in the SFPF dashboard. */
+.sfpf-faq-set{border:1px solid #dcdcde;border-radius:8px;padding:12px 16px;margin:0 0 12px;background:#fff}
+.sfpf-faq-set legend{font-weight:600;padding:0 6px}
+.sfpf-faq-row{display:grid;gap:6px;margin:0 0 10px}

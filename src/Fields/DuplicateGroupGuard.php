@@ -35,6 +35,9 @@ final class DuplicateGroupGuard implements ModuleInterface {
                 if ( ! is_array( $group ) || empty( $group['ID'] ) || ! isset( $group['key'] ) ) {
                     return true;
                 }
+                if ( FieldKeys::migrated() && isset( FieldKeys::RENAMED[ $group['key'] ] ) ) {
+                    return false;
+                }
                 foreach ( self::OWNED_PREFIXES as $prefix ) {
                     if ( str_starts_with( (string) $group['key'], $prefix ) ) {
                         return false;

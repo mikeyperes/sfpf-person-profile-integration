@@ -6,6 +6,8 @@ namespace SFPF\PersonProfile\ContentTypes\Interview;
 
 use SFPF\PersonProfile\ContentTypes\ContentTypeCatalog;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -36,7 +38,7 @@ final class InterviewContentType {
                     'id'              => 'interview-fields',
                     'label'           => 'Interview Fields',
                     'description'     => 'Podcast, guest, host, source-link, and press details for interviews.',
-                    'group_key'       => 'group_64b623fb36208',
+                    'group_key'       => FieldKeys::active( 'group_sfpf_interview' ),
                     'enabled_default' => true,
                     'legacy_option'   => 'sfpf_enable_interview_acf',
                     'definition'      => [ InterviewFields::class, 'group' ],

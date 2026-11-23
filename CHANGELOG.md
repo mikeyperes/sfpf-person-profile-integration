@@ -1,3 +1,9 @@
+## 4.0.14 - 2026-11-23
+
+- Use Core's tab registry with lazy tab rendering and load each dashboard script only with the controls it serves.
+- Register each current and legacy shortcode through its own Core module.
+- Standardize SFPF field identifiers with a backed-up, repeatable key-only migration. Stored field names and values remain intact.
+
 ## 4.0.13 - 2026-11-21
 
 - Bundle Hexa WP Core 3.67.2 to restore the declared REST fields for person profile content types.

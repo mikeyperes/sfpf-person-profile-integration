@@ -16,6 +16,7 @@ use SFPF\PersonProfile\Admin\Actions\PressReleaseActions;
 use SFPF\PersonProfile\Admin\Actions\SchemaActions;
 use SFPF\PersonProfile\Admin\Actions\SettingsActions;
 use SFPF\PersonProfile\Admin\Dashboard;
+use SFPF\PersonProfile\Admin\DashboardAssets;
 use SFPF\PersonProfile\Admin\Profile\ProfileScreen;
 use SFPF\PersonProfile\ContentTypes\ContentTypeCatalog;
 use SFPF\PersonProfile\Diagnostics\DebugEndpoint;
@@ -26,7 +27,9 @@ use SFPF\PersonProfile\Fields\KnowledgeGraphIdField;
 use SFPF\PersonProfile\Fields\RepeaterHydration;
 use SFPF\PersonProfile\Frontend\AuthorArchive;
 use SFPF\PersonProfile\Frontend\BreadcrumbVisibility;
+use SFPF\PersonProfile\Migrations\FieldKeyMigrationModule;
 use SFPF\PersonProfile\Migrations\MigrationRunner;
+use SFPF\PersonProfile\PluginRuntime\LifecycleModule;
 use SFPF\PersonProfile\Schema\SchemaCatalog;
 use SFPF\PersonProfile\Schema\SchemaMarkupField;
 use SFPF\PersonProfile\Shortcodes\ShortcodeCatalog;
@@ -63,17 +66,21 @@ final class Bootstrap {
         );
 
         // The person's data and content.
-        $core->add_module( ContentTypeCatalog::content_types() )
+        $core->add_module( new LifecycleModule() )
+            ->add_module( ContentTypeCatalog::content_types() )
             ->add_module( ContentTypeCatalog::field_groups() )
             ->add_module( new RepeaterHydration() )
             ->add_module( new DuplicateGroupGuard() )
             ->add_module( new KnowledgeGraphIdField() )
-            ->add_module( new MigrationRunner() );
+            ->add_module( new MigrationRunner() )
+            ->add_module( new FieldKeyMigrationModule() );
 
         // What visitors and search engines see.
-        $core->add_module( new SchemaCatalog() )
-            ->add_module( new ShortcodeCatalog() )
-            ->add_module( new ElementorIntegration() )
+        $core->add_module( new SchemaCatalog() );
+        foreach ( ShortcodeCatalog::modules() as $shortcode ) {
+            $core->add_module( $shortcode );
+        }
+        $core->add_module( new ElementorIntegration() )
             ->add_module( new AuthorArchive() )
             ->add_module( new BreadcrumbVisibility() )
             ->add_module( new SitemapTypes() )
@@ -99,8 +106,8 @@ final class Bootstrap {
                     new CoreTabModule(
                         new CoreTabConfig(
                             [
-                                'tabs_filter'   => Dashboard::TABS_FILTER,
-                                'render_filter' => Dashboard::RENDER_FILTER,
+                                'tabs_filter'   => Dashboard::STANDARD_TABS_FILTER,
+                                'render_filter' => Dashboard::STANDARD_RENDER_FILTER,
                                 'capability'    => PluginMetadata::ADMIN_CAPABILITY,
                                 'core_root'     => PluginMetadata::core_root(),
                                 'readme_path'   => PluginMetadata::core_root() . '/README.md',

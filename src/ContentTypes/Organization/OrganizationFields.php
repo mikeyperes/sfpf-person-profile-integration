@@ -4,21 +4,28 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\ContentTypes\Organization;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * The Organization record fields: identity, logo and gallery, contact details, founders and leadership, and schema data.
- * The keys are stored data and never change.
+ * Field names are stable. FieldKeys selects the identifiers used by the site.
  */
 final class OrganizationFields {
     /** @return array<string,mixed> */
     public static function group(): array {
+        return FieldKeys::active_group( self::canonical_group() );
+    }
+
+    /** Describes the fields with the canonical keys. */
+    private static function canonical_group(): array {
         return [
             'key' => 'group_sfpf_organization',
             'title' => 'Organization Details',
             'fields' => [
                 [
-                    'key' => 'field_sfpf_org_header_schema',
+                    'key' => 'field_sfpf_organization_header_schema',
                     'label' => '📋 Schema',
                     'name' => '',
                     'type' => 'accordion',
@@ -27,7 +34,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_schema',
+                    'key' => 'field_sfpf_organization_schema',
                     'label' => 'Schema Markup',
                     'name' => 'schema_markup',
                     'type' => 'textarea',
@@ -37,7 +44,7 @@ final class OrganizationFields {
                     'rows' => 10,
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_basic',
+                    'key' => 'field_sfpf_organization_header_basic',
                     'label' => '📝 Basic Info',
                     'name' => '',
                     'type' => 'accordion',
@@ -46,7 +53,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_subtitle',
+                    'key' => 'field_sfpf_organization_subtitle',
                     'label' => 'Sub-Title',
                     'name' => 'sub_title',
                     'type' => 'text',
@@ -54,7 +61,7 @@ final class OrganizationFields {
                     'required' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_short_summary',
+                    'key' => 'field_sfpf_organization_short_summary',
                     'label' => 'Short Summary',
                     'name' => 'short_summary',
                     'type' => 'wysiwyg',
@@ -66,7 +73,7 @@ final class OrganizationFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_org_mission_statement',
+                    'key' => 'field_sfpf_organization_mission_statement',
                     'label' => 'Mission Statement',
                     'name' => 'mission_statement',
                     'type' => 'wysiwyg',
@@ -78,7 +85,7 @@ final class OrganizationFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_org_company_info',
+                    'key' => 'field_sfpf_organization_company_info',
                     'label' => 'Company Info',
                     'name' => 'company_info',
                     'type' => 'wysiwyg',
@@ -90,7 +97,7 @@ final class OrganizationFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_org_alternate_names',
+                    'key' => 'field_sfpf_organization_alternate_names',
                     'label' => 'Alternate Names',
                     'name' => 'alternate_names',
                     'type' => 'textarea',
@@ -99,7 +106,7 @@ final class OrganizationFields {
                     'rows' => 3,
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_founding',
+                    'key' => 'field_sfpf_organization_header_founding',
                     'label' => '🏛️ Founding',
                     'name' => '',
                     'type' => 'accordion',
@@ -108,7 +115,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_founding_date',
+                    'key' => 'field_sfpf_organization_founding_date',
                     'label' => 'Founding Date',
                     'name' => 'founding_date',
                     'type' => 'text',
@@ -117,7 +124,7 @@ final class OrganizationFields {
                     'placeholder' => 'September 1, 2021',
                 ],
                 [
-                    'key' => 'field_sfpf_org_headquarters',
+                    'key' => 'field_sfpf_organization_headquarters',
                     'label' => 'Headquarters',
                     'name' => 'headquarters',
                     'type' => 'group',
@@ -126,7 +133,7 @@ final class OrganizationFields {
                     'layout' => 'block',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_org_hq_location',
+                            'key' => 'field_sfpf_organization_hq_location',
                             'label' => 'Location',
                             'name' => 'location',
                             'type' => 'text',
@@ -135,7 +142,7 @@ final class OrganizationFields {
                             'placeholder' => 'Dover, DE',
                         ],
                         [
-                            'key' => 'field_sfpf_org_hq_wikipedia',
+                            'key' => 'field_sfpf_organization_hq_wikipedia',
                             'label' => 'Wikipedia URL',
                             'name' => 'wikipedia_url',
                             'type' => 'url',
@@ -146,7 +153,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_secondary_location',
+                    'key' => 'field_sfpf_organization_secondary_location',
                     'label' => 'Secondary Location',
                     'name' => 'secondary_location',
                     'type' => 'text',
@@ -154,7 +161,7 @@ final class OrganizationFields {
                     'required' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_urls',
+                    'key' => 'field_sfpf_organization_header_urls',
                     'label' => '🔗 URLs',
                     'name' => '',
                     'type' => 'accordion',
@@ -163,7 +170,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_url',
+                    'key' => 'field_sfpf_organization_url',
                     'label' => 'Website URL',
                     'name' => 'url',
                     'type' => 'url',
@@ -171,7 +178,7 @@ final class OrganizationFields {
                     'required' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_facebook',
+                    'key' => 'field_sfpf_organization_url_facebook',
                     'label' => 'Facebook',
                     'name' => 'url_facebook',
                     'type' => 'url',
@@ -183,7 +190,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_instagram',
+                    'key' => 'field_sfpf_organization_url_instagram',
                     'label' => 'Instagram',
                     'name' => 'url_instagram',
                     'type' => 'url',
@@ -195,7 +202,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_linkedin',
+                    'key' => 'field_sfpf_organization_url_linkedin',
                     'label' => 'LinkedIn',
                     'name' => 'url_linkedin',
                     'type' => 'url',
@@ -207,7 +214,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_x',
+                    'key' => 'field_sfpf_organization_url_x',
                     'label' => 'X (Twitter)',
                     'name' => 'url_x',
                     'type' => 'url',
@@ -219,7 +226,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_youtube',
+                    'key' => 'field_sfpf_organization_url_youtube',
                     'label' => 'YouTube',
                     'name' => 'url_youtube',
                     'type' => 'url',
@@ -231,7 +238,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_tiktok',
+                    'key' => 'field_sfpf_organization_url_tiktok',
                     'label' => 'TikTok',
                     'name' => 'url_tiktok',
                     'type' => 'url',
@@ -243,7 +250,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_github',
+                    'key' => 'field_sfpf_organization_url_github',
                     'label' => 'GitHub',
                     'name' => 'url_github',
                     'type' => 'url',
@@ -255,7 +262,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_wikipedia',
+                    'key' => 'field_sfpf_organization_url_wikipedia',
                     'label' => 'Wikipedia',
                     'name' => 'url_wikipedia',
                     'type' => 'url',
@@ -267,7 +274,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_url_crunchbase',
+                    'key' => 'field_sfpf_organization_url_crunchbase',
                     'label' => 'Crunchbase',
                     'name' => 'url_crunchbase',
                     'type' => 'url',
@@ -279,7 +286,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_knowledge_graph_id',
+                    'key' => 'field_sfpf_organization_knowledge_graph_id',
                     'label' => 'Google Knowledge Graph ID',
                     'name' => 'knowledge_graph_id',
                     'type' => 'text',
@@ -290,7 +297,7 @@ final class OrganizationFields {
                     'placeholder' => '/g/11gyz2y3lp',
                 ],
                 [
-                    'key' => 'field_sfpf_org_social_urls',
+                    'key' => 'field_sfpf_organization_social_urls',
                     'label' => 'Social URLs',
                     'name' => 'social_urls',
                     'type' => 'textarea',
@@ -299,7 +306,7 @@ final class OrganizationFields {
                     'rows' => 5,
                 ],
                 [
-                    'key' => 'field_sfpf_org_sameas_urls',
+                    'key' => 'field_sfpf_organization_sameas_urls',
                     'label' => 'SameAs URLs',
                     'name' => 'sameas_urls',
                     'type' => 'textarea',
@@ -308,7 +315,7 @@ final class OrganizationFields {
                     'rows' => 5,
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_details',
+                    'key' => 'field_sfpf_organization_header_details',
                     'label' => '🏢 Details',
                     'name' => '',
                     'type' => 'accordion',
@@ -317,7 +324,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_legal_name',
+                    'key' => 'field_sfpf_organization_legal_name',
                     'label' => 'Legal Name',
                     'name' => 'legal_name',
                     'type' => 'text',
@@ -326,7 +333,7 @@ final class OrganizationFields {
                     'placeholder' => 'Company Name, Inc.',
                 ],
                 [
-                    'key' => 'field_sfpf_org_email',
+                    'key' => 'field_sfpf_organization_email',
                     'label' => 'Email',
                     'name' => 'email',
                     'type' => 'email',
@@ -338,7 +345,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_telephone',
+                    'key' => 'field_sfpf_organization_telephone',
                     'label' => 'Telephone',
                     'name' => 'telephone',
                     'type' => 'text',
@@ -350,7 +357,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_naics_code',
+                    'key' => 'field_sfpf_organization_naics_code',
                     'label' => 'NAICS Code',
                     'name' => 'naics_code',
                     'type' => 'text',
@@ -362,7 +369,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_number_of_employees',
+                    'key' => 'field_sfpf_organization_number_of_employees',
                     'label' => 'Number of Employees',
                     'name' => 'number_of_employees',
                     'type' => 'text',
@@ -374,7 +381,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_awards',
+                    'key' => 'field_sfpf_organization_awards',
                     'label' => 'Awards',
                     'name' => 'awards',
                     'type' => 'text',
@@ -385,7 +392,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_brands',
+                    'key' => 'field_sfpf_organization_brands',
                     'label' => 'Brands',
                     'name' => 'brands',
                     'type' => 'text',
@@ -393,7 +400,7 @@ final class OrganizationFields {
                     'required' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_seeks',
+                    'key' => 'field_sfpf_organization_seeks',
                     'label' => 'Seeks',
                     'name' => 'seeks',
                     'type' => 'text',
@@ -401,7 +408,7 @@ final class OrganizationFields {
                     'required' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_address',
+                    'key' => 'field_sfpf_organization_header_address',
                     'label' => '📍 Address',
                     'name' => '',
                     'type' => 'accordion',
@@ -410,7 +417,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_address',
+                    'key' => 'field_sfpf_organization_address',
                     'label' => 'Address',
                     'name' => 'address',
                     'type' => 'group',
@@ -419,7 +426,7 @@ final class OrganizationFields {
                     'layout' => 'block',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_org_addr_street',
+                            'key' => 'field_sfpf_organization_addr_street',
                             'label' => 'Street Address',
                             'name' => 'street_address',
                             'type' => 'text',
@@ -430,7 +437,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_addr_locality',
+                            'key' => 'field_sfpf_organization_addr_locality',
                             'label' => 'City',
                             'name' => 'address_locality',
                             'type' => 'text',
@@ -441,7 +448,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_addr_region',
+                            'key' => 'field_sfpf_organization_addr_region',
                             'label' => 'State / Region',
                             'name' => 'address_region',
                             'type' => 'text',
@@ -452,7 +459,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_addr_postal',
+                            'key' => 'field_sfpf_organization_addr_postal',
                             'label' => 'Postal Code',
                             'name' => 'postal_code',
                             'type' => 'text',
@@ -463,7 +470,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_addr_country',
+                            'key' => 'field_sfpf_organization_addr_country',
                             'label' => 'Country',
                             'name' => 'address_country',
                             'type' => 'text',
@@ -476,7 +483,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_contact',
+                    'key' => 'field_sfpf_organization_header_contact',
                     'label' => '📞 Contact Point',
                     'name' => '',
                     'type' => 'accordion',
@@ -485,7 +492,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_contact_point',
+                    'key' => 'field_sfpf_organization_contact_point',
                     'label' => 'Contact Point',
                     'name' => 'contact_point',
                     'type' => 'group',
@@ -494,7 +501,7 @@ final class OrganizationFields {
                     'layout' => 'block',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_org_cp_type',
+                            'key' => 'field_sfpf_organization_cp_type',
                             'label' => 'Contact Type',
                             'name' => 'contact_type',
                             'type' => 'text',
@@ -505,7 +512,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_cp_email',
+                            'key' => 'field_sfpf_organization_cp_email',
                             'label' => 'Email',
                             'name' => 'email',
                             'type' => 'email',
@@ -515,7 +522,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_cp_telephone',
+                            'key' => 'field_sfpf_organization_cp_telephone',
                             'label' => 'Telephone',
                             'name' => 'telephone',
                             'type' => 'text',
@@ -525,7 +532,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_cp_product',
+                            'key' => 'field_sfpf_organization_cp_product',
                             'label' => 'Product Supported',
                             'name' => 'product_supported',
                             'type' => 'text',
@@ -535,7 +542,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_cp_hours',
+                            'key' => 'field_sfpf_organization_cp_hours',
                             'label' => 'Hours Available',
                             'name' => 'hours_available',
                             'type' => 'text',
@@ -546,7 +553,7 @@ final class OrganizationFields {
                             ],
                         ],
                         [
-                            'key' => 'field_sfpf_org_cp_url',
+                            'key' => 'field_sfpf_organization_cp_url',
                             'label' => 'Contact URL',
                             'name' => 'url',
                             'type' => 'url',
@@ -558,7 +565,7 @@ final class OrganizationFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_org_header_media',
+                    'key' => 'field_sfpf_organization_header_media',
                     'label' => '🖼️ Media',
                     'name' => '',
                     'type' => 'accordion',
@@ -567,7 +574,7 @@ final class OrganizationFields {
                     'endpoint' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_org_image_cropped',
+                    'key' => 'field_sfpf_organization_image_cropped',
                     'label' => 'Logo (Cropped)',
                     'name' => 'image_cropped',
                     'type' => 'image',
@@ -578,7 +585,7 @@ final class OrganizationFields {
                     'preview_size' => 'thumbnail',
                 ],
                 [
-                    'key' => 'field_sfpf_org_gallery',
+                    'key' => 'field_sfpf_organization_gallery',
                     'label' => 'Gallery',
                     'name' => 'gallery',
                     'type' => 'gallery',
@@ -593,7 +600,7 @@ final class OrganizationFields {
                     'preview_size' => 'thumbnail',
                 ],
                 [
-                    'key' => 'field_sfpf_org_accordion_end',
+                    'key' => 'field_sfpf_organization_accordion_end',
                     'label' => '',
                     'name' => '',
                     'type' => 'accordion',

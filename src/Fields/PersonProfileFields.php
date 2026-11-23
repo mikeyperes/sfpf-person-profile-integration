@@ -10,20 +10,24 @@ defined( 'ABSPATH' ) || exit;
  * The person's fields on their WordPress user: identity, names, birth,
  * nationality, languages, awards, title and biographies, professions,
  * education, profile links, articles, additional pages, photos, the Google
- * Knowledge Graph ID and the person's FAQ. The field keys and names are
- * stored data and never change.
+ * Knowledge Graph ID and the person's FAQ. The field names stay stable across key migrations.
  */
 final class PersonProfileFields {
-    public const GROUP_KEY = 'group_sfpf_user_schema_structures';
+    public const GROUP_KEY = 'group_sfpf_person';
 
     /** @return array<string,mixed> */
     public static function group(): array {
+        return FieldKeys::active_group( self::canonical_group() );
+    }
+
+    /** Describes the fields with the canonical keys. */
+    private static function canonical_group(): array {
         return [
-            'key' => 'group_sfpf_user_schema_structures',
+            'key' => self::GROUP_KEY,
             'title' => 'Schema.org Structured Data',
             'fields' => [
                 [
-                    'key' => 'field_sfpf_entity_type',
+                    'key' => 'field_sfpf_person_entity_type',
                     'label' => 'Entity Type',
                     'name' => 'entity_type',
                     'type' => 'button_group',
@@ -44,7 +48,7 @@ final class PersonProfileFields {
                     'layout' => 'horizontal',
                 ],
                 [
-                    'key' => 'field_sfpf_knowledge_graph_id',
+                    'key' => 'field_sfpf_person_knowledge_graph_id',
                     'label' => 'Google Knowledge Graph ID',
                     'name' => 'knowledge_graph_id',
                     'type' => 'text',
@@ -58,7 +62,7 @@ final class PersonProfileFields {
                     'placeholder' => '/g/11gyz2y3lp',
                 ],
                 [
-                    'key' => 'field_sfpf_wikimedia_commons_urls',
+                    'key' => 'field_sfpf_person_wikimedia_commons_urls',
                     'label' => 'Wikimedia Commons URLs (Photos)',
                     'name' => 'wikimedia_commons_urls',
                     'type' => 'repeater',
@@ -73,12 +77,12 @@ final class PersonProfileFields {
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 100,
-                    'collapsed' => 'field_sfpf_wikimedia_commons_url',
+                    'collapsed' => 'field_sfpf_person_wikimedia_commons_url',
                     'button_label' => 'Add Photo URL',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_wikimedia_commons_url',
+                            'key' => 'field_sfpf_person_wikimedia_commons_url',
                             'label' => 'Photo URL',
                             'name' => 'url',
                             'type' => 'url',
@@ -91,7 +95,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_additional_name',
+                    'key' => 'field_sfpf_person_additional_name',
                     'label' => 'Additional Name',
                     'name' => 'additional_name',
                     'type' => 'text',
@@ -105,7 +109,7 @@ final class PersonProfileFields {
                     'placeholder' => 'e.g., Mike, Jr., III',
                 ],
                 [
-                    'key' => 'field_sfpf_alternate_names',
+                    'key' => 'field_sfpf_person_alternate_names',
                     'label' => 'Alternate Names',
                     'name' => 'alternate_names',
                     'type' => 'repeater',
@@ -124,7 +128,7 @@ final class PersonProfileFields {
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_alt_name_value',
+                            'key' => 'field_sfpf_person_alt_name_value',
                             'label' => 'Name',
                             'name' => 'name',
                             'type' => 'text',
@@ -137,7 +141,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_location_born',
+                    'key' => 'field_sfpf_person_location_born',
                     'label' => 'Location Born',
                     'name' => 'location_born',
                     'type' => 'group',
@@ -150,7 +154,7 @@ final class PersonProfileFields {
                     'layout' => 'block',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_location_born_location',
+                            'key' => 'field_sfpf_person_location_born_location',
                             'label' => 'Location',
                             'name' => 'location',
                             'type' => 'text',
@@ -161,7 +165,7 @@ final class PersonProfileFields {
                             'placeholder' => 'e.g., Chicago, Illinois',
                         ],
                         [
-                            'key' => 'field_sfpf_location_born_wikipedia',
+                            'key' => 'field_sfpf_person_location_born_wikipedia',
                             'label' => 'Wikipedia URL',
                             'name' => 'wikipedia_url',
                             'type' => 'url',
@@ -174,7 +178,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_birth_date',
+                    'key' => 'field_sfpf_person_birth_date',
                     'label' => 'Birth Date',
                     'name' => 'birth_date',
                     'type' => 'text',
@@ -188,7 +192,7 @@ final class PersonProfileFields {
                     'placeholder' => '1990-01-13',
                 ],
                 [
-                    'key' => 'field_sfpf_nationality',
+                    'key' => 'field_sfpf_person_nationality',
                     'label' => 'Nationality',
                     'name' => 'nationality',
                     'type' => 'repeater',
@@ -205,7 +209,7 @@ final class PersonProfileFields {
                     'button_label' => 'Add Nationality',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_nationality_value',
+                            'key' => 'field_sfpf_person_nationality_value',
                             'label' => 'Nationality',
                             'name' => 'value',
                             'type' => 'text',
@@ -218,7 +222,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_gender',
+                    'key' => 'field_sfpf_person_gender',
                     'label' => 'Gender',
                     'name' => 'gender',
                     'type' => 'select',
@@ -241,7 +245,7 @@ final class PersonProfileFields {
                     'return_format' => 'value',
                 ],
                 [
-                    'key' => 'field_sfpf_telephone',
+                    'key' => 'field_sfpf_person_telephone',
                     'label' => 'Telephone',
                     'name' => 'telephone',
                     'type' => 'text',
@@ -255,7 +259,7 @@ final class PersonProfileFields {
                     'placeholder' => '(415) 212-9449',
                 ],
                 [
-                    'key' => 'field_sfpf_honorific_prefix',
+                    'key' => 'field_sfpf_person_honorific_prefix',
                     'label' => 'Honorific Prefix',
                     'name' => 'honorific_prefix',
                     'type' => 'text',
@@ -269,7 +273,7 @@ final class PersonProfileFields {
                     'placeholder' => 'Dr.',
                 ],
                 [
-                    'key' => 'field_sfpf_honorific_suffix',
+                    'key' => 'field_sfpf_person_honorific_suffix',
                     'label' => 'Honorific Suffix',
                     'name' => 'honorific_suffix',
                     'type' => 'text',
@@ -283,7 +287,7 @@ final class PersonProfileFields {
                     'placeholder' => 'MBA',
                 ],
                 [
-                    'key' => 'field_sfpf_knows_language',
+                    'key' => 'field_sfpf_person_knows_language',
                     'label' => 'Languages',
                     'name' => 'knows_language',
                     'type' => 'repeater',
@@ -300,7 +304,7 @@ final class PersonProfileFields {
                     'button_label' => 'Add Language',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_knows_language_value',
+                            'key' => 'field_sfpf_person_knows_language_value',
                             'label' => 'Language',
                             'name' => 'value',
                             'type' => 'text',
@@ -313,7 +317,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_awards',
+                    'key' => 'field_sfpf_person_awards',
                     'label' => 'Awards',
                     'name' => 'awards',
                     'type' => 'repeater',
@@ -330,7 +334,7 @@ final class PersonProfileFields {
                     'button_label' => 'Add Award',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_award_value',
+                            'key' => 'field_sfpf_person_award_value',
                             'label' => 'Award',
                             'name' => 'value',
                             'type' => 'text',
@@ -343,7 +347,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_knowledge_graph_images',
+                    'key' => 'field_sfpf_person_knowledge_graph_images',
                     'label' => 'Knowledge Graph Images',
                     'name' => 'knowledge_graph_images',
                     'type' => 'gallery',
@@ -368,7 +372,7 @@ final class PersonProfileFields {
                     'preview_size' => 'thumbnail',
                 ],
                 [
-                    'key' => 'field_sfpf_gallery',
+                    'key' => 'field_sfpf_person_gallery',
                     'label' => 'Gallery (Legacy Fallback)',
                     'name' => 'gallery',
                     'type' => 'gallery',
@@ -411,7 +415,7 @@ final class PersonProfileFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_biography',
+                    'key' => 'field_sfpf_person_biography',
                     'label' => 'Biography',
                     'name' => 'biography',
                     'type' => 'wysiwyg',
@@ -427,7 +431,7 @@ final class PersonProfileFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_biography_short',
+                    'key' => 'field_sfpf_person_biography_short',
                     'label' => 'Biography (Short)',
                     'name' => 'biography_short',
                     'type' => 'wysiwyg',
@@ -443,7 +447,7 @@ final class PersonProfileFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_mission_statement',
+                    'key' => 'field_sfpf_person_mission_statement',
                     'label' => 'Mission Statement',
                     'name' => 'mission_statement',
                     'type' => 'wysiwyg',
@@ -459,7 +463,7 @@ final class PersonProfileFields {
                     'delay' => 1,
                 ],
                 [
-                    'key' => 'field_sfpf_professions_repeater',
+                    'key' => 'field_sfpf_person_professions_repeater',
                     'label' => 'Professions',
                     'name' => 'professions',
                     'type' => 'repeater',
@@ -473,12 +477,12 @@ final class PersonProfileFields {
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 20,
-                    'collapsed' => 'field_sfpf_profession_name',
+                    'collapsed' => 'field_sfpf_person_profession_name',
                     'button_label' => 'Add Profession',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_profession_name',
+                            'key' => 'field_sfpf_person_profession_name',
                             'label' => 'Profession Name',
                             'name' => 'name',
                             'type' => 'text',
@@ -489,7 +493,7 @@ final class PersonProfileFields {
                             'placeholder' => 'e.g., Entrepreneur, Author',
                         ],
                         [
-                            'key' => 'field_sfpf_profession_page',
+                            'key' => 'field_sfpf_person_profession_page',
                             'label' => 'Linked Page',
                             'name' => 'page',
                             'type' => 'post_object',
@@ -504,7 +508,7 @@ final class PersonProfileFields {
                             'allow_null' => 1,
                         ],
                         [
-                            'key' => 'field_sfpf_profession_summary',
+                            'key' => 'field_sfpf_person_profession_summary',
                             'label' => 'Summary',
                             'name' => 'summary',
                             'type' => 'wysiwyg',
@@ -520,7 +524,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_education_repeater',
+                    'key' => 'field_sfpf_person_education_repeater',
                     'label' => 'Education History',
                     'name' => 'education',
                     'type' => 'repeater',
@@ -534,12 +538,12 @@ final class PersonProfileFields {
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 10,
-                    'collapsed' => 'field_sfpf_edu_college',
+                    'collapsed' => 'field_sfpf_person_edu_college',
                     'button_label' => 'Add Education',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_edu_college',
+                            'key' => 'field_sfpf_person_edu_college',
                             'label' => 'College / University',
                             'name' => 'college',
                             'type' => 'text',
@@ -550,7 +554,7 @@ final class PersonProfileFields {
                             'placeholder' => 'Harvard University',
                         ],
                         [
-                            'key' => 'field_sfpf_edu_wiki_url',
+                            'key' => 'field_sfpf_person_edu_wiki_url',
                             'label' => 'Wikipedia URL',
                             'name' => 'wiki_url',
                             'type' => 'url',
@@ -561,7 +565,7 @@ final class PersonProfileFields {
                             'placeholder' => 'https://en.wikipedia.org/wiki/...',
                         ],
                         [
-                            'key' => 'field_sfpf_edu_year',
+                            'key' => 'field_sfpf_person_edu_year',
                             'label' => 'Year',
                             'name' => 'year',
                             'type' => 'text',
@@ -572,7 +576,7 @@ final class PersonProfileFields {
                             'placeholder' => '2015 or 2011-2015',
                         ],
                         [
-                            'key' => 'field_sfpf_edu_designation',
+                            'key' => 'field_sfpf_person_edu_designation',
                             'label' => 'Degree',
                             'name' => 'designation',
                             'type' => 'text',
@@ -583,7 +587,7 @@ final class PersonProfileFields {
                             'placeholder' => 'B.S., M.A., Ph.D.',
                         ],
                         [
-                            'key' => 'field_sfpf_edu_major',
+                            'key' => 'field_sfpf_person_edu_major',
                             'label' => 'Major / Field',
                             'name' => 'major',
                             'type' => 'text',
@@ -596,7 +600,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_inception_date',
+                    'key' => 'field_sfpf_person_inception_date',
                     'label' => 'Inception Date',
                     'name' => 'inception_date',
                     'type' => 'text',
@@ -610,7 +614,7 @@ final class PersonProfileFields {
                     'placeholder' => '2015 or January 1, 2015',
                 ],
                 [
-                    'key' => 'field_sfpf_headquarters_group',
+                    'key' => 'field_sfpf_person_headquarters_group',
                     'label' => 'Headquarters',
                     'name' => 'headquarters',
                     'type' => 'group',
@@ -623,7 +627,7 @@ final class PersonProfileFields {
                     'layout' => 'block',
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_hq_location',
+                            'key' => 'field_sfpf_person_hq_location',
                             'label' => 'Location',
                             'name' => 'location',
                             'type' => 'text',
@@ -634,7 +638,7 @@ final class PersonProfileFields {
                             'placeholder' => 'Miami, Florida',
                         ],
                         [
-                            'key' => 'field_sfpf_hq_wiki',
+                            'key' => 'field_sfpf_person_hq_wiki',
                             'label' => 'Wikipedia URL',
                             'name' => 'wiki_url',
                             'type' => 'url',
@@ -647,7 +651,7 @@ final class PersonProfileFields {
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_sameas',
+                    'key' => 'field_sfpf_person_sameas',
                     'label' => 'SameAs URLs',
                     'name' => 'sameas',
                     'type' => 'textarea',
@@ -664,7 +668,7 @@ https://twitter.com/handle',
                     'new_lines' => '',
                 ],
                 [
-                    'key' => 'field_sfpf_articles_import',
+                    'key' => 'field_sfpf_person_articles_import',
                     'label' => 'Bulk Import Articles',
                     'name' => '',
                     'type' => 'message',
@@ -684,7 +688,7 @@ https://twitter.com/handle',
                     'esc_html' => 0,
                 ],
                 [
-                    'key' => 'field_sfpf_articles',
+                    'key' => 'field_sfpf_person_articles',
                     'label' => 'Articles',
                     'name' => 'articles',
                     'type' => 'repeater',
@@ -698,12 +702,12 @@ https://twitter.com/handle',
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 100,
-                    'collapsed' => 'field_sfpf_article_title',
+                    'collapsed' => 'field_sfpf_person_article_title',
                     'button_label' => 'Add Article',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_article_title',
+                            'key' => 'field_sfpf_person_article_title',
                             'label' => 'Title',
                             'name' => 'title',
                             'type' => 'text',
@@ -714,7 +718,7 @@ https://twitter.com/handle',
                             'placeholder' => 'Article title (auto-fetched on import)',
                         ],
                         [
-                            'key' => 'field_sfpf_article_source',
+                            'key' => 'field_sfpf_person_article_source',
                             'label' => 'Source',
                             'name' => 'source',
                             'type' => 'text',
@@ -725,7 +729,7 @@ https://twitter.com/handle',
                             'placeholder' => 'forbes.com',
                         ],
                         [
-                            'key' => 'field_sfpf_article_url',
+                            'key' => 'field_sfpf_person_article_url',
                             'label' => 'URL',
                             'name' => 'url',
                             'type' => 'url',
@@ -738,7 +742,7 @@ https://twitter.com/handle',
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_additional_urls',
+                    'key' => 'field_sfpf_person_additional_urls',
                     'label' => 'Additional URLs',
                     'name' => 'additional_urls',
                     'type' => 'repeater',
@@ -752,12 +756,12 @@ https://twitter.com/handle',
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 100,
-                    'collapsed' => 'field_sfpf_additional_url_title',
+                    'collapsed' => 'field_sfpf_person_additional_url_title',
                     'button_label' => 'Add URL',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_additional_url_title',
+                            'key' => 'field_sfpf_person_additional_url_title',
                             'label' => 'Title',
                             'name' => 'title',
                             'type' => 'text',
@@ -768,7 +772,7 @@ https://twitter.com/handle',
                             'placeholder' => 'Link title',
                         ],
                         [
-                            'key' => 'field_sfpf_additional_url_source',
+                            'key' => 'field_sfpf_person_additional_url_source',
                             'label' => 'Source',
                             'name' => 'source',
                             'type' => 'text',
@@ -779,7 +783,7 @@ https://twitter.com/handle',
                             'placeholder' => 'example.com',
                         ],
                         [
-                            'key' => 'field_sfpf_additional_url_url',
+                            'key' => 'field_sfpf_person_additional_url_url',
                             'label' => 'URL',
                             'name' => 'url',
                             'type' => 'url',
@@ -792,7 +796,7 @@ https://twitter.com/handle',
                     ],
                 ],
                 [
-                    'key' => 'field_sfpf_faq',
+                    'key' => 'field_sfpf_person_faq',
                     'label' => 'FAQs',
                     'name' => 'faq',
                     'type' => 'repeater',
@@ -806,12 +810,12 @@ https://twitter.com/handle',
                     'pagination' => 0,
                     'min' => 0,
                     'max' => 20,
-                    'collapsed' => 'field_sfpf_faq_question',
+                    'collapsed' => 'field_sfpf_person_faq_question',
                     'button_label' => 'Add FAQ',
                     'rows_per_page' => 20,
                     'sub_fields' => [
                         [
-                            'key' => 'field_sfpf_faq_question',
+                            'key' => 'field_sfpf_person_faq_question',
                             'label' => 'Question',
                             'name' => 'question',
                             'type' => 'text',
@@ -822,7 +826,7 @@ https://twitter.com/handle',
                             'placeholder' => 'What is this person known for?',
                         ],
                         [
-                            'key' => 'field_sfpf_faq_answer',
+                            'key' => 'field_sfpf_person_faq_answer',
                             'label' => 'Answer',
                             'name' => 'answer',
                             'type' => 'wysiwyg',

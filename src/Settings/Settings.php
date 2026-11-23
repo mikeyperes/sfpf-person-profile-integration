@@ -31,6 +31,7 @@ final class Settings {
     public const PAGE_ASSIGNMENT_PREFIX     = 'sfpf_page_';
     public const CONTENT_TYPES              = 'sfpf_content_type_settings';
     public const FIELD_GROUPS               = 'sfpf_acf_structure_settings';
+    public const FIELD_KEYS_MIGRATED         = 'sfpf_person_profile_integration_field_keys_v1';
     public const MIGRATIONS                 = 'sfpf_migrations';
 
     public static function flag( string $option, bool $default ): bool {

@@ -15,6 +15,3 @@
 .sfpf-person-card img{border-radius:12px;object-fit:cover}
 .sfpf-values td{vertical-align:top}
 .sfpf-columns{columns:3 220px;margin:8px 0}
-.sfpf-faq-set{border:1px solid #dcdcde;border-radius:8px;padding:12px 16px;margin:0 0 12px;background:#fff}
-.sfpf-faq-set legend{font-weight:600;padding:0 6px}
-.sfpf-faq-row{display:grid;gap:6px;margin:0 0 10px}

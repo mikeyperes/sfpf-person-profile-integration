@@ -36,15 +36,23 @@ final class ShortcodeCatalog implements ModuleInterface {
         ElementorFaqShortcode::TAG  => [ ElementorFaqShortcode::class, 'render' ],
     ];
 
+    /** Registers the catalog's existing hook for callers that use it as a module. */
     public function register(): void {
-        // Late, so SFPF's [organization] replaces any older registration of the tag.
         add_action( 'init', [ self::class, 'add_shortcodes' ], 100 );
     }
 
-    public static function add_shortcodes(): void {
+    /** Supplies one Core module for each current and legacy shortcode tag. */
+    public static function modules(): array {
+        $modules = [];
         foreach ( self::TAGS as $tag => $handler ) {
-            remove_shortcode( $tag );
-            add_shortcode( $tag, $handler );
+            $modules[] = new ShortcodeModule( $tag, $handler );
+        }
+        return $modules;
+    }
+
+    public static function add_shortcodes(): void {
+        foreach ( self::modules() as $module ) {
+            $module->add_shortcode();
         }
     }
 

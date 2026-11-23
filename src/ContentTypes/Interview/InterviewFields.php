@@ -4,21 +4,28 @@ declare( strict_types=1 );
 
 namespace SFPF\PersonProfile\ContentTypes\Interview;
 
+use SFPF\PersonProfile\Fields\FieldKeys;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * The Interview fields: podcast or show, guest, host, the main link, more links and press.
- * The keys are stored data and never change.
+ * Field names are stable. FieldKeys selects the identifiers used by the site.
  */
 final class InterviewFields {
     /** @return array<string,mixed> */
     public static function group(): array {
+        return FieldKeys::active_group( self::canonical_group() );
+    }
+
+    /** Describes the fields with the canonical keys. */
+    private static function canonical_group(): array {
         return [
-            'key' => 'group_64b623fb36208',
+            'key' => 'group_sfpf_interview',
             'title' => 'Interview',
             'fields' => [
                 [
-                    'key' => 'field_64bc48f36f3a1',
+                    'key' => 'field_sfpf_interview_podcast_name',
                     'label' => 'Podcast Name',
                     'name' => 'podcast_name',
                     'type' => 'wysiwyg',
@@ -28,7 +35,7 @@ final class InterviewFields {
                     'delay' => 0,
                 ],
                 [
-                    'key' => 'field_64bf870639653',
+                    'key' => 'field_sfpf_interview_guest_name',
                     'label' => 'Guest Name',
                     'name' => 'guest_name',
                     'type' => 'wysiwyg',
@@ -38,7 +45,7 @@ final class InterviewFields {
                     'delay' => 0,
                 ],
                 [
-                    'key' => 'field_64bf870e39654',
+                    'key' => 'field_sfpf_interview_host_name',
                     'label' => 'Host Name',
                     'name' => 'host_name',
                     'type' => 'wysiwyg',
@@ -48,13 +55,13 @@ final class InterviewFields {
                     'delay' => 0,
                 ],
                 [
-                    'key' => 'field_64bb8d7a325e8',
+                    'key' => 'field_sfpf_interview_primary_url',
                     'label' => 'Primary URL',
                     'name' => 'primary_url',
                     'type' => 'text',
                 ],
                 [
-                    'key' => 'field_64bb8d69325e7',
+                    'key' => 'field_sfpf_interview_additional_links',
                     'label' => 'Additional Links',
                     'name' => 'additional_links',
                     'type' => 'wysiwyg',
@@ -64,7 +71,7 @@ final class InterviewFields {
                     'delay' => 0,
                 ],
                 [
-                    'key' => 'field_64b623fbd4aa4',
+                    'key' => 'field_sfpf_interview_press',
                     'label' => 'Press',
                     'name' => 'press',
                     'type' => 'wysiwyg',

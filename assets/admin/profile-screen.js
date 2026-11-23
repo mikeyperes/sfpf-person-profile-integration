@@ -2,11 +2,15 @@
 (function ($, config) {
     'use strict';
 
+    var group = '#acf-group_sfpf_person, #acf-group_sfpf_user_schema_structures';
+    var entity = '[data-name="entity_type"]';
+    var articles = '[data-name="articles"]';
+
     // Fields for another entity type are hidden, never removed, so saving never clears them.
     function entityType() {
-        var checked = $('input[name="acf[field_sfpf_entity_type]"]:checked');
+        var checked = $(group).find(entity).find('input:checked');
         if (checked.length) { return checked.val(); }
-        var selected = $('[data-key="field_sfpf_entity_type"] .acf-button-group label.selected input');
+        var selected = $(group).find(entity).find('.acf-button-group label.selected input');
         return selected.length ? selected.val() : 'none';
     }
     function updateEntityFields() {
@@ -37,13 +41,13 @@
         $('#sfpf-articles-report-footer').text(footer || '');
     }
     function addArticleRows(articles) {
-        var repeater = $('[data-key="field_sfpf_articles"]').find('.acf-repeater').first();
+        var repeater = $(group).find(articles).find('.acf-repeater').first();
         $.each(articles, function (index, article) {
             repeater.find('> .acf-actions .acf-repeater-add-row').trigger('click');
             var row = repeater.find('tbody > tr.acf-row:not(.acf-clone)').last();
-            row.find('[data-key="field_sfpf_article_title"] input').val(article.title || '');
-            row.find('[data-key="field_sfpf_article_source"] input').val(article.source || '');
-            row.find('[data-key="field_sfpf_article_url"] input').val(article.url || '').trigger('change');
+            row.find('[data-name="title"] input').val(article.title || '');
+            row.find('[data-name="source"] input').val(article.source || '');
+            row.find('[data-name="url"] input').val(article.url || '').trigger('change');
         });
     }
     function importArticles(event) {
@@ -74,7 +78,7 @@
     }
     function removeAllArticles(event) {
         event.preventDefault();
-        var rows = $('[data-key="field_sfpf_articles"]').find('.acf-repeater').first().find('tbody > tr.acf-row:not(.acf-clone)');
+        var rows = $(group).find(articles).find('.acf-repeater').first().find('tbody > tr.acf-row:not(.acf-clone)');
         if (!rows.length || !window.confirm(config.i18n.confirmRemove.replace('%d', rows.length))) { return; }
         $(rows.get().reverse()).each(function () { $(this).find('.acf-row-handle .acf-icon.-minus').trigger('click'); });
         report('warn', config.i18n.removed.replace('%d', rows.length), '', config.i18n.saveToKeep);
@@ -82,8 +86,8 @@
 
     $(function () {
         setTimeout(updateEntityFields, 100);
-        $(document).on('change', 'input[name="acf[field_sfpf_entity_type]"]', updateEntityFields);
-        $(document).on('click', '[data-key="field_sfpf_entity_type"] .acf-button-group label', function () { setTimeout(updateEntityFields, 50); });
+        $(group).on('change', entity + ' input', updateEntityFields);
+        $(group).on('click', entity + ' .acf-button-group label', function () { setTimeout(updateEntityFields, 50); });
         updateKnowledgePanelLink();
         $(document).on('input change', '[data-name="knowledge_graph_id"] input[type="text"]', updateKnowledgePanelLink);
         $(document).on('click', '#sfpf-process-articles', importArticles);

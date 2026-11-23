@@ -27,7 +27,7 @@
 
 - The Book Quote migration names the Core field engine in its requirements message.
 
-- Hexa WP Core 3.64.0 registers and edits Person Profile user fields. Existing profile, schema and education fields retain their stored values and keys.
+- Hexa WP Core registers and edits Person Profile user fields. The 4.0.14 migration standardizes SFPF identifiers while preserving existing profile, schema and education values. See [field-key migration](docs/field-key-migration.md).
 
 ### The website's person
 - **Does:** every value comes from one WordPress user: the Person chosen as the site's primary entity in HWS Base Tools (a user, or the user bound to a person post). Older sites that set a founder user keep working.
@@ -132,6 +132,8 @@
 - **Code:** `src/Diagnostics/`.
 
 ## Internals
+
+- Settings uses the Core tab registry and renders each tab on demand. The Update Center contains both the plugin updater and the bundled Core updater. [Asset loading](docs/asset-loading.md).
 
 - Bootstrap: `initialization.php` loads `src/PluginRuntime/Bootstrap.php`, which adds every feature as a Hexa WP Core module.
 - Upgrades run once each on admin, cron and command-line requests (`src/Migrations/`, `sfpf_migrations`).
